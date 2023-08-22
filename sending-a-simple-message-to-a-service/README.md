@@ -123,6 +123,7 @@ if resp is Doctor[] {
     return resp;
 }
 
+log:printError("Retrieving doctor information failed", resp);
 if resp is http:ClientRequestError {
     return <http:NotFound> {body: string `category not found: ${category}`};
 }
@@ -162,7 +163,8 @@ service /healthcare on new http:Listener(port) {
         if resp is Doctor[] {
             return resp;
         }
-
+        
+        log:printError("Retrieving doctor information failed", resp);
         if resp is http:ClientRequestError {
             return <http:NotFound> {body: string `category not found: ${category}`};
         }

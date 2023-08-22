@@ -1,5 +1,4 @@
 import ballerina/http;
-import ballerina/io;
 import ballerina/log;
 
 type Doctor record {|
@@ -26,7 +25,8 @@ service /healthcare on new http:Listener(port) {
         if resp is Doctor[] {
             return resp;
         }
-        io:println(resp);
+        
+        log:printError("Retrieving doctor information failed", resp);
         if resp is http:ClientRequestError {
             return <http:NotFound> {body: string `category not found: ${category}`};
         }
