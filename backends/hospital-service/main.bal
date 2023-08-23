@@ -1,6 +1,7 @@
 import ballerina/http;
 import ballerina/lang.regexp;
 import ballerina/time;
+import ballerina/uuid;
 
 type Doctor record {|
     readonly string name;
@@ -50,6 +51,26 @@ type ChannelingFee record {|
     string actualFee;
 |};
 
+type PaymentSettlement record {|
+    int appointmentNumber;
+    Doctor doctor;
+    Patient patient;
+    decimal fee;
+    boolean confirmed;
+    string card_number;
+|};
+
+type Payment record {|
+    int appointmentNo;
+    string doctorName;
+    string patient;
+    decimal actualFee;
+    int discount;
+    decimal discounted;
+    string paymentID = uuid:createType4AsString();
+    string status;
+|};
+
 type Status record {|
     string status;
 |};
@@ -81,6 +102,8 @@ isolated table<Appointment> key(appointmentNumber) appointments = table [];
 isolated table<Patient> key(ssn) patients = table [];
 
 isolated map<PatientRecord> patientRecords = {};
+
+isolated table<Payment & readonly> key (paymentID) payments = table [];
 
 isolated int appointmentNumber = 1;
 
@@ -118,10 +141,52 @@ service /healthcare on ln {
                 return {status: "appointment removed successfully"};
             }
         }
-        return {status: "unknown appointment ID"};
+        return {body: "unknown appointment ID"};
     }
 
-    // todo: payments 
+    resource function post payments(PaymentSettlement & readonly paymentSettlement) returns Payment|http:NotFound|error {
+        lock {
+            if !appointments.hasKey(paymentSettlement.appointmentNumber) {
+                return {body: "unknown appointment ID"};        
+            }
+        }
+        PaymentSettlement {
+            patient: {name: patientName, dob}, 
+            doctor: {name: doctorName},
+            appointmentNumber
+        } = paymentSettlement;
+        int discount = let int age = check getAge(dob) in  
+                                age < 12 ? 15 : (age > 55 ? 20 : 0);
+        Doctor {fee} = check getDoctor(doctorName).ensureType();
+        final Payment & readonly payment = {
+            discounted: (100 - discount) * fee / 100,
+            doctorName,
+            patient: patientName,
+            discount,
+            appointmentNo: appointmentNumber,
+            actualFee: fee,
+            status: "settled"
+        };
+        lock {
+            payments.put(payment);
+        }
+        return payment;
+    }
+
+    resource function get payments() returns Payment[] {
+        lock {
+            return <readonly> from Payment payment in payments select payment;
+        }
+    }
+
+    resource function get payments/payment/[string payment_id]() returns Payment|http:NotFound {
+        lock {
+            if payments.hasKey(payment_id) {
+                return payments.get(payment_id);
+            }
+        }
+        return {body: "unknown payment ID"};
+    }
 
     resource function post admin/newdoctor(Doctor & readonly doctor)
             returns Status|http:NotFound => addDoctor(doctor);
@@ -228,10 +293,7 @@ service on ln {
             returns Status|http:NotFound|error {
         lock {
             if appointments.hasKey(appointment_id) {
-                string dob = appointments.get(appointment_id).patient.dob;
-                string yob = regexp:split(re `-`, dob)[0];
-                string currYear = regexp:split(re `-`, time:utcToString(time:utcNow()))[0];
-                int age = check int:fromString(currYear) - check int:fromString(yob);
+                int age = check getAge( appointments.get(appointment_id).patient.dob);
                 return {status: (age < 12 || age > 55).toString()};
             }
         }
@@ -240,6 +302,12 @@ service on ln {
 
     resource function post [string hospital]/categories/admin/doctor/newdoctor(Doctor & readonly doctor)
             returns Status|http:NotFound => addDoctor(doctor);
+}
+
+isolated function getAge(string dob) returns int|error {
+    string yob = regexp:split(re `-`, dob)[0];
+    string currYear = regexp:split(re `-`, time:utcToString(time:utcNow()))[0];
+    return (check int:fromString(currYear) - check int:fromString(yob));
 }
 
 isolated function getDoctor(string name) returns (Doctor & readonly)? {
