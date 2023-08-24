@@ -293,7 +293,7 @@ service on ln {
             returns Status|http:NotFound|error {
         lock {
             if appointments.hasKey(appointment_id) {
-                int age = check getAge( appointments.get(appointment_id).patient.dob);
+                int age = check getAge(appointments.get(appointment_id).patient.dob);
                 return {status: (age < 12 || age > 55).toString()};
             }
         }
