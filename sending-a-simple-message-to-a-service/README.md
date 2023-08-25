@@ -267,7 +267,7 @@ import ballerina/test;
 
 ```ballerina
 public client class MockHttpClient {
-    isolated resource function get [string ...path](map<string|string[]>? headers = (), http:TargetType targetType = http:Response,
+    isolated resource function get [string... path](map<string|string[]>? headers = (), http:TargetType targetType = http:Response,
             *http:QueryParams params) returns http:Response|anydata|http:ClientError {
         match path[0] {
             "surgery" => {
