@@ -2,7 +2,7 @@
 
 ## What you'll build
 
-In this tutorial, when the client sends a request to make an appointment at a hospital, multiple calls are made to different backend services in order to make the appointment and respond to the client with the relevant details. Requests to the backend services are made one after the other given that information from one call is required for the next. This effectively integrates several services and exposes them as a single service.
+Let's develop a service that accepts requests to make an appointment at a hospital, makes multiple calls to different backend services to make the appointment, and responds to the client with the relevant details. Requests to the backend services are made one after the other given that information from one call is required for the next. This effectively integrates several services and exposes them as a single service.
 
 To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension, and then run the service. The resouce  will receive the user request, retrieve details from the backend services, and respond to the user request with the appointment details.
 
@@ -28,7 +28,7 @@ The flow is as follows.
     }
     ```
 
-2. Extract necessary details from the request and make a call to the hospital backend service to request an appointment. A response similar to the following will be returned from the hospital backend service on success.
+2. Extract necessary details from the request (e.g., hospital, patient, doctor, etc. details) and make a call to the hospital backend service to request an appointment. A response similar to the following will be returned from the hospital backend service on success.
 
     ```json
     {
@@ -172,7 +172,6 @@ type Appointment record {|
     int appointmentNumber;
     Doctor doctor;
     Patient patient;
-    decimal fee;
     boolean confirmed;
     string hospital;
     string appointmentDate;
@@ -200,7 +199,7 @@ Note that the `ReservationRequest` record uses [record type inclusion](https://b
 
 Note that the initial record definitions can be generated using the "Paste JSON as record" VSCode command with the relevant JSON payloads and then be modified as necessary.
 
-6. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes calls to the backend services and retrieves relevant details, and responds to the request. Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. Define an HTTP resource that allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` (corresponding to the specialization) is a path parameter, and expects a JSON object corresponding to `ReservationRequest` as the payload. The response will have a JSON payload corresponding to `ReservationStatus` on success or the response can be a "NotFound" or "InternalServerError" response on errors.
+6. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes calls to the backend services to retrieve relevant details, and responds to the request. Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. Define an HTTP resource that allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` (corresponding to the specialization) is a path parameter, and expects a JSON object corresponding to `ReservationRequest` as the payload. The response will have a JSON payload corresponding to `ReservationStatus` on success or the response can be a "NotFound" or "InternalServerError" response on errors.
 
 ```ballerina
 service /healthcare on new http:Listener(port) {
@@ -305,7 +304,7 @@ service /healthcare on new http:Listener(port) {
 
 - The `log` functions are used to [log](https://ballerina.io/learn/by-example/#log) information at `DEBUG` and `ERROR` log levels.
 
-- The first backend call is a `POST` request to the reserve the appointment. The `hospital_id` and `category` values are used as path parameters.
+- The first backend call is a `POST` request to reserve the appointment. The `hospital_id` and `category` values are used as path parameters.
 
     ```ballerina
     Appointment|http:ClientError appointment =
@@ -319,29 +318,29 @@ service /healthcare on new http:Listener(port) {
 
     The expected payload in the request to reserve the appointment consists of four fields, namely `patient`, `doctor`, `hospital`, and `appointment_date`. The payload is specified as an argument to the remote method call. 
 
-        ```ballerina
-        {patient, doctor, hospital, appointment_date}
-        ```
+    ```ballerina
+    {patient, doctor, hospital, appointment_date}
+    ```
 
     This is shorthand for
 
-        ```ballerina
-        {patient: patient, doctor: doctor, hospital: hospital, appointment_date: appointment_date}
-        ```
+    ```ballerina
+    {patient: patient, doctor: doctor, hospital: hospital, appointment_date: appointment_date}
+    ```
 
     [Client data binding](https://ballerina.io/learn/by-example/http-client-data-binding/) is used to directly try and bind the JSON response on success to the expected record.
 
-        ```ballerina
-        Appointment|http:ClientError appointment =
-                hospitalServicesEP->/[hospital_id]/categories/[category]/reserve.post({
-            patient,
-            doctor,
-            hospital,
-            appointment_date
-        });
-        ```
+    ```ballerina
+    Appointment|http:ClientError appointment =
+            hospitalServicesEP->/[hospital_id]/categories/[category]/reserve.post({
+        patient,
+        doctor,
+        hospital,
+        appointment_date
+    });
+    ```
 
-    Use the `is` check to decide the response based on the response to the client call. If the request failed or the response payload could not be bound to `Appointment` as expected, send a "NotFound" response if the client call failed with a 4xx status code or return an "InternalServerError" response for other failures. If the client call was successful and the respond payload was successfully bound to `Appointment` we can proceed with the subsequent calls. 
+    Use the `is` check to decide the response based on the response to the client call. If the request failed or the response payload could not be bound to `Appointment` as expected, send a "NotFound" response if the client call failed with a 4xx status code or return an "InternalServerError" response for other failures. If the client call was successful and the response payload was successfully bound to `Appointment` we can proceed with the subsequent calls. 
 
     ```ballerina
     if appointment !is Appointment {
@@ -368,10 +367,10 @@ if fee !is Fee {
 }
 ```
 
-- If fee retrieval is successful, the next and last step is to make the payment by making a `POST` request to the payment service. The payload includes details extracted out from the original request (`patient`, and `card_number`), the appointment reservation response (`appointmentNumber`, and `doctor`), and the response to the fee retrieval (`fee`).
+- If fee retrieval is successful, the next and last step is to make the payment by making a `POST` request to the payment service. The payload includes details extracted out from the original request (`patient` and `card_number`), the appointment reservation response (`appointmentNumber` and `doctor`), and the response to the fee retrieval request (`fee`).
 
 ```ballerina
-ReservationStatus|http:ClientError status = paymentEP->/.post( {
+ReservationStatus|http:ClientError status = paymentEP->/.post({
     appointmentNumber,
     doctor: appointment.doctor,
     patient,
@@ -394,8 +393,7 @@ log:printDebug("Appointment reservation successful",
 return status;
 ```
 
-
-    If the payment request fails, the response to the original request will be an appropriate error response. If not, the response will be the response from the payment service.
+If the payment request fails, the response to the original request will be an appropriate error response. If not, the response will be the response from the payment service.
 
 #### Complete source
 
@@ -446,7 +444,6 @@ type Appointment record {|
     int appointmentNumber;
     Doctor doctor;
     Patient patient;
-    decimal fee;
     boolean confirmed;
     string hospital;
     string appointmentDate;
@@ -519,7 +516,7 @@ service /healthcare on new http:Listener(port) {
 
         int appointmentNumber = appointment.appointmentNumber;
 
-        ReservationStatus|http:ClientError status = paymentEP->/.post( {
+        ReservationStatus|http:ClientError status = paymentEP->/.post({
             appointmentNumber,
             doctor: appointment.doctor,
             patient,
