@@ -251,8 +251,8 @@ service on ln {
             if appointments.hasKey(appointment_id) {
                 Appointment {doctor: {name: doctorName, fee}, patient: {name: patientName}} = appointments.get(appointment_id);
                 return {
-                    patientName: patientName.toLowerAscii(),
-                    doctorName: doctorName.toLowerAscii(),
+                    patientName,
+                    doctorName,
                     actualFee: fee.toString()
                 };
             }
