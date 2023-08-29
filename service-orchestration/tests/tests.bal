@@ -30,7 +30,7 @@ function testSuccessfulRequest() returns error? {
         "appointmentNo": app.appointmentNumber,
         "doctorName": app.doctor.name,
         "patient": app.patient.name,
-        "actualFee": app.fee,
+        "actualFee": app.doctor.fee,
         "discount": 20,
         "discounted": 5600.0,
         "paymentID": "f130e2ed-a34e-4434-9b40-6a0a8054ee6b",
@@ -168,7 +168,6 @@ isolated function handleAppointment(http:PathParamType[] path, http:RequestMessa
                     },
                     "patient": payload.patient.cloneReadOnly(),
                     "hospital": payload.hospital,
-                    "fee": 7000,
                     "confirmed": false,
                     "appointmentDate": payload.appointment_date
                 };

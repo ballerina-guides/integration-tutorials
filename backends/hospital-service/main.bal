@@ -21,14 +21,11 @@ type Patient record {|
 |};
 
 type Appointment record {|
-    string time?; // todo
     readonly int appointmentNumber;
     Doctor doctor;
     Patient patient;
     string hospital;
-    decimal fee;
     boolean confirmed;
-    string paymentID?; // todo
     string appointmentDate;
 |};
 
@@ -219,7 +216,6 @@ service on ln {
             appointmentNumber: newAppointmentNumber,
             doctor,
             patient,
-            fee: doctor.fee,
             confirmed: false,
             appointmentDate: appointmentRequest.appointment_date,
             hospital: requestedHospital

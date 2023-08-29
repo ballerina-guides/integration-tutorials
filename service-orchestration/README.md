@@ -2,15 +2,13 @@
 
 ## What you'll build
 
-Let's develop a service that requires information from several services to construct a response to a request. This effectively integrates several services and exposes them as a single service.
-
-In this tutorial, when the client sends a request to make an appointment at a hospital, multiple calls are made to different backend services in order to make the appointment and respond to the client with the relevant details. Requests to the backend services are made one after the other given that information from one call is required for the next.
+In this tutorial, when the client sends a request to make an appointment at a hospital, multiple calls are made to different backend services in order to make the appointment and respond to the client with the relevant details. Requests to the backend services are made one after the other given that information from one call is required for the next. This effectively integrates several services and exposes them as a single service.
 
 To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension, and then run the service. The resouce  will receive the user request, retrieve details from the backend services, and respond to the user request with the appointment details.
 
-The flow is as follows:
+The flow is as follows.
 
-1. Receive a request with a JSON payload in the following form
+1. Receive a request with a JSON payload in the following form.
 
     ```json
     {
@@ -51,7 +49,6 @@ The flow is as follows:
             "email": "johndoe@gmail.com"
         },
         "hospital": "grand oak community hospital",
-        "fee": 7000,
         "confirmed": false,
         "appointmentDate": "2023-10-02"
     }
@@ -396,6 +393,7 @@ log:printDebug("Appointment reservation successful",
                 appointmentNumber = appointmentNumber);
 return status;
 ```
+
 
     If the payment request fails, the response to the original request will be an appropriate error response. If not, the response will be the response from the payment service.
 

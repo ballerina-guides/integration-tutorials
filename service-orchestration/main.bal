@@ -42,7 +42,6 @@ type Appointment record {|
     int appointmentNumber;
     Doctor doctor;
     Patient patient;
-    decimal fee;
     boolean confirmed;
     string hospital;
     string appointmentDate;
