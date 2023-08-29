@@ -208,7 +208,7 @@ bal run hospitalservice.jar
 
 Let's send a request to the service using cURL as follows.
 
-1. Install and set up [cURL](https://curl.haxx.se/) as your client.
+1. Install and set up [cURL](https://curl.se/) as your client.
 
 2. Execute the following command.
 
