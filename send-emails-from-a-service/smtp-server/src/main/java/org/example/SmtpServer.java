@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2023, WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -30,9 +30,9 @@ import javax.mail.internet.MimeMessage;
  */
 public class SmtpServer {
 
-    private static final String USER_PASSWORD = "Askl@7809";
+    private static final String USER_PASSWORD = "abcdef123";
     private static final String USER_NAME = "hascode";
-    private static final String EMAIL_USER_ADDRESS_1 = "rominxd97@gmail.com";
+    private static final String EMAIL_USER_ADDRESS_1 = "hascode1@localhost";
     private static GreenMail mailServer;
 
     public static Object startSendWithOptionsSmtpServer() {
@@ -51,5 +51,4 @@ public class SmtpServer {
         MimeMessage[] messages = mailServer.getReceivedMessages();
         return null;
     }
-
 }

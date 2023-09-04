@@ -89,7 +89,7 @@ service /healthcare on new http:Listener(port) {
         port: 3025,
         security: email:START_TLS_NEVER
     };
-        email:SmtpClient smtpClient = check new("127.0.0.1", "hascode", "Askl@7809", config);
+        email:SmtpClient smtpClient = check new("127.0.0.1", "hascode", "abcdef123", config);
 
         ReservationRequest {
             patient: {cardNo, ...patient},

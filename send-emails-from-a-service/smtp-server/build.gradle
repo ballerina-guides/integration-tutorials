@@ -1,5 +1,4 @@
 apply plugin: 'java'
-//apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'org.example'
 version = '1.0-SNAPSHOT'
@@ -8,8 +7,6 @@ repositories {
     mavenCentral()
 }
 
-
-
 configurations {
     dependency {
         transitive = false;
@@ -17,8 +14,6 @@ configurations {
 }
 
 dependencies {
-
-
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     implementation "com.icegreen:greenmail:1.5.11"
@@ -37,4 +32,3 @@ compileJava {
         classpath = files()
     }
 }
-
