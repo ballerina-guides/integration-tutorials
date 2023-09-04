@@ -1,0 +1,40 @@
+apply plugin: 'java'
+//apply plugin: 'com.github.johnrengelman.shadow'
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+
+
+configurations {
+    dependency {
+        transitive = false;
+    }
+}
+
+dependencies {
+
+
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation "com.icegreen:greenmail:1.5.11"
+    implementation group: 'com.sun.mail', name: 'javax.mail', version: "1.6.2"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+compileJava {
+    doFirst {
+        options.compilerArgs = [
+                '--module-path', classpath.asPath,
+        ]
+        classpath = files()
+    }
+}
+
