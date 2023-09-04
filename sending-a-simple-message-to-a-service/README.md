@@ -4,7 +4,7 @@
 
 Let's develop a service that allows a user to retrieve a list of doctors based on the doctor's specialization (category). The information about the doctors is retrieved from a separate microservice. 
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension, and then run the service. The resouce  will receive the user request, retrieve details from the backend service, and respond to the user request with the relevant doctor details.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension, and then run the service. The resource will receive the user request, retrieve details from the backend service, and respond to the user request with the relevant doctor details.
 
 ### Concepts covered
 
