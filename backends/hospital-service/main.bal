@@ -11,14 +11,14 @@ type Doctor record {|
     decimal fee;
 |};
 
-type Patient record {|
+type Patient record {
     string name;
     string dob;
     readonly string ssn;
     string address;
     string phone;
     string email;
-|};
+};
 
 type Appointment record {|
     string time?; // todo
@@ -32,12 +32,12 @@ type Appointment record {|
     string appointmentDate;
 |};
 
-type AppointmentRequest record {|
+type AppointmentRequest record {
     Patient patient;
     string doctor;
     string hospital;
     string appointment_date;
-|};
+};
 
 type PatientRecord record {|
     Patient patient;
