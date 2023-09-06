@@ -11,7 +11,7 @@ type Details record {|
     string doctor;
     string hospital_id;
     string hospital;
-    string cardNo;
+    string card_no;
     string appointment_date;
 |};
 
@@ -22,7 +22,7 @@ type Patient record {|
     string address;
     string phone;
     string email;
-    string cardNo;
+    string card_no;
 |};
 
 type ReservationRequest record {|
@@ -61,15 +61,7 @@ service /healthcare on new http:Listener(port) {
             @http:Payload Details details
         ) returns ReservationResponse|http:NotFound|http:BadRequest {
         string hospitalId = details.hospital_id;
-
-        ReservationRequest req;
-        do {
-            req = transform(details);
-        } on fail error err {
-            log:printError("Request body is not match with the expected type", err);
-            return <http:BadRequest>{body: "Request body is not match with the expected type"};
-        }
-
+        ReservationRequest req = transform(details);
         ReservationResponse|http:ClientError resp = hospitalBE->/[hospitalId]/categories/[category]/reserve.post(req);
 
         if resp is ReservationResponse {
@@ -94,7 +86,7 @@ function transform(Details details) returns ReservationRequest => {
         address: details.address,
         phone: details.phone,
         email: details.email,
-        cardNo: details.cardNo
+        card_no: details.card_no
     },
     doctor: details.doctor,
     hospital_id: details.hospital_id,
