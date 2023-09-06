@@ -23,9 +23,34 @@ function testSuccessfullReservation() returns error? {
         hospital: "grand oak community hospital",
         appointment_date: "2025-04-02"
     });
-    ReservationResponse expectedResp = check (check getSuccessAppointmentResponse(GRAND_OAKS_HOSPITAL)
-                                                                .ensureType(anydata)).cloneWithType();
+    ReservationResponse expectedResp = getSuccessAppointmentResponse(GRAND_OAKS_HOSPITAL);
     test:assertEquals(resp, expectedResp, "Response mismatched");
+}
+
+@test:Config
+function testInvalidHospital() {
+    ReservationResponse|http:ClientError resp = cl->/categories/surgery/reserve.post({
+        patient: {
+            name: "John Doe",
+            dob: "1940-03-19",
+            ssn: "234-23-525",
+            address: "California",
+            phone: "8770586755",
+            email: "johndoe@gmail.com"
+        },
+        doctor: "thomas chandler",
+        hospital: "monarch hospital",
+        appointment_date: "2025-04-02"
+    });
+
+    if resp !is http:ClientRequestError {
+        test:assertFail("expected an http:ClientRequestError, found " + (typeof resp).toString());
+    }
+
+    test:assertEquals(resp.message(), "Not Found");
+    var detail = resp.detail();
+    test:assertEquals(detail.statusCode, http:STATUS_NOT_FOUND);
+    test:assertEquals(detail.body, "Hospital not found: monarch hospital");
 }
 
 @test:Config
@@ -54,7 +79,7 @@ function testInvalidDoctor() {
     test:assertEquals(detail.body, "Invalid doctor or hospital");
 }
 
-isolated function getSuccessAppointmentResponse(string hospital) returns map<json> & readonly => {
+isolated function getSuccessAppointmentResponse(string hospital) returns ReservationResponse & readonly => {
     "appointmentNumber": 4,
     "doctor": {
         "name": "thomas collins",
@@ -124,10 +149,9 @@ public client class MockHttpClient {
             PINE_VALLEY_COMMUNITY_HOSPITAL => {
                 return getSuccessAppointmentResponse(PINE_VALLEY_COMMUNITY_HOSPITAL);
             }
-            _ => {
-                return getWrongHospitalOrDoctorResponse();
-            }
         }
+
+        return getWrongHospitalOrDoctorResponse();
     }
 }
 
