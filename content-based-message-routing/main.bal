@@ -13,7 +13,7 @@ type Patient record {|
 type ReservationRequest record {|
     Patient patient;
     string doctor;
-    string hospital_id?;
+    string hospital_id;
     string hospital;
     string appointment_date;
 |};
@@ -50,25 +50,25 @@ service /healthcare on new http:Listener(port) {
         ) returns ReservationResponse|http:NotFound|http:InternalServerError? {
 
         http:Client? hospitalBE = ();
-        string hospital = reservationRequest.hospital;
-        match hospital {
-            "grand oak community hospital" => {
+        string hospital_id = reservationRequest.hospital_id;
+        match hospital_id {
+            "grandoaks" => {
                 log:printInfo("Routed to Grand Oak Community Hospital");
                 hospitalBE = grandOaksBE;
             }
-            "clemency medical center" => {
+            "clemency" => {
                 log:printInfo("Routed to Clemency Medical Center");
                 hospitalBE = clemencyBE;
             }
-            "pine valley community hospital" => {
+            "pinevalley" => {
                 log:printInfo("Routed to Pine Valley Community Hospital");
                 hospitalBE = pineValleyBE;
             }
         }
 
         if hospitalBE is () {
-            log:printError(string `Routed to none. Hospital not found: ${hospital}`);
-            return <http:NotFound>{body: string `Hospital not found: ${hospital}`};
+            log:printError(string `Routed to none. Hospital not found: ${hospital_id}`);
+            return <http:NotFound>{body: string `Hospital not found: ${hospital_id}`};
         }
 
         ReservationResponse|http:ClientError resp = hospitalBE->/[category]/reserve.post(reservationRequest);
@@ -81,11 +81,11 @@ service /healthcare on new http:Listener(port) {
         }
 
         if resp is http:ClientRequestError {
-            log:printError("Reservation request failed.", resp);
-            return <http:NotFound>{body: "Invalid doctor or hospital"};
+            log:printError("Unknown hospital or doctor", resp);
+            return <http:NotFound>{body: "Unknown hospital or doctor"};
         }
 
-        log:printError("Reservation request failed", resp);
+        log:printError("Internal error", resp);
         return <http:InternalServerError>{body: resp.message()};
     }
 }

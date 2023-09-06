@@ -21,6 +21,7 @@ function testSuccessfullReservation() returns error? {
         },
         doctor: "thomas collins",
         hospital: "grand oak community hospital",
+        hospital_id: "grandoaks",
         appointment_date: "2025-04-02"
     });
     ReservationResponse expectedResp = getSuccessAppointmentResponse(GRAND_OAKS_HOSPITAL);
@@ -40,6 +41,7 @@ function testInvalidHospital() {
         },
         doctor: "thomas chandler",
         hospital: "monarch hospital",
+        hospital_id: "monarch",
         appointment_date: "2025-04-02"
     });
 
@@ -50,7 +52,7 @@ function testInvalidHospital() {
     test:assertEquals(resp.message(), "Not Found");
     var detail = resp.detail();
     test:assertEquals(detail.statusCode, http:STATUS_NOT_FOUND);
-    test:assertEquals(detail.body, "Hospital not found: monarch hospital");
+    test:assertEquals(detail.body, "Hospital not found: monarch");
 }
 
 @test:Config
@@ -66,6 +68,7 @@ function testInvalidDoctor() {
         },
         doctor: "thomas chandler",
         hospital: "grand oak community hospital",
+        hospital_id: "grandoaks",
         appointment_date: "2025-04-02"
     });
 
@@ -76,7 +79,7 @@ function testInvalidDoctor() {
     test:assertEquals(resp.message(), "Not Found");
     var detail = resp.detail();
     test:assertEquals(detail.statusCode, http:STATUS_NOT_FOUND);
-    test:assertEquals(detail.body, "Invalid doctor or hospital");
+    test:assertEquals(detail.body, "Unknown hospital or doctor");
 }
 
 isolated function getSuccessAppointmentResponse(string hospital) returns ReservationResponse & readonly => {
