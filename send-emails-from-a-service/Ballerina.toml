@@ -1,19 +1,8 @@
 [package]
-org = "mindula"
+org = "integration_tutorials"
 name = "send_emails_from_a_service"
 version = "0.1.0"
 distribution = "2201.7.2"
 
 [build-options]
-observabilityIncluded = false
-
-[[dependency]]
-org="ballerina"
-name="email"
-version="2.8.0"
-
-[[platform.java11.dependency]]
-path="/Users/mindula/Desktop/integration-tutorials/send-emails-from-a-service/smtp-server/build/libs/smtp-server-1.0-SNAPSHOT.jar"
-groupId = "org.example"
-artifactId = "smtp-server"
-version = "1.0-SNAPSHOT"
+observabilityIncluded = true

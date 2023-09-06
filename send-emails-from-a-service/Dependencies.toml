@@ -117,9 +117,6 @@ dependencies = [
 org = "ballerina"
 name = "jballerina.java"
 version = "0.0.0"
-modules = [
-	{org = "ballerina", packageName = "jballerina.java", moduleName = "jballerina.java"}
-]
 
 [[package]]
 org = "ballerina"
@@ -325,18 +322,30 @@ modules = [
 ]
 
 [[package]]
-org = "mindula"
+org = "ballerinai"
+name = "observe"
+version = "0.0.0"
+dependencies = [
+	{org = "ballerina", name = "jballerina.java"},
+	{org = "ballerina", name = "observe"}
+]
+modules = [
+	{org = "ballerinai", packageName = "observe", moduleName = "observe"}
+]
+
+[[package]]
+org = "integration_tutorials"
 name = "send_emails_from_a_service"
 version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "email"},
 	{org = "ballerina", name = "http"},
-	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "log"},
 	{org = "ballerina", name = "test"},
-	{org = "ballerina", name = "uuid"}
+	{org = "ballerina", name = "uuid"},
+	{org = "ballerinai", name = "observe"}
 ]
 modules = [
-	{org = "mindula", packageName = "send_emails_from_a_service", moduleName = "send_emails_from_a_service"}
+	{org = "integration_tutorials", packageName = "send_emails_from_a_service", moduleName = "send_emails_from_a_service"}
 ]
 

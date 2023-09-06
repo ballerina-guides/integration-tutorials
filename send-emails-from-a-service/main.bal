@@ -1,7 +1,6 @@
+import ballerina/email;
 import ballerina/http;
 import ballerina/log;
-import ballerina/email;
-import ballerina/jballerina.java;
 import ballerina/uuid;
 
 type Patient record {|
@@ -74,31 +73,32 @@ type ReservationResponse record {|
 
 configurable int port = 8290;
 configurable string hospitalServicesBackend = "http://localhost:9090";
-final http:Client hospitalServicesEP = check new(hospitalServicesBackend);
+final http:Client hospitalServicesEP = check initializeHttpClient(hospitalServicesBackend);
+
+configurable string host = "smtp.gmail.com";
+configurable string senderAddress = "rominxd97@gmail.com";
+configurable string appPassword = "ztqmiijrbiiosrrw";
+
+function initializeHttpClient(string url) returns http:Client|error => new (url);
 
 service /healthcare on new http:Listener(port) {
 
-    function init() returns error? {
-        check startSendWithOptionsSmtpServer();
-    }
-        
-    resource function post categories/[string category]/reserve(@http:Payload ReservationRequest reservationRequest) 
-        returns http:InternalServerError|http:NotFound|error? {
+    resource function post categories/[string category]/reserve(ReservationRequest reservationRequest)
+            returns http:InternalServerError|http:NotFound|http:Ok {
 
-        email:SmtpConfiguration config = {
-        port: 3025,
-        security: email:START_TLS_NEVER
-    };
-        email:SmtpClient smtpClient = check new("127.0.0.1", "hascode", "abcdef123", config);
+        email:SmtpClient|email:Error smtpClient = new (host, senderAddress, appPassword);
+        
+        if smtpClient is email:Error {
+            return <http:InternalServerError> {body: smtpClient.message()};
+        } 
 
         ReservationRequest {
             patient: {cardNo, ...patient},
-            doctor, 
+            doctor,
             hospital,
             hospital_id,
             appointment_date
         } = reservationRequest;
-
 
         Appointment|http:ClientError appointment =
                 hospitalServicesEP->/[hospital_id]/categories/[category]/reserve.post({
@@ -116,8 +116,10 @@ service /healthcare on new http:Listener(port) {
             return <http:InternalServerError> {body: appointment.message()};
         }
 
+        int appointmentNumber = appointment.appointmentNumber;
+
         PaymentSettlement paymentSettlement = {
-            appointmentNumber: appointment.appointmentNumber,
+            appointmentNumber: appointmentNumber,
             doctor: appointment.doctor,
             patient: appointment.patient,
             fee: appointment.doctor.fee,
@@ -137,7 +139,7 @@ service /healthcare on new http:Listener(port) {
         }
 
         ReservationResponse reservationResponse = {
-            appointmentNo: appointment.appointmentNumber,
+            appointmentNo: appointmentNumber,
             doctorName: reservationRequest.doctor,
             patient: reservationRequest.patient.name,
             actualFee: payment.actualFee,
@@ -147,18 +149,25 @@ service /healthcare on new http:Listener(port) {
             status: payment.status
         };
 
+        string[] messageContent = from var [key, value] in reservationResponse.entries()
+            let string str = key + ": " + value.toString()
+            select str;
+
+        string emailBody = string:'join("\n", ...messageContent);
+
         email:Message email = {
             to: reservationRequest.patient.email,
             subject: "Payment Status",
-            body: reservationResponse.toString()
+            body: emailBody
         };
 
-        check smtpClient->sendMessage(email);
-        log:printInfo("Email sent successfully");
-        return;
+        email:Error? sendMessage = smtpClient->sendMessage(email);
+        if sendMessage is email:Error {
+            return <http:InternalServerError> {body: sendMessage.message()};
+        }
+        log:printDebug("Email sent successfully",
+                       status = "Payment Status",
+                       body = emailBody);
+        return <http:Ok> {body: reservationResponse};
     }
 }
-
-public function startSendWithOptionsSmtpServer() returns error? = @java:Method {
-    'class: "org.example.SmtpServer"
-} external;
