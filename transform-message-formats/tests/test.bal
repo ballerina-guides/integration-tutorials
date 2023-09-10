@@ -54,7 +54,7 @@ function testInvalidDoctor() {
 }
 
 @test:Config
-function testBadRequest() {
+function testMissingPatientData() {
     ReservationResponse|http:ClientError resp = cl->/categories/surgery/reserve.post({
         dob: "1940-03-19",
         ssn: "234-23-525",
@@ -77,6 +77,31 @@ function testBadRequest() {
     test:assertEquals(detail.statusCode, http:STATUS_BAD_REQUEST);
 }
 
+@test:Config
+function testWrongCategory() {
+    ReservationResponse|http:ClientError resp = cl->/categories/chickenpox/reserve.post({
+        name: "John Doe",
+        dob: "1940-03-19",
+        ssn: "234-23-525",
+        address: "California",
+        phone: "8770586755",
+        email: "johndoe@gmail.com",
+        doctor: "thomas chandler",
+        hospital_id: "grandoaks",
+        hospital: "grand oak community hospital",
+        card_no: "7844481124110331",
+        appointment_date: "2025-04-02"
+    });
+
+    if resp !is http:ClientRequestError {
+        test:assertFail("expected an http:ClientRequestError, found " + (typeof resp).toString());
+    }
+
+    test:assertEquals(resp.message(), "Not Found");
+    var detail = resp.detail();
+    test:assertEquals(detail.statusCode, http:STATUS_NOT_FOUND);
+}
+
 isolated function getSuccessAppointmentResponse(string hospital) returns ReservationResponse & readonly => {
     "appointmentNumber": 1,
     "doctor": {
@@ -92,8 +117,7 @@ isolated function getSuccessAppointmentResponse(string hospital) returns Reserva
         "ssn": "234-23-525",
         "address": "California",
         "phone": "8770586755",
-        "email": "johndoe@gmail.com",
-        "card_no": "1111111"
+        "email": "johndoe@gmail.com"
     },
     "hospital": "grand oak community hospital",
     "fee": 7000,
@@ -118,13 +142,20 @@ public client class MockHttpClient {
             string hospital;
         } payload;
 
+        if path[2] != "surgery" {
+            return <http:ClientRequestError>error("unknown specialization",
+                                        body = string `unknown specialization: ${path[2]}`,
+                                        headers = {},
+                                        statusCode = http:STATUS_NOT_FOUND); 
+        }
+
         do {
             payload = check (check message.ensureType(anydata)).cloneWithType();
         } on fail {
             return <http:ClientRequestError>error("invalid payload",
                                                 body = "invalid payload",
                                                 headers = {},
-                                                statusCode = http:STATUS_BAD_REQUEST);
+                                                statusCode =  http:STATUS_BAD_REQUEST);
         }
 
         if DEFAULT_DOCTOR != payload.doctor {

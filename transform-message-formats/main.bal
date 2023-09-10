@@ -1,13 +1,22 @@
-import ballerina/log;
 import ballerina/http;
+import ballerina/log;
 
-type Details record {|
-    string name;
-    string dob;
-    string ssn;
-    string address;
-    string phone;
-    string email;
+configurable int port = 8290;
+configurable string hospitalServicesUrl = "http://localhost:9090";
+
+final http:Client hospitalServicesEP = check initializeHttpClient();
+
+function initializeHttpClient() returns http:Client|error => new (hospitalServicesUrl);
+
+type ReservationRequest record {|
+    Patient patient;
+    string doctor;
+    string hospital;
+    string appointment_date;
+|};
+
+type RequestData record {|
+    *Patient;
     string doctor;
     string hospital_id;
     string hospital;
@@ -22,15 +31,6 @@ type Patient record {|
     string address;
     string phone;
     string email;
-    string card_no;
-|};
-
-type ReservationRequest record {|
-    Patient patient;
-    string doctor;
-    string hospital_id;
-    string hospital;
-    string appointment_date;
 |};
 
 type Doctor record {|
@@ -51,45 +51,40 @@ type ReservationResponse record {|
     string appointmentDate;
 |};
 
-configurable int port = 8290;
-configurable string hospitalBackendUrl = "http://localhost:9090";
-
-final http:Client hospitalBE = check initializeHttpClient();
-
 service /healthcare on new http:Listener(port) {
     resource function post categories/[string category]/reserve(
-            @http:Payload Details details
-        ) returns ReservationResponse|http:NotFound|http:BadRequest {
-        string hospitalId = details.hospital_id;
-        ReservationRequest req = transform(details);
-        ReservationResponse|http:ClientError resp = hospitalBE->/[hospitalId]/categories/[category]/reserve.post(req);
+            RequestData payload
+        ) returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
+        string hospitalId = payload.hospital_id;
+        ReservationRequest req = transform(payload);
+        ReservationResponse|http:ClientError resp = hospitalServicesEP->/[hospitalId]/categories/[category]/reserve.post(req);
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",
-                            name = details.name,
+                            name = payload.name,
                             appointmentNumber = resp.appointmentNumber);
             return resp;
         }
 
-        log:printError("Reservation failed. Wrong hospital or doctor", resp);
-        return <http:NotFound>{body: "Reservation failed. Wrong hospital or doctor"};
+        log:printError("Reservation failed", resp);
+        if resp is http:ClientRequestError {
+            return <http:NotFound>{body: "Reservation failed. Wrong hospital or doctor"};
+        }
+
+        return <http:InternalServerError>{body: resp.message()};
     }
 }
 
-function initializeHttpClient() returns http:Client|error => new (hospitalBackendUrl);
-
-function transform(Details details) returns ReservationRequest => {
+function transform(RequestData details) returns ReservationRequest => {
     patient: {
         name: details.name,
         dob: details.dob,
         ssn: details.ssn,
         address: details.address,
         phone: details.phone,
-        email: details.email,
-        card_no: details.card_no
+        email: details.email
     },
     doctor: details.doctor,
-    hospital_id: details.hospital_id,
     hospital: details.hospital,
     appointment_date: details.appointment_date
 };
