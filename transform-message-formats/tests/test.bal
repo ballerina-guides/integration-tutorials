@@ -102,35 +102,6 @@ function testWrongCategory() {
     test:assertEquals(detail.statusCode, http:STATUS_NOT_FOUND);
 }
 
-isolated function getSuccessAppointmentResponse(string hospital) returns ReservationResponse & readonly => {
-    "appointmentNumber": 1,
-    "doctor": {
-        "name": "thomas collins",
-        "hospital": "grand oak community hospital",
-        "category": "surgery",
-        "availability": "9.00 a.m - 11.00 a.m",
-        "fee": 7000
-    },
-    "patient": {
-        "name": "John Doe",
-        "dob": "1940-03-19",
-        "ssn": "234-23-525",
-        "address": "California",
-        "phone": "8770586755",
-        "email": "johndoe@gmail.com"
-    },
-    "hospital": "grand oak community hospital",
-    "fee": 7000,
-    "confirmed": false,
-    "appointmentDate": "2025-04-02"
-};
-
-isolated function getWrongHospitalOrDoctorResponse() returns http:ClientRequestError
-    => <http:ClientRequestError>error("Not Found",
-                                        body = "requested doctor is not available at the requested hospital",
-                                        headers = {},
-                                        statusCode = http:STATUS_NOT_FOUND);
-
 public client class MockHttpClient {
     isolated resource function post [http:PathParamType... path](http:RequestMessage message,
             map<string|string[]>? headers = (),
@@ -178,6 +149,36 @@ public client class MockHttpClient {
         }
     }
 }
+
+isolated function getSuccessAppointmentResponse(string hospital) returns ReservationResponse & readonly => {
+    "appointmentNumber": 1,
+    "doctor": {
+        "name": "thomas collins",
+        "hospital": "grand oak community hospital",
+        "category": "surgery",
+        "availability": "9.00 a.m - 11.00 a.m",
+        "fee": 7000
+    },
+    "patient": {
+        "name": "John Doe",
+        "dob": "1940-03-19",
+        "ssn": "234-23-525",
+        "address": "California",
+        "phone": "8770586755",
+        "email": "johndoe@gmail.com"
+    },
+    "hospital": "grand oak community hospital",
+    "fee": 7000,
+    "confirmed": false,
+    "appointmentDate": "2025-04-02"
+};
+
+isolated function getWrongHospitalOrDoctorResponse() returns http:ClientRequestError
+    => <http:ClientRequestError>error("Not Found",
+                                        body = "requested doctor is not available at the requested hospital",
+                                        headers = {},
+                                        statusCode = http:STATUS_NOT_FOUND);
+
 
 @test:Mock {
     functionName: "initializeHttpClient"
