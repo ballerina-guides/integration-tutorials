@@ -71,26 +71,26 @@ type ReservationResponse record {|
     string status;
 |};
 
+const string hostUrl = "smtp.gmail.com";
+
 configurable int port = 8290;
 configurable string hospitalServicesBackend = "http://localhost:9090";
-final http:Client hospitalServicesEP = check initializeHttpClient(hospitalServicesBackend);
+configurable string paymentBackend = "http://localhost:9090/healthcare/payments";
+configurable string senderAddress = ?;
+configurable string appPassword = ?;
 
-configurable string host = "smtp.gmail.com";
-configurable string senderAddress = "rominxd97@gmail.com";
-configurable string appPassword = "ztqmiijrbiiosrrw";
+final http:Client hospitalServicesEP = check initializeHttpClient(hospitalServicesBackend);
+final http:Client paymentEP = check initializeHttpClient(paymentBackend);
+final email:SmtpClient smtpClient = check initializeEmailClient(hostUrl, senderAddress, appPassword);
 
 function initializeHttpClient(string url) returns http:Client|error => new (url);
+function initializeEmailClient(string host, string username, string password) 
+    returns email:SmtpClient|error => new (host, username, password);
 
 service /healthcare on new http:Listener(port) {
 
-    resource function post categories/[string category]/reserve(ReservationRequest reservationRequest)
+    resource function post categories/[string category]/reserve(ReservationRequest payload)
             returns http:InternalServerError|http:NotFound|http:Ok {
-
-        email:SmtpClient|email:Error smtpClient = new (host, senderAddress, appPassword);
-        
-        if smtpClient is email:Error {
-            return <http:InternalServerError> {body: smtpClient.message()};
-        } 
 
         ReservationRequest {
             patient: {cardNo, ...patient},
@@ -98,7 +98,7 @@ service /healthcare on new http:Listener(port) {
             hospital,
             hospital_id,
             appointment_date
-        } = reservationRequest;
+        } = payload;
 
         Appointment|http:ClientError appointment =
                 hospitalServicesEP->/[hospital_id]/categories/[category]/reserve.post({
@@ -118,56 +118,56 @@ service /healthcare on new http:Listener(port) {
 
         int appointmentNumber = appointment.appointmentNumber;
 
-        PaymentSettlement paymentSettlement = {
+        Payment|http:ClientError payment = paymentEP->/.post({
             appointmentNumber: appointmentNumber,
             doctor: appointment.doctor,
             patient: appointment.patient,
             fee: appointment.doctor.fee,
             confirmed: appointment.confirmed,
             card_number: cardNo
-        };
-
-        Payment|http:ClientError payment =
-                hospitalServicesEP->/healthcare/payments.post(paymentSettlement);
+        });
 
         if payment !is Payment {
             log:printError("Payment settlement failed", payment);
             if payment is http:ClientRequestError {
-                return <http:NotFound> {body: string `unknown hospital, patient, or category`};
+                return <http:NotFound> {body: string `unknown appointment number`};
             }
             return <http:InternalServerError> {body: payment.message()};
         }
 
-        ReservationResponse reservationResponse = {
-            appointmentNo: appointmentNumber,
-            doctorName: reservationRequest.doctor,
-            patient: reservationRequest.patient.name,
-            actualFee: payment.actualFee,
-            discount: payment.discount,
-            discounted: payment.discounted,
-            paymentID: payment.paymentID,
-            status: payment.status
-        };
+        string messageContent = string `Appointment Confirmation
 
-        string[] messageContent = from var [key, value] in reservationResponse.entries()
-            let string str = key + ": " + value.toString()
-            select str;
+        Appointment Details
+            Appointment Number : ${appointmentNumber}
+            Appointment Date: ${payload.appointment_date}
 
-        string emailBody = string:'join("\n", ...messageContent);
+        Patient Details
+            Name : ${payload.patient.name}
+            Contact Number : ${payload.patient.phone}
+            Doctor Name : ${payload.doctor}
 
-        email:Message email = {
-            to: reservationRequest.patient.email,
-            subject: "Payment Status",
-            body: emailBody
-        };
+        Doctor Details
+            Name : ${appointment.doctor.name}
+            Specialization : ${appointment.doctor.category}
 
-        email:Error? sendMessage = smtpClient->sendMessage(email);
+        Payment Details
+            Doctor Fee : ${payment.actualFee}
+            Discount : ${payment.discount}
+            Total Fee : ${payment.discounted}
+            Payment Status : ${payment.status}`;
+
+        email:Error? sendMessage = smtpClient->sendMessage({
+            to: payload.patient.email,
+            subject: "Appointment reservation confirmed at " + payload.hospital,
+            body: messageContent
+        });
+        
         if sendMessage is email:Error {
             return <http:InternalServerError> {body: sendMessage.message()};
         }
         log:printDebug("Email sent successfully",
                        status = "Payment Status",
-                       body = emailBody);
-        return <http:Ok> {body: reservationResponse};
+                       body = messageContent);
+        return <http:Ok> {body: messageContent};
     }
 }

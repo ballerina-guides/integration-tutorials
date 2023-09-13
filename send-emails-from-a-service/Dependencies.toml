@@ -41,7 +41,7 @@ dependencies = [
 [[package]]
 org = "ballerina"
 name = "crypto"
-version = "2.4.0"
+version = "2.4.1"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "time"}
@@ -75,7 +75,7 @@ dependencies = [
 [[package]]
 org = "ballerina"
 name = "http"
-version = "2.9.2"
+version = "2.9.3"
 dependencies = [
 	{org = "ballerina", name = "auth"},
 	{org = "ballerina", name = "cache"},
@@ -271,6 +271,19 @@ dependencies = [
 
 [[package]]
 org = "ballerina"
+name = "random"
+version = "1.4.0"
+scope = "testOnly"
+dependencies = [
+	{org = "ballerina", name = "jballerina.java"},
+	{org = "ballerina", name = "time"}
+]
+modules = [
+	{org = "ballerina", packageName = "random", moduleName = "random"}
+]
+
+[[package]]
+org = "ballerina"
 name = "task"
 version = "2.4.0"
 dependencies = [
@@ -341,6 +354,7 @@ dependencies = [
 	{org = "ballerina", name = "email"},
 	{org = "ballerina", name = "http"},
 	{org = "ballerina", name = "log"},
+	{org = "ballerina", name = "random"},
 	{org = "ballerina", name = "test"},
 	{org = "ballerina", name = "uuid"},
 	{org = "ballerinai", name = "observe"}
