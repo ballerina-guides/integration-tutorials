@@ -1,7 +1,7 @@
-import ballerina/http;
-import ballerina/test;
 import ballerina/email;
+import ballerina/http;
 import ballerina/random;
+import ballerina/test;
 
 final http:Client cl = check new (string `http://localhost:${port}/healthcare/categories`);
 
