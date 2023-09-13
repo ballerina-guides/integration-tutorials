@@ -3,13 +3,13 @@ import ballerina/test;
 
 final http:Client cl = check new (string `http://localhost:${port}/healthcare`);
 
-const GRAND_OAKS_HOSPITAL = "grand oak community hospital";
+const GRAND_OAK_HOSPITAL = "grand oak community hospital";
 const CLEMENCY_MEDICAL_CENTER = "clemency medical center";
 const PINE_VALLEY_COMMUNITY_HOSPITAL = "pine valley community hospital";
 const DEFAULT_DOCTOR = "thomas collins";
 
 @test:Config
-function testSuccessfullReservation() returns error? {
+function testSuccessfulReservation() returns error? {
     ReservationResponse resp = check cl->/categories/surgery/reserve.post({
         patient: {
             name: "John Doe",
@@ -24,7 +24,7 @@ function testSuccessfullReservation() returns error? {
         hospital_id: "grandoaks",
         appointment_date: "2025-04-02"
     });
-    ReservationResponse expectedResp = getSuccessAppointmentResponse(GRAND_OAKS_HOSPITAL);
+    ReservationResponse expectedResp = getSuccessAppointmentResponse(GRAND_OAK_HOSPITAL);
     test:assertEquals(resp, expectedResp, "Response mismatched");
 }
 
@@ -79,7 +79,58 @@ function testInvalidDoctor() {
     test:assertEquals(resp.message(), "Not Found");
     var detail = resp.detail();
     test:assertEquals(detail.statusCode, http:STATUS_NOT_FOUND);
-    test:assertEquals(detail.body, "Unknown hospital or doctor");
+    test:assertEquals(detail.body, "Unknown hospital, doctor or category");
+}
+
+@test:Config
+function testInvalidCategory() {
+    ReservationResponse|http:ClientError resp = cl->/categories/chickenpox/reserve.post({
+        patient: {
+            name: "John Doe",
+            dob: "1940-03-19",
+            ssn: "234-23-525",
+            address: "California",
+            phone: "8770586755",
+            email: "johndoe@gmail.com"
+        },
+        doctor: "thomas collins",
+        hospital: "grand oak community hospital",
+        hospital_id: "grandoaks",
+        appointment_date: "2025-04-02"
+    });
+
+    if resp !is http:ClientRequestError {
+        test:assertFail("expected an http:ClientRequestError, found " + (typeof resp).toString());
+    }
+
+    test:assertEquals(resp.message(), "Not Found");
+    var detail = resp.detail();
+    test:assertEquals(detail.statusCode, http:STATUS_NOT_FOUND);
+    test:assertEquals(detail.body, "Unknown hospital, doctor or category");
+}
+
+@test:Config
+function testMissingPatientData() {
+    ReservationResponse|http:ClientError resp = cl->/categories/chickenpox/reserve.post({
+        patient: {
+            dob: "1940-03-19",
+            ssn: "234-23-525",
+            address: "California",
+            phone: "8770586755",
+            email: "johndoe@gmail.com"
+        },
+        doctor: "thomas collins",
+        hospital: "grand oak community hospital",
+        hospital_id: "grandoaks",
+        appointment_date: "2025-04-02"
+    });
+
+    if resp !is http:ClientRequestError {
+        test:assertFail("expected an http:ClientRequestError, found " + (typeof resp).toString());
+    }
+
+    test:assertEquals(resp.message(), "Bad Request");
+    test:assertEquals(resp.detail().statusCode, http:STATUS_BAD_REQUEST);
 }
 
 isolated function getSuccessAppointmentResponse(string hospital) returns ReservationResponse & readonly => {
@@ -105,7 +156,7 @@ isolated function getSuccessAppointmentResponse(string hospital) returns Reserva
     "appointmentDate": "2025-04-02"
 };
 
-isolated function getWrongHospitalOrDoctorResponse() returns http:ClientRequestError
+isolated function getInvalidHospitalOrDoctorErrorResponse() returns http:ClientRequestError
     => <http:ClientRequestError>error("Not Found",
                                         body = "requested doctor is not available at the requested hospital",
                                         headers = {},
@@ -124,6 +175,13 @@ public client class MockHttpClient {
             string? mediaType = (),
             http:TargetType targetType = http:Response,
             *http:QueryParams params) returns http:Response|anydata|http:ClientError {
+        if path[0] != "surgery" {
+            return <http:ClientRequestError>error("unknown specialization",
+                                                body = string `unknown specialization: ${path[0]}`,
+                                                headers = {},
+                                                statusCode = http:STATUS_NOT_FOUND);
+        }
+
         record {
             string doctor;
             string hospital;
@@ -139,12 +197,12 @@ public client class MockHttpClient {
         }
 
         if DEFAULT_DOCTOR != payload.doctor {
-            return getWrongHospitalOrDoctorResponse();
+            return getInvalidHospitalOrDoctorErrorResponse();
         }
 
         match payload.hospital {
-            GRAND_OAKS_HOSPITAL => {
-                return getSuccessAppointmentResponse(GRAND_OAKS_HOSPITAL);
+            GRAND_OAK_HOSPITAL => {
+                return getSuccessAppointmentResponse(GRAND_OAK_HOSPITAL);
             }
             CLEMENCY_MEDICAL_CENTER => {
                 return getSuccessAppointmentResponse(CLEMENCY_MEDICAL_CENTER);
@@ -154,7 +212,7 @@ public client class MockHttpClient {
             }
         }
 
-        return getWrongHospitalOrDoctorResponse();
+        return getInvalidHospitalOrDoctorErrorResponse();
     }
 }
 
