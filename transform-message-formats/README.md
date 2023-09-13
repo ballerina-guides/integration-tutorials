@@ -34,11 +34,11 @@ The flow is as follows
         "address": "California",
         "phone": "8770586755",
         "email": "johndoe@gmail.com",
-        "card_no": "1111111"
+        "card_no": "7844481124110331"
     },
     "doctor": "thomas collins",
     "hospital": "grand oak community hospital",
-    "appointment_date": "2025-04-02"
+    "appointment_date": "2017-04-02"
 }
 ```
 3. Extract the `hospital_id` and send the POST reuqest to the correct URL to make the reservation.
