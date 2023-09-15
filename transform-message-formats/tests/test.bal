@@ -9,7 +9,7 @@ const PINE_VALLEY_COMMUNITY_HOSPITAL = "pine valley community hospital";
 const DEFAULT_DOCTOR = "thomas collins";
 
 @test:Config
-function testSuccessfullReservation() returns error? {
+function testSuccessfulReservation() returns error? {
     ReservationResponse resp = check cl->/categories/surgery/reserve.post({
         name: "John Doe",
         dob: "1940-03-19",
@@ -25,6 +25,32 @@ function testSuccessfullReservation() returns error? {
     });
     ReservationResponse expResp = getSuccessAppointmentResponse(GRAND_OAKS_HOSPITAL);
     test:assertEquals(resp, expResp, "Response mismatched");
+}
+
+@test:Config
+function testInvalidHospital() {
+    ReservationResponse|http:ClientError resp = cl->/categories/surgery/reserve.post({
+        name: "John Doe",
+        dob: "1940-03-19",
+        ssn: "234-23-525",
+        address: "California",
+        phone: "8770586755",
+        email: "johndoe@gmail.com",
+        doctor: "thomas collins",
+        hospital_id: "monach",
+        hospital: "monarch hospital",
+        card_no: "7844481124110331",
+        appointment_date: "2025-04-02"
+    });
+
+    if resp !is http:ClientRequestError {
+        test:assertFail("expected an http:ClientRequestError, found " + (typeof resp).toString());
+    }
+
+    test:assertEquals(resp.message(), "Not Found");
+    var detail = resp.detail();
+    test:assertEquals(detail.statusCode, http:STATUS_NOT_FOUND);
+    test:assertEquals(detail.body, "Unknown hospital, doctor or category");
 }
 
 @test:Config
@@ -50,7 +76,7 @@ function testInvalidDoctor() {
     test:assertEquals(resp.message(), "Not Found");
     var detail = resp.detail();
     test:assertEquals(detail.statusCode, http:STATUS_NOT_FOUND);
-    test:assertEquals(detail.body, "Reservation failed. Wrong hospital or doctor");
+    test:assertEquals(detail.body, "Unknown hospital, doctor or category");
 }
 
 @test:Config
@@ -73,12 +99,11 @@ function testMissingPatientData() {
     }
 
     test:assertEquals(resp.message(), "Bad Request");
-    var detail = resp.detail();
-    test:assertEquals(detail.statusCode, http:STATUS_BAD_REQUEST);
+    test:assertEquals(resp.detail().statusCode, http:STATUS_BAD_REQUEST);
 }
 
 @test:Config
-function testWrongCategory() {
+function testInvalidCategory() {
     ReservationResponse|http:ClientError resp = cl->/categories/chickenpox/reserve.post({
         name: "John Doe",
         dob: "1940-03-19",
@@ -100,6 +125,7 @@ function testWrongCategory() {
     test:assertEquals(resp.message(), "Not Found");
     var detail = resp.detail();
     test:assertEquals(detail.statusCode, http:STATUS_NOT_FOUND);
+    test:assertEquals(detail.body, "Unknown hospital, doctor or category");
 }
 
 public client class MockHttpClient {
@@ -151,26 +177,26 @@ public client class MockHttpClient {
 }
 
 isolated function getSuccessAppointmentResponse(string hospital) returns ReservationResponse & readonly => {
-    "appointmentNumber": 1,
-    "doctor": {
-        "name": "thomas collins",
-        "hospital": "grand oak community hospital",
-        "category": "surgery",
-        "availability": "9.00 a.m - 11.00 a.m",
-        "fee": 7000
+    appointmentNumber: 1,
+    doctor: {
+        name: "thomas collins",
+        hospital: "grand oak community hospital",
+        category: "surgery",
+        availability: "9.00 a.m - 11.00 a.m",
+        fee: 7000
     },
-    "patient": {
-        "name": "John Doe",
-        "dob": "1940-03-19",
-        "ssn": "234-23-525",
-        "address": "California",
-        "phone": "8770586755",
-        "email": "johndoe@gmail.com"
+    patient: {
+        name: "John Doe",
+        dob: "1940-03-19",
+        ssn: "234-23-525",
+        address: "California",
+        phone: "8770586755",
+        email: "johndoe@gmail.com"
     },
-    "hospital": "grand oak community hospital",
-    "fee": 7000,
-    "confirmed": false,
-    "appointmentDate": "2025-04-02"
+    hospital: hospital,
+    fee: 7000,
+    confirmed: false,
+    appointmentDate: "2025-04-02"
 };
 
 isolated function getWrongHospitalOrDoctorResponse() returns http:ClientRequestError

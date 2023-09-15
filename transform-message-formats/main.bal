@@ -8,11 +8,13 @@ final http:Client hospitalServicesEP = check initializeHttpClient();
 
 function initializeHttpClient() returns http:Client|error => new (hospitalServicesUrl);
 
-type ReservationRequest record {|
-    Patient patient;
-    string doctor;
-    string hospital;
-    string appointment_date;
+type Patient record {|
+    string name;
+    string dob;
+    string ssn;
+    string address;
+    string phone;
+    string email;
 |};
 
 type RequestData record {|
@@ -24,13 +26,11 @@ type RequestData record {|
     string appointment_date;
 |};
 
-type Patient record {|
-    string name;
-    string dob;
-    string ssn;
-    string address;
-    string phone;
-    string email;
+type ReservationRequest record {|
+    Patient patient;
+    string doctor;
+    string hospital;
+    string appointment_date;
 |};
 
 type Doctor record {|
@@ -52,12 +52,13 @@ type ReservationResponse record {|
 |};
 
 service /healthcare on new http:Listener(port) {
-    resource function post categories/[string category]/reserve(
+    isolated resource function post categories/[string category]/reserve(
             RequestData payload
         ) returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
         string hospitalId = payload.hospital_id;
         ReservationRequest req = transform(payload);
-        ReservationResponse|http:ClientError resp = hospitalServicesEP->/[hospitalId]/categories/[category]/reserve.post(req);
+        ReservationResponse|http:ClientError resp =
+                    hospitalServicesEP->/[hospitalId]/categories/[category]/reserve.post(req);
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",
@@ -66,16 +67,16 @@ service /healthcare on new http:Listener(port) {
             return resp;
         }
 
-        log:printError("Reservation failed", resp);
+        log:printError("Reservation request failed", resp);
         if resp is http:ClientRequestError {
-            return <http:NotFound>{body: "Reservation failed. Wrong hospital or doctor"};
+            return <http:NotFound>{body: "Unknown hospital, doctor or category"};
         }
 
         return <http:InternalServerError>{body: resp.message()};
     }
 }
 
-function transform(RequestData details) returns ReservationRequest => {
+isolated function transform(RequestData details) returns ReservationRequest => {
     patient: {
         name: details.name,
         dob: details.dob,
