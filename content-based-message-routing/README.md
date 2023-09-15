@@ -2,7 +2,7 @@
 
 ## What you'll build
 
-Let's develop a service that accepts requests to make an appointment at a hospital, make a call to a particular hospital endpoint depending on the content provided.
+Let's develop a service that accepts requests to make an appointment at a hospital, makes a call to a particular hospital endpoint depending on the content provided.
 
 To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with Ballerina Swan Lake extension. The resource will receive the user request, select the hospital endpoint based on the `hospital_id`, send to the hospital endpoint and retrieve the response with the correct reservation details.
 
