@@ -372,6 +372,12 @@ service /healthcare on new http:Listener(port) {
 }
 ```
 
+#### Diagram
+
+The [sequence diagram view](https://wso2.com/ballerina/vscode/docs/implement-the-code/sequence-diagram-view/) for the implemented resource method is the following.
+
+![sequence diagram](./resources/diagrm_content_based_message_routing.png)
+
 ### Step 3: Build and run the service
 
 You can run this service by navigating to the project root and using the `bal run` command.
