@@ -41,7 +41,7 @@ dependencies = [
 [[package]]
 org = "ballerina"
 name = "crypto"
-version = "2.4.0"
+version = "2.4.1"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "time"}
@@ -61,7 +61,7 @@ dependencies = [
 [[package]]
 org = "ballerina"
 name = "http"
-version = "2.9.2"
+version = "2.9.3"
 dependencies = [
 	{org = "ballerina", name = "auth"},
 	{org = "ballerina", name = "cache"},
@@ -307,7 +307,7 @@ modules = [
 
 [[package]]
 org = "integration_tutorials"
-name = "sending_a_simple_message_to_a_service"
+name = "sending_a_message_to_a_service"
 version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "http"},
@@ -316,6 +316,6 @@ dependencies = [
 	{org = "ballerinai", name = "observe"}
 ]
 modules = [
-	{org = "integration_tutorials", packageName = "sending_a_simple_message_to_a_service", moduleName = "sending_a_simple_message_to_a_service"}
+	{org = "integration_tutorials", packageName = "sending_a_message_to_a_service", moduleName = "sending_a_message_to_a_service"}
 ]
 

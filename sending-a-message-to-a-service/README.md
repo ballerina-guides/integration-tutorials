@@ -1,4 +1,4 @@
-# Sending a simple message to a service
+# Sending a message to a service
 
 ## Overview
 
@@ -24,7 +24,7 @@ Follow the instructions given in this section to develop the service.
 1. Create a new Ballerina project using the `bal` command and open it in VS Code.
 
 ```bash
-$ bal new sending-a-simple-message-to-a-service
+$ bal new sending-a-message-to-a-service
 ```
 
 2. Introduce the source code in files with the `.bal` extension (e.g., the `main.bal` file). 
@@ -178,16 +178,16 @@ service /healthcare on new http:Listener(port) {
 
 The [sequence diagram view](https://wso2.com/ballerina/vscode/docs/implement-the-code/sequence-diagram-view/) for the implemented resource method is the following.
 
-![sequence diagram](./resources/tutorial_sending_a_simple_message_to_a_service.png)
+![sequence diagram](./resources/tutorial_sending_a_message_to_a_service.png)
 
 ### Step 3: Build and run the service
 
 You can run this service by navigating to the project root and using the `bal run` command.
 
 ```bash
-sending-a-simple-message-to-a-service$ bal run
+sending-a-message-to-a-service$ bal run
 Compiling source
-        integration_tutorials/sending_a_simple_message_to_a_service:0.1.0
+        integration_tutorials/sending_a_message_to_a_service:0.1.0
 
 Running executable
 ```
@@ -249,7 +249,7 @@ You will see the response message from the backend with a list of details of the
 Now, check the terminal in which you ran the Ballerina service. You should see a log similar to the following.
 
 ```bash
-time = 2023-08-15T13:01:34.022+05:30 level = INFO module = integration_tutorials/sending_a_simple_message_to_a_service message = "Retrieving information" specialization = "surgery"
+time = 2023-08-15T13:01:34.022+05:30 level = INFO module = integration_tutorials/sending_a_message_to_a_service message = "Retrieving information" specialization = "surgery"
 ```
 
 ### Step 5: Write tests for the use case
@@ -301,14 +301,14 @@ function testSuccessfulRequest() returns error? {
 4. Run the `bal test` command from the project root to run the tests.
 
 ```bash
-sending-a-simple-message-to-a-service$ bal test
+sending-a-message-to-a-service$ bal test
 Compiling source
-        integration_tutorials/sending_a_simple_message_to_a_service:0.1.0
+        integration_tutorials/sending_a_message_to_a_service:0.1.0
 
 Running Tests
 
-        sending_a_simple_message_to_a_service
-time = 2023-08-17T09:01:23.758+05:30 level = INFO module = integration_tutorials/sending_a_simple_message_to_a_service message = "Retrieving information" specialization = "surgery"
+        sending_a_message_to_a_service
+time = 2023-08-17T09:01:23.758+05:30 level = INFO module = integration_tutorials/sending_a_message_to_a_service message = "Retrieving information" specialization = "surgery"
 
 
                 1 passing
