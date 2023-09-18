@@ -277,12 +277,11 @@ service /healthcare on new http:Listener(port) {
 
         Appointment Details
             Appointment Number : ${appointmentNumber}
-            Appointment Date: ${payload.appointment_date}
+            Appointment Date: ${appointment_date}
 
         Patient Details
-            Name : ${payload.patient.name}
-            Contact Number : ${payload.patient.phone}
-            Doctor Name : ${payload.doctor}
+            Name : ${patient.name}
+            Contact Number : ${patient.phone}
 
         Doctor Details
             Name : ${appointment.doctor.name}
@@ -295,8 +294,8 @@ service /healthcare on new http:Listener(port) {
             Payment Status : ${payment.status}`;
 
         email:Error? sendMessage = smtpClient->sendMessage({
-            to: payload.patient.email,
-            subject: "Appointment reservation confirmed at " + payload.hospital,
+            to: patient.email,
+            subject: "Appointment reservation confirmed at " + hospital,
             body: messageContent
         });
         
@@ -304,8 +303,8 @@ service /healthcare on new http:Listener(port) {
             return <http:InternalServerError> {body: sendMessage.message()};
         }
         log:printDebug("Email sent successfully",
-                       status = "Payment Status",
-                       body = messageContent);
+                       name = patient.name,
+                       appointmentNumber = appointmentNumber);
         return <http:Ok> {body: messageContent};
     }
 }
@@ -360,31 +359,30 @@ If the payment was successful, the next and final step is to send an email to th
 
 ```ballerina
 string messageContent = string `Appointment Confirmation
-        
-    Appointment Details
-        Appointment Number : ${appointmentNumber}
-        Appointment Date: ${payload.appointment_date}
 
-    Patient Details
-        Name : ${payload.patient.name}
-        Contact Number : ${payload.patient.phone}
-        Doctor Name : ${payload.doctor}
+Appointment Details
+    Appointment Number : ${appointmentNumber}
+    Appointment Date: ${appointment_date}
 
-    Doctor Details
-        Name : ${appointment.doctor.name}
-        Specialization : ${appointment.doctor.category}
+Patient Details
+    Name : ${patient.name}
+    Contact Number : ${patient.phone}
 
-    Payment Details
-        Doctor Fee : ${payment.actualFee}
-        Discount : ${payment.discount}
-        Total Fee : ${payment.discounted}
-        Payment Status : ${payment.status}`;
+Doctor Details
+    Name : ${appointment.doctor.name}
+    Specialization : ${appointment.doctor.category}
 
-    email:Error? sendMessage = smtpClient->sendMessage({
-        to: payload.patient.email,
-        subject: "Appointment reservation confirmed at " + payload.hospital,
-        body: messageContent
-    });
+Payment Details
+    Doctor Fee : ${payment.actualFee}
+    Discount : ${payment.discount}
+    Total Fee : ${payment.discounted}
+    Payment Status : ${payment.status}`;
+
+email:Error? sendMessage = smtpClient->sendMessage({
+    to: patient.email,
+    subject: "Appointment reservation confirmed at " + hospital,
+    body: messageContent
+});
 ```
 
 Finally we send the email to the user using an SMTP client. If the sending process resulted in an error, an "InternalServerError" will be returned. If the email is sent successfully, the response will be "ok". 
@@ -395,9 +393,9 @@ email:Error? sendMessage = smtpClient->sendMessage(email);
         return <http:InternalServerError> {body: sendMessage.message()};
     }
     log:printDebug("Email sent successfully",
-                    status = "Payment Status",
-                    body = emailBody);
-    return <http:Ok> {body: reservationResponse};
+                   name = patient.name,
+                   appointmentNumber = appointmentNumber);
+    return <http:Ok> {body: messageContent};
 ```
 
 #### Complete source
@@ -546,12 +544,11 @@ service /healthcare on new http:Listener(port) {
 
         Appointment Details
             Appointment Number : ${appointmentNumber}
-            Appointment Date: ${payload.appointment_date}
+            Appointment Date: ${appointment_date}
 
         Patient Details
-            Name : ${payload.patient.name}
-            Contact Number : ${payload.patient.phone}
-            Doctor Name : ${payload.doctor}
+            Name : ${patient.name}
+            Contact Number : ${patient.phone}
 
         Doctor Details
             Name : ${appointment.doctor.name}
@@ -564,8 +561,8 @@ service /healthcare on new http:Listener(port) {
             Payment Status : ${payment.status}`;
 
         email:Error? sendMessage = smtpClient->sendMessage({
-            to: payload.patient.email,
-            subject: "Appointment reservation confirmed at " + payload.hospital,
+            to: patient.email,
+            subject: "Appointment reservation confirmed at " + hospital,
             body: messageContent
         });
         
@@ -573,8 +570,8 @@ service /healthcare on new http:Listener(port) {
             return <http:InternalServerError> {body: sendMessage.message()};
         }
         log:printDebug("Email sent successfully",
-                       status = "Payment Status",
-                       body = messageContent);
+                       name = patient.name,
+                       appointmentNumber = appointmentNumber);
         return <http:Ok> {body: messageContent};
     }
 }

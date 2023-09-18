@@ -139,12 +139,11 @@ service /healthcare on new http:Listener(port) {
 
         Appointment Details
             Appointment Number : ${appointmentNumber}
-            Appointment Date: ${payload.appointment_date}
+            Appointment Date: ${appointment_date}
 
         Patient Details
-            Name : ${payload.patient.name}
-            Contact Number : ${payload.patient.phone}
-            Doctor Name : ${payload.doctor}
+            Name : ${patient.name}
+            Contact Number : ${patient.phone}
 
         Doctor Details
             Name : ${appointment.doctor.name}
@@ -157,8 +156,8 @@ service /healthcare on new http:Listener(port) {
             Payment Status : ${payment.status}`;
 
         email:Error? sendMessage = smtpClient->sendMessage({
-            to: payload.patient.email,
-            subject: "Appointment reservation confirmed at " + payload.hospital,
+            to: patient.email,
+            subject: "Appointment reservation confirmed at " + hospital,
             body: messageContent
         });
         
@@ -166,8 +165,8 @@ service /healthcare on new http:Listener(port) {
             return <http:InternalServerError> {body: sendMessage.message()};
         }
         log:printDebug("Email sent successfully",
-                       status = "Payment Status",
-                       body = messageContent);
+                       name = patient.name,
+                       appointmentNumber = appointmentNumber);
         return <http:Ok> {body: messageContent};
     }
 }
