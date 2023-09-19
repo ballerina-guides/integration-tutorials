@@ -15,10 +15,10 @@ jobs:
         uses: ballerina-platform/ballerina-action@2201.7.2
         with:
           args: 
-            build
+            build ./backends/hospital-service/
 
       - name: Upload JAR
         uses: actions/upload-artifact@v2
         with:
           name: hospitalservice.jar
-          path: ./hospitalservice/target/bin/
+          path: ./backends/hospital-service/target/bin/
