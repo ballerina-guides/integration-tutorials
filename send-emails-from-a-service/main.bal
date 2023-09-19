@@ -1,7 +1,6 @@
 import ballerina/email;
 import ballerina/http;
 import ballerina/log;
-import ballerina/uuid;
 
 type Patient record {|
     string name;
@@ -45,7 +44,7 @@ type Payment record {|
     decimal actualFee;
     int discount;
     decimal discounted;
-    string paymentID = uuid:createType4AsString();
+    string paymentID;
     string status;
 |};
 
@@ -71,26 +70,25 @@ type ReservationResponse record {|
     string status;
 |};
 
-const string hostUrl = "smtp.gmail.com";
-
 configurable int port = 8290;
 configurable string hospitalServicesBackend = "http://localhost:9090";
 configurable string paymentBackend = "http://localhost:9090/healthcare/payments";
+configurable string gmailHost = "smtp.gmail.com";
 configurable string senderAddress = ?;
 configurable string appPassword = ?;
 
 final http:Client hospitalServicesEP = check initializeHttpClient(hospitalServicesBackend);
 final http:Client paymentEP = check initializeHttpClient(paymentBackend);
-final email:SmtpClient smtpClient = check initializeEmailClient(hostUrl, senderAddress, appPassword);
+final email:SmtpClient smtpClient = check initializeEmailClient();
 
 function initializeHttpClient(string url) returns http:Client|error => new (url);
-function initializeEmailClient(string host, string username, string password) 
-    returns email:SmtpClient|error => new (host, username, password);
+
+function initializeEmailClient() returns email:SmtpClient|error => new (gmailHost, senderAddress, appPassword);
 
 service /healthcare on new http:Listener(port) {
 
     resource function post categories/[string category]/reserve(ReservationRequest payload)
-            returns http:InternalServerError|http:NotFound|http:Ok {
+            returns http:InternalServerError|http:Created|http:NotFound {
 
         ReservationRequest {
             patient: {cardNo, ...patient},
@@ -111,15 +109,15 @@ service /healthcare on new http:Listener(port) {
         if appointment !is Appointment {
             log:printError("Appointment reservation failed", appointment);
             if appointment is http:ClientRequestError {
-                return <http:NotFound> {body: string `unknown hospital, doctor, or category`};
+                return <http:NotFound>{body: string `unknown hospital, doctor, or category`};
             }
-            return <http:InternalServerError> {body: appointment.message()};
+            return <http:InternalServerError>{body: appointment.message()};
         }
 
         int appointmentNumber = appointment.appointmentNumber;
 
         Payment|http:ClientError payment = paymentEP->/.post({
-            appointmentNumber: appointmentNumber,
+            appointmentNumber,
             doctor: appointment.doctor,
             patient: appointment.patient,
             fee: appointment.doctor.fee,
@@ -130,43 +128,46 @@ service /healthcare on new http:Listener(port) {
         if payment !is Payment {
             log:printError("Payment settlement failed", payment);
             if payment is http:ClientRequestError {
-                return <http:NotFound> {body: string `unknown appointment number`};
+                return <http:NotFound>{body: string `unknown appointment number`};
             }
-            return <http:InternalServerError> {body: payment.message()};
+            return <http:InternalServerError>{body: payment.message()};
         }
-
-        string messageContent = string `Appointment Confirmation
-
-        Appointment Details
-            Appointment Number : ${appointmentNumber}
-            Appointment Date: ${appointment_date}
-
-        Patient Details
-            Name : ${patient.name}
-            Contact Number : ${patient.phone}
-
-        Doctor Details
-            Name : ${appointment.doctor.name}
-            Specialization : ${appointment.doctor.category}
-
-        Payment Details
-            Doctor Fee : ${payment.actualFee}
-            Discount : ${payment.discount}
-            Total Fee : ${payment.discounted}
-            Payment Status : ${payment.status}`;
 
         email:Error? sendMessage = smtpClient->sendMessage({
             to: patient.email,
             subject: "Appointment reservation confirmed at " + hospital,
-            body: messageContent
+            body: getEmailContent(appointmentNumber, appointment, payment)
         });
-        
+
         if sendMessage is email:Error {
-            return <http:InternalServerError> {body: sendMessage.message()};
+            return <http:InternalServerError>{body: sendMessage.message()};
         }
         log:printDebug("Email sent successfully",
-                       name = patient.name,
-                       appointmentNumber = appointmentNumber);
-        return <http:Ok> {body: messageContent};
+                        name = patient.name,
+                        appointmentNumber = appointmentNumber);
+        return <http:Created>{};
     }
+}
+
+function getEmailContent(int appointmentNumber, Appointment appointment, Payment payment)
+        returns string {
+    return string `Appointment Confirmation
+
+    Appointment Details
+        Appointment Number : ${appointmentNumber}
+        Appointment Date: ${appointment.appointmentDate}
+
+    Patient Details
+        Name : ${appointment.patient.name}
+        Contact Number : ${appointment.patient.phone}
+
+    Doctor Details
+        Name : ${appointment.doctor.name}
+        Specialization : ${appointment.doctor.category}
+
+    Payment Details
+        Doctor Fee : ${payment.actualFee}
+        Discount : ${payment.discount}
+        Total Fee : ${payment.discounted}
+        Payment Status : ${payment.status}`;
 }

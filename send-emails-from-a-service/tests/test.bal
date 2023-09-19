@@ -6,15 +6,15 @@ import ballerina/test;
 final http:Client cl = check new (string `http://localhost:${port}/healthcare/categories`);
 
 @test:Config
-function testSuccessfulReservation() returns error? {
-    ReservationResponse resp = check cl->/surgery/reserve.post({
+isolated function testSuccessfulReservation() returns error? {
+    http:Response _ = check cl->/surgery/reserve.post({
         patient: {
             name: "John Doe",
             dob: "1940-03-19",
             ssn: "234-23-525",
             address: "California",
             phone: "8770586755",
-            email: "rominxd97@gmail.com",
+            email: "johndoe@gmail.com",
             cardNo: "7844481124110331"
         },
         doctor: "thomas collins",
@@ -28,18 +28,29 @@ function testSuccessfulReservation() returns error? {
         app = <Appointment & readonly> appointment;
     }
 
-    ReservationResponse expectedResp = {
-        "appointmentNo": app.appointmentNumber,
-        "doctorName": app.doctor.name,
-        "patient": app.patient.name,
-        "actualFee": app.doctor.fee,
-        "discount": 20,
-        "discounted": 5600.0,
-        "paymentID": "f130e2ed-a34e-4434-9b40-6a0a8054ee6b",
-        "status": "settled"
-    };
+    string expectedResp = string `Appointment Confirmation
 
-    test:assertEquals(resp, expectedResp, "Response mismatched");
+    Appointment Details
+        Appointment Number : ${app.appointmentNumber}
+        Appointment Date: ${app.appointmentDate}
+
+    Patient Details
+        Name : ${app.patient.name}
+        Contact Number : ${app.patient.phone}
+
+    Doctor Details
+        Name : ${app.doctor.name}
+        Specialization : ${app.doctor.category}
+
+    Payment Details
+        Doctor Fee : ${app.doctor.fee}
+        Discount : ${20}
+        Total Fee : ${5600.0}
+        Payment Status : ${"settled"}`;
+
+    lock {
+        test:assertEquals(emailContent, expectedResp, "Response mismatched");
+    }
 }
 
 @test:Config
@@ -125,8 +136,13 @@ public client class MockHttpClient {
 
 }
 
+isolated string? emailContent = "";
+
 public isolated client class MockEmailClient {
     remote isolated function sendMessage(email:Message message) returns email:Error? {
+        lock {
+            emailContent = message.body;
+        }
         if message.to == "" {
             return error("invalid email address");
         }
@@ -170,7 +186,7 @@ isolated function handleAppointment(http:PathParamType[] path, http:RequestMessa
                         "hospital": "grand oak community hospital",
                         "category": "surgery",
                         "availability": "9.00 a.m - 11.00 a.m",
-                        "fee": 7000
+                        "fee": 7000.0
                     },
                     "patient": payload.patient.cloneReadOnly(),
                     "hospital": payload.hospital,
@@ -231,5 +247,5 @@ function initializeHttpClientMock(string url) returns http:Client|error =>
 @test:Mock {
     functionName: "initializeEmailClient"
 }
-function initializeEmailClientMock(string host, string username, string password) returns email:SmtpClient|error =>
+function initializeEmailClientMock() returns email:SmtpClient|error =>
     test:mock(email:SmtpClient, new MockEmailClient());
