@@ -173,11 +173,11 @@ Here `RequestData` is the type the resource takes as the payload and `Reservatio
 
 Follow the guide shown below to create the `transform` function.
 
-![Data Mapper Guide](./resources/data_mapper_guide_transform_message_formats.gif)
+![Data Mapper Guide](./resources/tutorial_transform_message_formats_data_mapper_guide.gif)
 
 The data mapper diagram of the `transform` function is shown below.
 
-![Data Mapper Diagram](./resources/data_mapper_diagram_transform_function.png)
+![Data Mapper Diagram](./resources/tutorial_transform_message_formats_data_mapper_diagram_transform_function.png)
 
 Now, make the `transform` function isolated and then it will look like this:
 
@@ -377,6 +377,10 @@ isolated function transform(RequestData details) returns ReservationRequest => {
 
 ```
 
+#### Diagram
+The [sequence diagram view](https://wso2.com/ballerina/vscode/docs/implement-the-code/sequence-diagram-view/) for the implemented resource method is the following.
+
+![sequence diagram](./resources/tutorial_transform_message_formats_diagram.png)
 
 ### Step 3: Build and run the service
 
