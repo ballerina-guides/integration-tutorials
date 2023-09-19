@@ -1,8 +1,8 @@
 # Service orchestration
 
-## What you'll build
+## Overview
 
-Let's develop a service that accepts requests to make an appointment at a hospital, makes multiple calls to different backend services to make the appointment, and responds to the client with the relevant details. Calls to the backend services are made one after the other given that information from one call is required for the next. This effectively integrates several services and exposes them as a single service, also known as service orchestration.
+In this tutorial, we will develop a service that accepts requests to make an appointment at a hospital, makes multiple calls to different backend services to make the appointment, and responds to the client with the relevant details. Calls to the backend services are made one after the other given that information from one call is required for the next. This effectively integrates several services and exposes them as a single service, also known as service orchestration.
 
 To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension, and then run the service. This resource  will receive the user request, retrieve details from the backend services, and respond to the user request with the appointment details.
 
@@ -84,7 +84,7 @@ The flow is as follows.
 - REST API
 - HTTP client
 
-## Let's get started!
+## Develop the application
 
 ### Step 1: Set up the workspace
 
