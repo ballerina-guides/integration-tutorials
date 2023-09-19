@@ -96,8 +96,10 @@ service /healthcare on new http:Listener(port) {
             return <http:InternalServerError> {body: appointment.message()};
         }
 
+        int appointmentNumber = appointment.appointmentNumber;
+
         Fee|http:ClientError fee = 
-                hospitalServicesEP->/[hospital_id]/categories/appointments/[appointment.appointmentNumber]/fee;
+                hospitalServicesEP->/[hospital_id]/categories/appointments/[appointmentNumber]/fee;
 
         if fee !is Fee {
             log:printError("Retrieving fee failed", fee);
@@ -111,8 +113,6 @@ service /healthcare on new http:Listener(port) {
         if actualFee is error {
             return <http:InternalServerError> {body: "fee retrieval failed"};
         }
-
-        int appointmentNumber = appointment.appointmentNumber;
 
         ReservationStatus|http:ClientError status = paymentEP->/.post({
             appointmentNumber,

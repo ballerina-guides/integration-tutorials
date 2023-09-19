@@ -39,7 +39,7 @@ function testSuccessfulRequest() returns error? {
 }
 
 @test:Config
-function testUnknownCaregory() returns error? {
+function testUnknownCategory() returns error? {
     ReservationStatus|http:ClientError status = cl->/rheumatology/reserve.post({
         "patient": {
             "name": "John Doe",
@@ -75,8 +75,10 @@ public client class MockHttpClient {
         self.url = url;
     }
 
-    isolated resource function post [http:PathParamType... path](http:RequestMessage message, map<string|string[]>? headers = (), string?
-            mediaType = (), http:TargetType targetType = <>, *http:QueryParams params) returns http:Response|anydata|http:ClientError {
+    isolated resource function post [http:PathParamType... path](
+            http:RequestMessage message, map<string|string[]>? headers = (), string?
+            mediaType = (), http:TargetType targetType = <>, *http:QueryParams params) 
+                returns http:Response|anydata|http:ClientError {
         if self.url == hospitalServicesBackend {
             return handleAppointment(path, message);
         }

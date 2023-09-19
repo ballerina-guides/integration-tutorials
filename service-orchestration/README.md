@@ -128,14 +128,14 @@ final http:Client paymentEP = check initializeHttpClient(paymentBackend);
 function initializeHttpClient(string url) returns http:Client|error => new (url);
 ```
 
-The argument to the `new` expression is the URL for the backend service. 
-
-Alternatively, the clients can be initialized directly with `new` expressions, but a separate function is used to aid with testing.
-
-```ballerina
-final http:Client hospitalServicesEP = check new (hospitalServicesBackend);
-final http:Client paymentEP = check new (paymentBackend);
-```
+> **Note:** The argument to the `new` expression is the URL for the backend service. 
+> 
+> Alternatively, the clients can be initialized directly with `new` expressions, but a separate function is used to aid with testing.
+> 
+> ```ballerina
+> final http:Client hospitalServicesEP = check new (hospitalServicesBackend);
+> final http:Client paymentEP = check new (paymentBackend);
+> ```
 
 5. Define records corresponding to the request payload and response payloads.
 
@@ -290,7 +290,7 @@ service /healthcare on new http:Listener(port) {
 
 - Use a [typed binding pattern with a mapping binding pattern to destructure](https://ballerina.io/learn/by-example/rest-binding-pattern-in-mapping-binding-pattern/) the payload and assign required components of the value to separate variables.
 
-    ``` ballerina
+    ```ballerina
     ReservationRequest {
         patient: {cardNo, ...patient},
         doctor, 
@@ -571,7 +571,7 @@ Let's send a request to the service using cURL as follows.
 
 1. Install and set up [cURL](https://curl.se/) as your client.
 
-3. Create a file named `request.json` with the request payload.
+2. Create a file named `request.json` with the request payload.
 
 ```json
 {
