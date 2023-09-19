@@ -3,10 +3,10 @@ import ballerina/test;
 
 final http:Client cl = check new (string `http://localhost:${port}/healthcare`);
 
-const GRAND_OAKS_HOSPITAL = "grand oak community hospital";
+const GRAND_OAK_HOSPITAL = "grand oak community hospital";
 const CLEMENCY_MEDICAL_CENTER = "clemency medical center";
 const PINE_VALLEY_COMMUNITY_HOSPITAL = "pine valley community hospital";
-const DEFAULT_DOCTOR = "thomas collins";
+const THOMAS_COLLINS = "thomas collins";
 
 @test:Config
 function testSuccessfulReservation() returns error? {
@@ -23,7 +23,7 @@ function testSuccessfulReservation() returns error? {
         card_no: "7844481124110331",
         appointment_date: "2025-04-02"
     });
-    ReservationResponse expResp = getSuccessAppointmentResponse(GRAND_OAKS_HOSPITAL);
+    ReservationResponse expResp = getSuccessAppointmentResponse(GRAND_OAK_HOSPITAL);
     test:assertEquals(resp, expResp, "Response mismatched");
 }
 
@@ -155,13 +155,13 @@ public client class MockHttpClient {
                                                 statusCode =  http:STATUS_BAD_REQUEST);
         }
 
-        if DEFAULT_DOCTOR != payload.doctor {
+        if THOMAS_COLLINS != payload.doctor {
             return getWrongHospitalOrDoctorResponse();
         }
 
         match payload.hospital {
-            GRAND_OAKS_HOSPITAL => {
-                return getSuccessAppointmentResponse(GRAND_OAKS_HOSPITAL);
+            GRAND_OAK_HOSPITAL => {
+                return getSuccessAppointmentResponse(GRAND_OAK_HOSPITAL);
             }
             CLEMENCY_MEDICAL_CENTER => {
                 return getSuccessAppointmentResponse(CLEMENCY_MEDICAL_CENTER);

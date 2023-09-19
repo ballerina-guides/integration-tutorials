@@ -197,7 +197,7 @@ isolated function transform(RequestData details) returns ReservationRequest => {
 };
 ```
 
-7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes calls to the hospital backend services, retrieve relevant details, and responds to the client.
+7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes calls to the hospital backend services, retrieves relevant details, and responds to the client.
 
 Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. Define an HTTP resource that allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` (corresponding to the specialization) is a path parameter. Use `RequestData` as a parameter indicating that the resource expects a JSON object corresponding to `RequestData` as the payload. Use `ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationResponse` on success or the response will be a "NotFound", "BadRequest" or "InternalServerError" response on error.
 

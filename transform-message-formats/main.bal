@@ -52,9 +52,8 @@ type ReservationResponse record {|
 |};
 
 service /healthcare on new http:Listener(port) {
-    isolated resource function post categories/[string category]/reserve(
-            RequestData payload
-        ) returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
+    isolated resource function post categories/[string category]/reserve(RequestData payload)
+            returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
         string hospitalId = payload.hospital_id;
         ReservationRequest req = transform(payload);
         ReservationResponse|http:ClientError resp =
