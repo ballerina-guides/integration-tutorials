@@ -3,7 +3,7 @@ import ballerina/test;
 
 final http:Client cl = check new (string `http://localhost:${port}/healthcare`);
 
-const GRAND_OAK_HOSPITAL = "grand oak community hospital";
+const GRAND_OAK_COMMUNITY_HOSPITAL = "grand oak community hospital";
 const CLEMENCY_MEDICAL_CENTER = "clemency medical center";
 const PINE_VALLEY_COMMUNITY_HOSPITAL = "pine valley community hospital";
 const THOMAS_COLLINS = "thomas collins";
@@ -21,10 +21,10 @@ function testSuccessfulReservation() returns error? {
         },
         doctor: "thomas collins",
         hospital: "grand oak community hospital",
-        hospital_id: "grandoaks",
+        hospital_id: "grandoak",
         appointment_date: "2025-04-02"
     });
-    ReservationResponse expectedResp = getSuccessAppointmentResponse(GRAND_OAK_HOSPITAL);
+    ReservationResponse expectedResp = getSuccessAppointmentResponse(GRAND_OAK_COMMUNITY_HOSPITAL);
     test:assertEquals(resp, expectedResp, "Response mismatched");
 }
 
@@ -49,10 +49,9 @@ function testInvalidHospital() {
         test:assertFail("expected an http:ClientRequestError, found " + (typeof resp).toString());
     }
 
-    test:assertEquals(resp.message(), "Not Found");
+    test:assertEquals(resp.message(), "Bad Request");
     var detail = resp.detail();
-    test:assertEquals(detail.statusCode, http:STATUS_NOT_FOUND);
-    test:assertEquals(detail.body, "Unknown hospital, doctor or category");
+    test:assertEquals(detail.statusCode, http:STATUS_BAD_REQUEST);
 }
 
 @test:Config
@@ -68,7 +67,7 @@ function testInvalidDoctor() {
         },
         doctor: "thomas chandler",
         hospital: "grand oak community hospital",
-        hospital_id: "grandoaks",
+        hospital_id: "grandoak",
         appointment_date: "2025-04-02"
     });
 
@@ -95,7 +94,7 @@ function testInvalidCategory() {
         },
         doctor: "thomas collins",
         hospital: "grand oak community hospital",
-        hospital_id: "grandoaks",
+        hospital_id: "grandoak",
         appointment_date: "2025-04-02"
     });
 
@@ -121,7 +120,7 @@ function testMissingPatientData() {
         },
         doctor: "thomas collins",
         hospital: "grand oak community hospital",
-        hospital_id: "grandoaks",
+        hospital_id: "grandoak",
         appointment_date: "2025-04-02"
     });
 
@@ -165,7 +164,7 @@ public client class MockHttpClient {
             return getInvalidHospitalOrDoctorErrorResponse();
         }
 
-        if payload.hospital is GRAND_OAK_HOSPITAL|CLEMENCY_MEDICAL_CENTER|PINE_VALLEY_COMMUNITY_HOSPITAL {
+        if payload.hospital is GRAND_OAK_COMMUNITY_HOSPITAL|CLEMENCY_MEDICAL_CENTER|PINE_VALLEY_COMMUNITY_HOSPITAL {
             return getSuccessAppointmentResponse(payload.hospital);
         }
 

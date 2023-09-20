@@ -3,11 +3,17 @@ import ballerina/log;
 
 configurable int port = 8290;
 
-final http:Client grandOakEP = check initializeHttpClient("http://localhost:9090/grandoaks/categories");
+final http:Client grandOakEP = check initializeHttpClient("http://localhost:9090/grandoak/categories");
 final http:Client clemencyEP = check initializeHttpClient("http://localhost:9090/clemency/categories");
 final http:Client pineValleyEP = check initializeHttpClient("http://localhost:9090/pinevalley/categories");
 
 function initializeHttpClient(string url) returns http:Client|error => new (url);
+
+enum HospitalId {
+    GRAND_OAK = "grandoak",
+    CLEMENCY = "clemency",
+    PINE_VALLEY = "pinevalley"
+};
 
 type Patient record {|
     string name;
@@ -21,7 +27,7 @@ type Patient record {|
 type ReservationRequest record {|
     Patient patient;
     string doctor;
-    string hospital_id;
+    HospitalId hospital_id;
     string hospital;
     string appointment_date;
 |};
@@ -44,19 +50,13 @@ type ReservationResponse record {|
     string appointmentDate;
 |};
 
-enum HospitalIds {
-    GRANDOAKS = "grandoaks",
-    CLEMENCY = "clemency",
-    PINEVALLEY = "pinevalley"
-};
-
 service /healthcare on new http:Listener(port) {
     resource function post categories/[string category]/reserve(ReservationRequest payload)
             returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
         ReservationRequest {hospital_id, patient, ...reservationRequest} = payload;
         http:Client hospitalEP;
         match hospital_id {
-            GRANDOAKS => {
+            GRAND_OAK => {
                 log:printInfo("Routed to Grand Oak Community Hospital");
                 hospitalEP = grandOakEP;
             }

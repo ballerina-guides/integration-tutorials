@@ -1,10 +1,10 @@
-# Content Based Message Routing
+# Content-based message routing
 
 ## Overview
 
-In this tutorial, we will develop a service that accepts requests to make an appointment at a hospital and makes a call to a selected hospital service endpoint depending on the content provided.
+In this tutorial, you will develop an appointment reservation service for serveral hospitals. Requests are routed to the relevant hospital based on the content of the request payload.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. The resource will receive the user request, select the hospital service endpoint based on `hospital_id`, send a request to the hospital service, and respond with the correct reservation details
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. The resource will receive the user request, select the hospital service based on `hospital_id`, send a request to the hospital service, and respond with the correct reservation details.
 
 The flow is as follows:
 
@@ -29,7 +29,7 @@ The flow is as follows:
 
 2. Extract `hospital_id` field and select the hospital service endpoint according to the following criteria. 
 
-- grandoak -> `http://localhost:9090/grandoaks/categories`
+- grandoak -> `http://localhost:9090/grandoak/categories`
 - clemency -> `http://localhost:9090/clemency/categories`
 - pinevalley -> `http://localhost:9090/pinevalley/categories`
 
@@ -101,7 +101,7 @@ configurable int port = 8290;
 4. Define three [`http:Client`](https://ballerina.io/learn/by-example/#http-client) clients to send requests to the backend services.
 
 ```ballerina
-final http:Client grandOaksEP = check initializeHttpClient("http://localhost:9090/grandoaks/categories");
+final http:Client grandOakEP = check initializeHttpClient("http://localhost:9090/grandoak/categories");
 final http:Client clemencyEP = check initializeHttpClient("http://localhost:9090/clemency/categories");
 final http:Client pineValleyEP = check initializeHttpClient("http://localhost:9090/pinevalley/categories");
 
@@ -113,12 +113,22 @@ function initializeHttpClient(string url) returns http:Client|error => new (url)
 > Here, a separate function is used to initialize the clients to aid with testing. Alternatively, the `new` expression can be used directly to initialize the clients.
 >
 > ```ballerina
-> final http:Client grandoaksEP = new ("http://localhost:9090/grandoaks/categories");
+> final http:Client grandoakEP = new ("http://localhost:9090/grandoak/categories");
 > final http:Client clemencyEP = new ("http://localhost:9090/clemency/categories");
 > final http:Client pinevalleyEP = new ("http://localhost:9090/pinevalley/categories");
 >```
 
-5. Define records corresponding to the request payload and response payload.
+5. Introduce an [enum](https://ballerina.io/learn/by-example/enumerations/) to define the hospital IDs.
+
+```ballerina
+enum HospitalId {
+    GRAND_OAK = "grandoak",
+    CLEMENCY = "clemency",
+    PINE_VALLEY = "pinevalley"
+};
+```
+
+6. Define records corresponding to the request payload and response payload.
 
 ```ballerina
 type Patient record {|
@@ -134,7 +144,7 @@ type ReservationRequest record {|
     Patient patient;
     string doctor;
     string hospital_id;
-    string hospital;
+    HospitalId hospital;
     string appointment_date;
 |};
 
@@ -157,9 +167,7 @@ type ReservationResponse record {|
 |};
 ```
 
-6. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes calls to the hospital backend services, retrieves relevant details, and responds to the client. 
-
-Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. Define an HTTP resource that allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` (corresponding to the specialization) is a path parameter. Use `ReservationRequest` as a parameter indicating that the resource expects a JSON object corresponding to `ReservationRequest` as the payload. Use `ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationResponse` on success or the response will be a "NotFound", "BadRequest" or "InternalServerError" response on error.
+7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes calls to the relevant hospital backend service to retrieve relevant details, and responds to the client.
 
 ```ballerina
 service /healthcare on new http:Listener(port) {
@@ -169,7 +177,15 @@ service /healthcare on new http:Listener(port) {
     }
 ```
 
-7. Implement the logic.
+- Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. 
+
+- The HTTP resource allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` is a path parameter. 
+
+- Use `ReservationRequest` as a parameter indicating that the resource expects a JSON object corresponding to `ReservationRequest` as the payload. 
+
+- Use `ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationResponse` on success or the response will be a "NotFound", "BadRequest" or "InternalServerError" response on error.
+
+8. Implement the logic.
 
 ```ballerina
 service /healthcare on new http:Listener(port) {
@@ -178,7 +194,7 @@ service /healthcare on new http:Listener(port) {
         ReservationRequest {hospital_id, patient, ...reservationRequest} = payload;
         http:Client hospitalEP;
         match hospital_id {
-            GRANDOAKS => {
+            GRAND_OAK => {
                 log:printInfo("Routed to Grand Oak Community Hospital");
                 hospitalEP = grandOakEP;
             }
@@ -214,9 +230,10 @@ service /healthcare on new http:Listener(port) {
 }
 ```
 
-- Define `hospitalEP`. Later, this variable is assigned to the relevant client based on the `hospital_id` value.
+- Define the `hospitalEP` variable. Later, the relevant client is assigned to this variable based on the `hospital_id` value.
+
     ```ballerina
-    http:Client? hospitalEP = ();
+    http:Client hospitalEP;
     ```
 
 - Use a [typed binding pattern with a mapping binding pattern to destructure](https://ballerina.io/learn/by-example/rest-binding-pattern-in-mapping-binding-pattern/) the payload and assign required components of the value to separate variables.
@@ -236,7 +253,7 @@ service /healthcare on new http:Listener(port) {
 
     ```ballerina
     match hospital_id {
-            GRANDOAKS => {
+            GRAND_OAK => {
                 log:printInfo("Routed to Grand Oak Community Hospital");
                 hospitalEP = grandOakEP;
             }
@@ -333,8 +350,8 @@ type ReservationResponse record {|
     string appointmentDate;
 |};
 
-enum HospitalIds {
-    GRANDOAKS = "grandoaks",
+enum HospitalId {
+    GRAND_OAK = "grandoak",
     CLEMENCY = "clemency",
     PINEVALLEY = "pinevalley"
 };
@@ -345,7 +362,7 @@ service /healthcare on new http:Listener(port) {
         ReservationRequest {hospital_id, patient, ...reservationRequest} = payload;
         http:Client hospitalEP;
         match hospital_id {
-            GRANDOAKS => {
+            GRAND_OAK => {
                 log:printInfo("Routed to Grand Oak Community Hospital");
                 hospitalEP = grandOakEP;
             }
@@ -431,7 +448,7 @@ Let's send a request to the service using cURL as follows.
         "email": "johndoe@gmail.com"
     },
     "doctor": "thomas collins",
-    "hospital_id": "grandoaks",
+    "hospital_id": "grandoak",
     "hospital": "grand oak community hospital",
     "appointment_date": "2023-10-02"
 }
