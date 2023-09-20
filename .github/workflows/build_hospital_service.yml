@@ -1,0 +1,24 @@
+name: Build hospital service
+
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+    
+      - name: Hospital service build
+        uses: ballerina-platform/ballerina-action@2201.7.2
+        with:
+          args: 
+            build ./backends/hospital-service/
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v2
+        with:
+          name: hospitalservice.jar
+          path: ./backends/hospital-service/target/bin/
