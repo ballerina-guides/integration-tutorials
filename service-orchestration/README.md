@@ -88,13 +88,13 @@ The flow is as follows.
 
 ### Step 1: Set up the workspace
 
-Install [Ballerina Swan Lake](https://ballerina.io/downloads/) and the [Ballerina Swan Lake VSCode extension](https://marketplace.visualstudio.com/items?itemName=wso2.ballerina) on VSCode.
+Install [Ballerina Swan Lake](https://ballerina.io/downloads/) and the [Ballerina Swan Lake VS Code extension](https://marketplace.visualstudio.com/items?itemName=wso2.ballerina) on VS Code.
 
 ### Step 2: Develop the service
 
 Follow the instructions given in this section to develop the service.
 
-1. Create a new Ballerina project using the `bal` command and open it in VSCode.
+1. Create a new Ballerina project using the `bal` command and open it in VS Code.
 
 ```bash
 $ bal new service-orchestration
@@ -119,7 +119,7 @@ configurable string hospitalServicesBackend = "http://localhost:9090";
 configurable string paymentBackend = "http://localhost:9090/healthcare/payments";
 ```
 
-4. Define two [`http:Client` clients](https://ballerina.io/learn/by-example/#http-client) to send requests to the backend services.
+4. Define two [`http:Client`](https://ballerina.io/learn/by-example/#http-client) clients to send requests to the backend services.
 
 ```ballerina
 final http:Client hospitalServicesEP = check initializeHttpClient(hospitalServicesBackend);
@@ -197,7 +197,7 @@ type ReservationStatus record {|
 
 - The `ReservationRequest` record uses [record type inclusion](https://ballerina.io/learn/by-example/type-inclusion-for-records/) in the type of the `patient` field to include all the fields from the `Patient` record along with the `cardNo` field.
 
-- The initial record definitions can be generated using the "Paste JSON as record" VSCode command with the relevant JSON payloads and the records can then be modified as necessary.
+- The initial record definitions can be generated using the "Paste JSON as record" VS Code command with the relevant JSON payloads and the records can then be modified as necessary.
 
 6. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes calls to the backend services to retrieve relevant details, and responds to the client. Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. Define an HTTP resource that allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` (corresponding to the specialization) is a path parameter. Use `ReservationRequest` as a parameter indicating that the resource expects a JSON object corresponding to `ReservationRequest` as the payload. Use `ReservationStatus|http:NotFound|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationStatus` on success or the response will be a "NotFound" or "InternalServerError" response on error.
 
