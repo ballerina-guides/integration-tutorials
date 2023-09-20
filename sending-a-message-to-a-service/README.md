@@ -131,9 +131,9 @@ if resp is http:ClientRequestError {
 return <http:InternalServerError> {body: resp.message()};
 ```
 
-#### Complete source
-
 You have successfully developed the required service.
+
+#### Complete source
 
 ```ballerina
 import ballerina/http;
