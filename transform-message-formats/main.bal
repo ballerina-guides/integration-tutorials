@@ -2,11 +2,11 @@ import ballerina/http;
 import ballerina/log;
 
 configurable int port = 8290;
-configurable string hospitalServicesUrl = "http://localhost:9090";
+configurable string hospitalServiceUrl = "http://localhost:9090";
 
-final http:Client hospitalServicesEP = check initializeHttpClient();
+final http:Client hospitalServiceEP = check initializeHttpClient();
 
-function initializeHttpClient() returns http:Client|error => new (hospitalServicesUrl);
+function initializeHttpClient() returns http:Client|error => new (hospitalServiceUrl);
 
 type Patient record {|
     string name;
@@ -54,10 +54,10 @@ type ReservationResponse record {|
 service /healthcare on new http:Listener(port) {
     isolated resource function post categories/[string category]/reserve(RequestData payload)
             returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
-        string hospitalId = payload.hospital_id;
         ReservationRequest req = transform(payload);
+        string hospitalId = payload.hospital_id;
         ReservationResponse|http:ClientError resp =
-                    hospitalServicesEP->/[hospitalId]/categories/[category]/reserve.post(req);
+                    hospitalServiceEP->/[hospitalId]/categories/[category]/reserve.post(req);
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",

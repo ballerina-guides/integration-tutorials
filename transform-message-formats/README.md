@@ -4,7 +4,7 @@
 
 In this tutorial, we will develop a service that accepts requests to make an appointment at a hospital, takes the request in one format, transforms that into another format and forwards to a backend hospital service.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with Ballerina Swan Lake extension. The resource will receive the user request, transform the request format into another format, retrieve the reservation details by calling the backend service and respond with the correct reservation details.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with Ballerina Swan Lake extension. The resource will receive the user request, transform the request format into another format, retrieve the reservation details by calling the backend hospital service, and respond with the correct reservation details.
 
 The flow is as follows
 
@@ -43,7 +43,7 @@ The flow is as follows
 }
 ```
 
-3. Extract the `hospital_id` and send the POST request to the hospital service to reserve.
+3. Extract `hospital_id` to construct the URL of the post request to the hospital service.
 
 4. Retrieve the reservation response by calling the hospital service with the transformed request and `hospital_id`. The response will be similar to the following. 
 
@@ -86,7 +86,7 @@ Install [Ballerina Swan Lake](https://ballerina.io/downloads/) and the [Ballerin
 
 ### Step 2: Develop the service
 
-Follow the instruction given in this section to develop the service.
+Follow the instructions given in this section to develop the service.
 
 1. Create a new Ballerina project using the `bal` command and open it in VS Code.
 
@@ -96,37 +96,36 @@ $ bal new transform-message-formats
 
 2. Introduce the source code in files with the `.bal` extension (e.g., the `main.bal` file).
 
-Import the following modules.
-
 Import the
 - `ballerina/http` module to develop the REST API and define the clients that can be used to send requests to the backend services
-- `ballerina/log` module to log debug, error, or info levels of information for each client request
+- `ballerina/log` module to log debug, error, or info level information for each client request
 
 ```ballerina
 import ballerina/http;
 import ballerina/log;
 ```
 
-3. Define two [configurable variables](https://ballerina.io/learn/by-example/#configurability) for the port the listener listen on and the URL of the hospital service.
+3. Define two [configurable variables](https://ballerina.io/learn/by-example/#configurability) for the port on which the listener should listen and the URL of the hospital service.
 
 ```ballerina
 configurable int port = 8290;
+configurable string hospitalServiceUrl = "http://localhost:9090";
 ```
 
-4. Define an [`http:Client` client](https://ballerina.io/learn/by-example/#http-client) to send requests to the backend services.
+4. Define an [`http:Client` client](https://ballerina.io/learn/by-example/#http-client) to send requests to the backend hospital services.
 
 ```ballerina
-final http:Client hospitalServicesEP = check initializeHttpClient();
+final http:Client hospitalServiceEP = check initializeHttpClient();
 
-function initializeHttpClient() returns http:Client|error => new (hospitalServicesUrl);
+function initializeHttpClient() returns http:Client|error => new (hospitalServiceUrl);
 ```
 
-> **Note** The argument passed to the `new` expression (`hospitalServicesUrl`) is the URL of the hospital service.
+> **Note** The argument passed to the `new` expression (`hospitalServiceUrl`) is the URL of the backend hospital service.
 > 
 > Here, a separate function is used to initialize the clients to aid with testing. Alternatively, the `new` expression can be used directly to initialize the clients.
 >
 > ```ballerina
-> final http:Client hospitalServicesEP = new (hospitalServicesUrl);
+> final http:Client hospitalServiceEP = new (hospitalServiceUrl);
 >```
 
 5. Define records corresponding to the request payload and response payloads.
@@ -208,7 +207,7 @@ type ReservationResponse record {|
     };
     ```
 
-7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes calls to the hospital backend services, retrieves relevant details, and responds to the client.
+7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes a call to the backend hospital service, retrieves reservation details, and responds to the client.
 
 Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. Define an HTTP resource that allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` (corresponding to the specialization) is a path parameter. Use `RequestData` as a parameter indicating that the resource expects a JSON object corresponding to `RequestData` as the payload. Use `ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationResponse` on success or the response will be a "NotFound", "BadRequest" or "InternalServerError" response on error.
 
@@ -221,16 +220,16 @@ service /healthcare on new http:Listener(port) {
 }
 ```
 
-8. Implement the logic
+8. Implement the logic.
 
 ```ballerina
 service /healthcare on new http:Listener(port) {
     isolated resource function post categories/[string category]/reserve(RequestData payload) 
             returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
-        string hospitalId = payload.hospital_id;
         ReservationRequest req = transform(payload);
+        string hospitalId = payload.hospital_id;
         ReservationResponse|http:ClientError resp =
-                    hospitalServicesEP->/[hospitalId]/categories/[category]/reserve.post(req);
+                    hospitalServiceEP->/[hospitalId]/categories/[category]/reserve.post(req);
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",
@@ -249,27 +248,27 @@ service /healthcare on new http:Listener(port) {
 }
 ```
 
-- Extract `hospital_id` from the payload and use it to construct the URL of the post request.
-
-    ```ballerina
-    string hospitalId = payload.hospital_id;
-    ```
-
 - Use the `transform` function to transform the data from `RequestData` to `ReservationRequest`.
 
     ```ballerina
     ReservationRequest req = transform(payload);
     ```
 
+- Extract `hospital_id` from the payload and use it to construct the URL of the post request.
+
+    ```ballerina
+    string hospitalId = payload.hospital_id;
+    ```
+
 - Send the transformed payload to the hospital service and get the response. Here, The `hospital_id` and `category` values are used as path parameters.
 
     ```ballerina
-    ReservationResponse|http:ClientError resp = hospitalServicesEP->/[hospitalId]/categories/[category]/reserve.post(req);
+    ReservationResponse|http:ClientError resp = hospitalServiceEP->/[hospitalId]/categories/[category]/reserve.post(req);
     ```
 
-- The `log` functions are used to [log](https://ballerina.io/learn/by-example/#log) information at `DEBUG` and `ERROR` log levels.
+- The `log` functions are used to [log](https://ballerina.io/learn/by-example/#log) information at `INFO`, `DEBUG`, and `ERROR` log levels.
 
-- Use the `is` check to decide the response based on the response to the client call. If the client call was successful and the response is in the type of `ReservationResponse`, then, directly return it. If the request failed, send a "NotFound" response if the client call failed with a 4xx status code or return an "InternalServerError" response for other failures
+- Use the `is` check to decide the response based on the response to the client call. If the client call was successful and the response is in the type of `ReservationResponse`, then, directly return it. If the request failed, log information at `ERROR` level and send a "NotFound" response if the client call failed with a 4xx status code or return an "InternalServerError" response for other failures.
 
     ```ballerina
     if resp is ReservationResponse {
@@ -296,11 +295,11 @@ import ballerina/http;
 import ballerina/log;
 
 configurable int port = 8290;
-configurable string hospitalServicesUrl = "http://localhost:9090";
+configurable string hospitalServiceUrl = "http://localhost:9090";
 
-final http:Client hospitalServicesEP = check initializeHttpClient();
+final http:Client hospitalServiceEP = check initializeHttpClient();
 
-function initializeHttpClient() returns http:Client|error => new (hospitalServicesUrl);
+function initializeHttpClient() returns http:Client|error => new (hospitalServiceUrl);
 
 type Patient record {|
     string name;
@@ -349,10 +348,10 @@ service /healthcare on new http:Listener(port) {
     isolated resource function post categories/[string category]/reserve(
             RequestData payload
         ) returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
-        string hospitalId = payload.hospital_id;
         ReservationRequest req = transform(payload);
+        string hospitalId = payload.hospital_id;
         ReservationResponse|http:ClientError resp =
-                    hospitalServicesEP->/[hospitalId]/categories/[category]/reserve.post(req);
+                    hospitalServiceEP->/[hospitalId]/categories/[category]/reserve.post(req);
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",
@@ -387,6 +386,7 @@ isolated function transform(RequestData details) returns ReservationRequest => {
 ```
 
 #### Diagram
+
 The [sequence diagram view](https://wso2.com/ballerina/vscode/docs/implement-the-code/sequence-diagram-view/) for the implemented resource method is the following.
 
 ![sequence diagram](./resources/tutorial_transform_message_formats_diagram.png)
