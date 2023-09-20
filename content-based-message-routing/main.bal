@@ -66,10 +66,13 @@ service /healthcare on new http:Listener(port) {
 
         if hospitalEP is () {
             log:printError(string `Routed to none. Hospital not found: ${hospital_id}`);
-            return <http:NotFound>{body: string `Hospital not found: ${hospital_id}`};
+            return <http:NotFound> {body: string `Hospital not found: ${hospital_id}`};
         }
 
-        ReservationResponse|http:ClientError resp = hospitalEP->/[category]/reserve.post({patient, ...reservationRequest});
+        ReservationResponse|http:ClientError resp = hospitalEP->/[category]/reserve.post({
+            patient,
+            ...reservationRequest
+        });
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",
@@ -80,9 +83,9 @@ service /healthcare on new http:Listener(port) {
 
         log:printError("Reservation request failed", resp);
         if resp is http:ClientRequestError {
-            return <http:NotFound>{body: "Unknown hospital, doctor or category"};
+            return <http:NotFound> {body: "Unknown hospital, doctor or category"};
         }
 
-        return <http:InternalServerError>{body: resp.message()};
+        return <http:InternalServerError> {body: resp.message()};
     }
 }

@@ -6,7 +6,7 @@ final http:Client cl = check new (string `http://localhost:${port}/healthcare`);
 const GRAND_OAK_HOSPITAL = "grand oak community hospital";
 const CLEMENCY_MEDICAL_CENTER = "clemency medical center";
 const PINE_VALLEY_COMMUNITY_HOSPITAL = "pine valley community hospital";
-const DEFAULT_DOCTOR = "thomas collins";
+const THOMAS_COLLINS = "thomas collins";
 
 @test:Config
 function testSuccessfulReservation() returns error? {
@@ -133,35 +133,6 @@ function testMissingPatientData() {
     test:assertEquals(resp.detail().statusCode, http:STATUS_BAD_REQUEST);
 }
 
-isolated function getSuccessAppointmentResponse(string hospital) returns ReservationResponse & readonly => {
-    "appointmentNumber": 4,
-    "doctor": {
-        "name": "thomas collins",
-        "hospital": hospital,
-        "category": "surgery",
-        "availability": "9.00 a.m - 11.00 a.m",
-        "fee": 7000
-    },
-    "patient": {
-        "name": "John Doe",
-        "dob": "1940-03-19",
-        "ssn": "234-23-525",
-        "address": "California",
-        "phone": "8770586755",
-        "email": "johndoe@gmail.com"
-    },
-    "hospital": hospital,
-    "fee": 7000,
-    "confirmed": false,
-    "appointmentDate": "2025-04-02"
-};
-
-isolated function getInvalidHospitalOrDoctorErrorResponse() returns http:ClientRequestError
-    => <http:ClientRequestError>error("Not Found",
-                                        body = "requested doctor is not available at the requested hospital",
-                                        headers = {},
-                                        statusCode = http:STATUS_NOT_FOUND);
-
 public client class MockHttpClient {
 
     private final string url;
@@ -196,25 +167,47 @@ public client class MockHttpClient {
                                                 statusCode = http:STATUS_BAD_REQUEST);
         }
 
-        if DEFAULT_DOCTOR != payload.doctor {
+        if THOMAS_COLLINS != payload.doctor {
             return getInvalidHospitalOrDoctorErrorResponse();
         }
 
-        match payload.hospital {
-            GRAND_OAK_HOSPITAL => {
-                return getSuccessAppointmentResponse(GRAND_OAK_HOSPITAL);
-            }
-            CLEMENCY_MEDICAL_CENTER => {
-                return getSuccessAppointmentResponse(CLEMENCY_MEDICAL_CENTER);
-            }
-            PINE_VALLEY_COMMUNITY_HOSPITAL => {
-                return getSuccessAppointmentResponse(PINE_VALLEY_COMMUNITY_HOSPITAL);
-            }
+        if payload.hospital is GRAND_OAK_HOSPITAL|CLEMENCY_MEDICAL_CENTER|PINE_VALLEY_COMMUNITY_HOSPITAL {
+            return getSuccessAppointmentResponse(payload.hospital);
         }
 
         return getInvalidHospitalOrDoctorErrorResponse();
     }
 }
+
+isolated function getSuccessAppointmentResponse(string hospital) returns ReservationResponse & readonly => {
+    appointmentNumber: 4,
+    doctor: {
+        name: "thomas collins",
+        hospital,
+        category: "surgery",
+        availability: "9.00 a.m - 11.00 a.m",
+        fee: 7000
+    },
+    patient: {
+        name: "John Doe",
+        dob: "1940-03-19",
+        ssn: "234-23-525",
+        address: "California",
+        phone: "8770586755",
+        email: "johndoe@gmail.com"
+    },
+    hospital,
+    fee: 7000,
+    confirmed: false,
+    appointmentDate: "2025-04-02"
+};
+
+isolated function getInvalidHospitalOrDoctorErrorResponse() returns http:ClientRequestError
+    => <http:ClientRequestError>error("Not Found",
+                                        body = "requested doctor is not available at the requested hospital",
+                                        headers = {},
+                                        statusCode = http:STATUS_NOT_FOUND);
+
 
 @test:Mock {
     functionName: "initializeHttpClient"
