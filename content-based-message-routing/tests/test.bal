@@ -52,7 +52,7 @@ function testInvalidHospital() {
     test:assertEquals(resp.message(), "Not Found");
     var detail = resp.detail();
     test:assertEquals(detail.statusCode, http:STATUS_NOT_FOUND);
-    test:assertEquals(detail.body, "Hospital not found: monarch");
+    test:assertEquals(detail.body, "Unknown hospital, doctor or category");
 }
 
 @test:Config
@@ -135,12 +135,6 @@ function testMissingPatientData() {
 
 public client class MockHttpClient {
 
-    private final string url;
-
-    isolated function init(string url) {
-        self.url = url;
-    }
-
     isolated resource function post [http:PathParamType... path](http:RequestMessage message,
             map<string|string[]>? headers = (),
             string? mediaType = (),
@@ -213,4 +207,4 @@ isolated function getInvalidHospitalOrDoctorErrorResponse() returns http:ClientR
     functionName: "initializeHttpClient"
 }
 function initializeHttpClientMock(string hospitalId) returns http:Client|error =>
-    test:mock(http:Client, new MockHttpClient(hospitalId));
+    test:mock(http:Client, new MockHttpClient());

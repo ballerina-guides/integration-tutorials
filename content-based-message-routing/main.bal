@@ -3,7 +3,7 @@ import ballerina/log;
 
 configurable int port = 8290;
 
-final http:Client grandOaksEP = check initializeHttpClient("http://localhost:9090/grandoaks/categories");
+final http:Client grandOakEP = check initializeHttpClient("http://localhost:9090/grandoaks/categories");
 final http:Client clemencyEP = check initializeHttpClient("http://localhost:9090/clemency/categories");
 final http:Client pineValleyEP = check initializeHttpClient("http://localhost:9090/pinevalley/categories");
 
@@ -44,29 +44,30 @@ type ReservationResponse record {|
     string appointmentDate;
 |};
 
+enum HospitalIds {
+    GRANDOAKS = "grandoaks",
+    CLEMENCY = "clemency",
+    PINEVALLEY = "pinevalley"
+};
+
 service /healthcare on new http:Listener(port) {
     resource function post categories/[string category]/reserve(ReservationRequest payload)
             returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
-        http:Client? hospitalEP = ();
         ReservationRequest {hospital_id, patient, ...reservationRequest} = payload;
+        http:Client hospitalEP;
         match hospital_id {
-            "grandoaks" => {
+            GRANDOAKS => {
                 log:printInfo("Routed to Grand Oak Community Hospital");
-                hospitalEP = grandOaksEP;
+                hospitalEP = grandOakEP;
             }
-            "clemency" => {
+            CLEMENCY => {
                 log:printInfo("Routed to Clemency Medical Center");
                 hospitalEP = clemencyEP;
             }
-            "pinevalley" => {
+            _ => {
                 log:printInfo("Routed to Pine Valley Community Hospital");
                 hospitalEP = pineValleyEP;
             }
-        }
-
-        if hospitalEP is () {
-            log:printError(string `Routed to none. Hospital not found: ${hospital_id}`);
-            return <http:NotFound> {body: string `Hospital not found: ${hospital_id}`};
         }
 
         ReservationResponse|http:ClientError resp = hospitalEP->/[category]/reserve.post({
