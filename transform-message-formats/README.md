@@ -109,6 +109,10 @@ import ballerina/log;
 
 3. Define two [configurable variables](https://ballerina.io/learn/by-example/#configurability) for the port the listener listen on and the URL of the hospital service.
 
+```ballerina
+configurable int port = 8290;
+```
+
 4. Define an [`http:Client` client](https://ballerina.io/learn/by-example/#http-client) to send requests to the backend services.
 
 ```ballerina
@@ -119,7 +123,7 @@ function initializeHttpClient() returns http:Client|error => new (hospitalServic
 
 > **Note** The argument passed to the `new` expression (`hospitalServicesUrl`) is the URL of the hospital service.
 > 
-> Here, a separate function is used to initialize the clients to aid with testing. Alternatively, the `new` expression can be used to initialize the clients.
+> Here, a separate function is used to initialize the clients to aid with testing. Alternatively, the `new` expression can be used directly to initialize the clients.
 >
 > ```ballerina
 > final http:Client hospitalServicesEP = new (hospitalServicesUrl);
