@@ -73,9 +73,9 @@ type ReservationResponse record {|
 configurable int port = 8290;
 configurable string hospitalServicesBackend = "http://localhost:9090";
 configurable string paymentBackend = "http://localhost:9090/healthcare/payments";
-configurable string gmailHost = "smtp.gmail.com";
-configurable string senderAddress = ?;
-configurable string appPassword = ?;
+configurable string host = "smtp.gmail.com";
+configurable string username = ?;
+configurable string password = ?;
 
 final http:Client hospitalServicesEP = check initializeHttpClient(hospitalServicesBackend);
 final http:Client paymentEP = check initializeHttpClient(paymentBackend);
@@ -83,12 +83,12 @@ final email:SmtpClient smtpClient = check initializeEmailClient();
 
 function initializeHttpClient(string url) returns http:Client|error => new (url);
 
-function initializeEmailClient() returns email:SmtpClient|error => new (gmailHost, senderAddress, appPassword);
+function initializeEmailClient() returns email:SmtpClient|error => new (host, username, password);
 
 service /healthcare on new http:Listener(port) {
 
     resource function post categories/[string category]/reserve(ReservationRequest payload)
-            returns http:InternalServerError|http:Created|http:NotFound {
+            returns http:Created|http:InternalServerError|http:NotFound {
 
         ReservationRequest {
             patient: {cardNo, ...patient},
@@ -128,7 +128,7 @@ service /healthcare on new http:Listener(port) {
         if payment !is Payment {
             log:printError("Payment settlement failed", payment);
             if payment is http:ClientRequestError {
-                return <http:NotFound>{body: string `unknown appointment number`};
+                return <http:NotFound>{body: string `payment failed: unknown appointment number`};
             }
             return <http:InternalServerError>{body: payment.message()};
         }
@@ -150,24 +150,24 @@ service /healthcare on new http:Listener(port) {
 }
 
 function getEmailContent(int appointmentNumber, Appointment appointment, Payment payment)
-        returns string {
-    return string `Appointment Confirmation
+        returns string =>
+    let Patient patient = appointment.patient, Doctor doctor = appointment.doctor in
+    string `Appointment Confirmation
 
     Appointment Details
         Appointment Number : ${appointmentNumber}
         Appointment Date: ${appointment.appointmentDate}
 
     Patient Details
-        Name : ${appointment.patient.name}
-        Contact Number : ${appointment.patient.phone}
+        Name : ${patient.name}
+        Contact Number : ${patient.phone}
 
     Doctor Details
-        Name : ${appointment.doctor.name}
-        Specialization : ${appointment.doctor.category}
+        Name : ${doctor.name}
+        Specialization : ${doctor.category}
 
     Payment Details
         Doctor Fee : ${payment.actualFee}
         Discount : ${payment.discount}
         Total Fee : ${payment.discounted}
         Payment Status : ${payment.status}`;
-}

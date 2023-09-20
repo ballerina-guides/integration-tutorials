@@ -146,7 +146,6 @@ public isolated client class MockEmailClient {
         if message.to == "" {
             return error("invalid email address");
         }
-        return ();
     }
 }
 
