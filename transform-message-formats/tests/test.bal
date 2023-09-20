@@ -156,14 +156,14 @@ public client class MockHttpClient {
         }
 
         if THOMAS_COLLINS != payload.doctor {
-            return getWrongHospitalOrDoctorResponse();
+            return getInvalidHospitalOrDoctorErrorResponse();
         }
 
         if payload.hospital is GRAND_OAK_HOSPITAL|CLEMENCY_MEDICAL_CENTER|PINE_VALLEY_HOSPITAL {
             return getSuccessfulAppointmentResponse(payload.hospital);
         }
 
-        return getWrongHospitalOrDoctorResponse();
+        return getInvalidHospitalOrDoctorErrorResponse();
     }
 }
 
@@ -190,7 +190,7 @@ isolated function getSuccessfulAppointmentResponse(string hospital) returns Rese
     appointmentDate: "2025-04-02"
 };
 
-isolated function getWrongHospitalOrDoctorResponse() returns http:ClientRequestError
+isolated function getInvalidHospitalOrDoctorErrorResponse() returns http:ClientRequestError
     => <http:ClientRequestError>error("Not Found",
                                         body = "requested doctor is not available at the requested hospital",
                                         headers = {},
