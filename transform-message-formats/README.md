@@ -8,7 +8,7 @@ To implement this use case, you will develop a REST service with a single resour
 
 The flow is as follows
 
-1. Receive a request with a JSON payload in the following form.
+1. Receive a request with a JSON payload similar to the following.
 ```json
 {
     "name": "John Doe",
@@ -24,7 +24,7 @@ The flow is as follows
     "appointment_date": "2017-04-02"
 }
 ```
-2. Transform the request data into the following form.
+2. Transform the request data into a form that is similar to the following.
 
 ```json
 {
@@ -43,7 +43,7 @@ The flow is as follows
 }
 ```
 
-3. Extract `hospital_id` to construct the URL of the post request to the hospital service.
+3. Extract `hospital_id` field to construct the URL of the post request to the hospital service.
 
 4. Retrieve the reservation response by calling the hospital service with the transformed request and `hospital_id`. The response will be similar to the following. 
 
@@ -112,7 +112,7 @@ configurable int port = 8290;
 configurable string hospitalServiceUrl = "http://localhost:9090";
 ```
 
-4. Define an [`http:Client` client](https://ballerina.io/learn/by-example/#http-client) to send requests to the backend hospital services.
+4. Define an [`http:Client`](https://ballerina.io/learn/by-example/#http-client) client to send requests to the backend hospital services.
 
 ```ballerina
 final http:Client hospitalServiceEP = check initializeHttpClient();
@@ -267,6 +267,10 @@ service /healthcare on new http:Listener(port) {
     ```
 
 - The `log` functions are used to [log](https://ballerina.io/learn/by-example/#log) information at `INFO`, `DEBUG`, and `ERROR` log levels.
+
+    ```ballerina
+    log:printError("Reservation request failed", resp);
+    ```
 
 - Use the `is` check to decide the response based on the response to the client call. If the client call was successful and the response is in the type of `ReservationResponse`, then, directly return it. If the request failed, log information at `ERROR` level and send a "NotFound" response if the client call failed with a 4xx status code or return an "InternalServerError" response for other failures.
 
