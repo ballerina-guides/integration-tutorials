@@ -140,7 +140,7 @@ public client class MockHttpClient {
         } payload;
 
         if path[2] != "surgery" {
-            return <http:ClientRequestError>error("unknown specialization",
+            return <http:ClientRequestError> error("unknown specialization",
                                         body = string `unknown specialization: ${path[2]}`,
                                         headers = {},
                                         statusCode = http:STATUS_NOT_FOUND); 
@@ -149,7 +149,7 @@ public client class MockHttpClient {
         do {
             payload = check (check message.ensureType(anydata)).cloneWithType();
         } on fail {
-            return <http:ClientRequestError>error("invalid payload",
+            return <http:ClientRequestError> error("invalid payload",
                                                 body = "invalid payload",
                                                 headers = {},
                                                 statusCode =  http:STATUS_BAD_REQUEST);
@@ -200,7 +200,7 @@ isolated function getSuccessAppointmentResponse(string hospital) returns Reserva
 };
 
 isolated function getWrongHospitalOrDoctorResponse() returns http:ClientRequestError
-    => <http:ClientRequestError>error("Not Found",
+    => <http:ClientRequestError> error("Not Found",
                                         body = "requested doctor is not available at the requested hospital",
                                         headers = {},
                                         statusCode = http:STATUS_NOT_FOUND);

@@ -68,10 +68,10 @@ service /healthcare on new http:Listener(port) {
 
         log:printError("Reservation request failed", resp);
         if resp is http:ClientRequestError {
-            return <http:NotFound>{body: "Unknown hospital, doctor or category"};
+            return <http:NotFound> {body: "Unknown hospital, doctor or category"};
         }
 
-        return <http:InternalServerError>{body: resp.message()};
+        return <http:InternalServerError> {body: resp.message()};
     }
 }
 
