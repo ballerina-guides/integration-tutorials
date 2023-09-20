@@ -2,7 +2,7 @@
 
 ## Overview
 
-In this tutorial, we will develop a service that accepts requests to make an appointment at a hospital, makes multiple calls to different backend services to make the appointment, and responds to the client with the relevant details. Calls to the backend services are made one after the other given that information from one call is required for the next. This effectively integrates several services and exposes them as a single service, also known as service orchestration.
+In this tutorial, you will develop a service that accepts requests to make an appointment at a hospital, makes multiple calls to different backend services to make the appointment, and responds to the client with the relevant details. Calls to the backend services are made one after the other given that information from one call is required for the next. This effectively integrates several services and exposes them as a single service, also known as service orchestration.
 
 To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension, and then run the service. This resource  will receive the user request, retrieve details from the backend services, and respond to the user request with the appointment details.
 
@@ -245,8 +245,10 @@ service /healthcare on new http:Listener(port) {
             return <http:InternalServerError> {body: appointment.message()};
         }
 
+        int appointmentNumber = appointment.appointmentNumber;
+
         Fee|http:ClientError fee = 
-                hospitalServicesEP->/[hospital_id]/categories/appointments/[appointment.appointmentNumber]/fee;
+                hospitalServicesEP->/[hospital_id]/categories/appointments/[appointmentNumber]/fee;
 
         if fee !is Fee {
             log:printError("Retrieving fee failed", fee);
@@ -261,9 +263,7 @@ service /healthcare on new http:Listener(port) {
             return <http:InternalServerError> {body: "fee retrieval failed"};
         }
 
-        int appointmentNumber = appointment.appointmentNumber;
-
-        ReservationStatus|http:ClientError status = paymentEP->/.post( {
+        ReservationStatus|http:ClientError status = paymentEP->/.post({
             appointmentNumber,
             doctor: appointment.doctor,
             patient,
@@ -355,8 +355,10 @@ service /healthcare on new http:Listener(port) {
 - If the appointment reservation was successful, we can now retrieve the fee, by making a `GET` request to the hospital service, with `hospital_id` and `appointmentNumber` from the `Appointment` payload as path parameters.
 
     ```ballerina
+    int appointmentNumber = appointment.appointmentNumber;
+
     Fee|http:ClientError fee = 
-            hospitalServicesEP->/[hospital_id]/categories/appointments/[appointment.appointmentNumber]/fee;
+            hospitalServicesEP->/[hospital_id]/categories/appointments/[appointmentNumber]/fee;
 
     if fee !is Fee {
         log:printError("Retrieving fee failed", fee);
@@ -395,9 +397,9 @@ service /healthcare on new http:Listener(port) {
 
     If the payment request fails, the response to the original request will be an appropriate error response. If not, the response will be the response from the payment service.
 
-#### Complete source
-
 You have successfully developed the required service.
+
+#### Complete source
 
 ```ballerina
 import ballerina/http;
@@ -498,8 +500,10 @@ service /healthcare on new http:Listener(port) {
             return <http:InternalServerError> {body: appointment.message()};
         }
 
+        int appointmentNumber = appointment.appointmentNumber;
+
         Fee|http:ClientError fee = 
-                hospitalServicesEP->/[hospital_id]/categories/appointments/[appointment.appointmentNumber]/fee;
+                hospitalServicesEP->/[hospital_id]/categories/appointments/[appointmentNumber]/fee;
 
         if fee !is Fee {
             log:printError("Retrieving fee failed", fee);
@@ -513,8 +517,6 @@ service /healthcare on new http:Listener(port) {
         if actualFee is error {
             return <http:InternalServerError> {body: "fee retrieval failed"};
         }
-
-        int appointmentNumber = appointment.appointmentNumber;
 
         ReservationStatus|http:ClientError status = paymentEP->/.post({
             appointmentNumber,
