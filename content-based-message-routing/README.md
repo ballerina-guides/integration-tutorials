@@ -1,14 +1,14 @@
 # Content Based Message Routing
 
-## What you'll build
+## Overview
 
-Let's develop a service that accepts requests to make an appointment at a hospital, makes a call to a particular hospital endpoint depending on the content provided.
+Let's develop a service that accepts requests to make an appointment at a hospital and makes a call to a particular hospital endpoint depending on the content provided.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with Ballerina Swan Lake extension. The resource will receive the user request, select the hospital endpoint based on the `hospital_id`, send to the hospital endpoint and retrieve the response with the correct reservation details.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. The resource will receive the user request, select the hospital endpoint based on the `hospital_id`, send a request to the hospital service and respond with the correct reservation details
 
 The flow is as follows:
 
-1. Receive a request with a json payload as follows.
+1. Receive a request with a JSON payload similar to the following.
 
 ```json
 {
@@ -27,13 +27,13 @@ The flow is as follows:
 }
 ```
 
-2. Extract the `hospital_id` and select the hospital backend. 
+2. Extract the `hospital_id` and select the hospital end-point. 
 
-- grandoaks -> `http://localhost:9090/grandoaks/categories`
-- clemencyEP -> `http://localhost:9090/clemency/categories`
-- pinevalley -> `http://localhost:9090/pinevalley/categories`
+- grand oaks -> `http://localhost:9090/grandoaks/categories`
+- clemency -> `http://localhost:9090/clemency/categories`
+- pine valley -> `http://localhost:9090/pinevalley/categories`
 
-3. Call the selected hospital service with the details of the payload and retrieve the response which will be in the following form.
+3. Send a request to the selected hospital service and retrieve the response which will be similar to the following.
 
 ```json
 {
@@ -65,15 +65,15 @@ The flow is as follows:
 - REST API
 - HTTP Client
 
-## Let's get started!
+## Develop the application
 
 ### Step 1: Set up the workspace
 
-Install [Ballerina Swan Lake](https://ballerina.io/downloads/) and the [Ballerina Swan Lake VSCode extension](https://marketplace.visualstudio.com/items?itemName=wso2.ballerina) on VSCode.
+Install [Ballerina Swan Lake](https://ballerina.io/downloads/) and the [Ballerina Swan Lake VS Code extension](https://marketplace.visualstudio.com/items?itemName=wso2.ballerina) on VS Code.
 
 ### Step 2: Develop the service
 
-Follow the instruction given in this to develop the service.
+Follow the instruction given in this section to develop the service.
 
 1. Create a new Ballerina project using the `bal` command and open it in VSCode.
 
@@ -83,18 +83,21 @@ $ bal new content-based-message-routing
 
 2. Introduce the source code in files with the `.bal` extension. (e.g., the `main.bal` file)
 
-Import the following modules.
-
 Import the
 - `ballerina/http` module to develop the REST API and define the clients that can be used to send requests to the backend services
-- `ballerina/log` module to log debug, error or info levels of information for each client request
+- `ballerina/log` module to log debug, error, or info levels of information for each client request
 
 ```ballerina
 import ballerina/http;
 import ballerina/log;
 ```
 
-3. Define a [configurable variable](https://ballerina.io/learn/by-example/#configurability) for the port the listener listen.
+3. Define a [configurable variable](https://ballerina.io/learn/by-example/#configurability) for the port the listener listen on.
+
+```ballerina
+configurable int port = 8290;
+```
+
 4. Define three [`http:Client` clients](https://ballerina.io/learn/by-example/#http-client) to send requests to the backend services.
 
 ```ballerina
@@ -104,16 +107,17 @@ final http:Client pineValleyEP = check initializeHttpClient("http://localhost:90
 
 function initializeHttpClient(string url) returns http:Client|error => new (url);
 ```
-The argument passed to the `new` expression is the URL of the backend service.
-
-> **Note:** Here, a separate function is used to initialize the clients to aid with testing. Alternatively, the `new` expression can be used to initialize the clients.
+> **Note:** The argument passed to the `new` expression is the URL of the backend service.
+>
+> Here, a separate function is used to initialize the clients to aid with testing. Alternatively, the `new` expression can be used directly to initialize the clients.
+>
 > ```ballerina
 > final http:Client grandoaksEP = new ("http://localhost:9090/grandoaks/categories");
 > final http:Client clemencyEP = new ("http://localhost:9090/clemency/categories");
 > final http:Client pinevalleyEP = new ("http://localhost:9090/pinevalley/categories");
 >```
 
-5. Define records corresponding to the request payload and response payloads.
+5. Define records corresponding to the request payload and response payload.
 
 ```ballerina
 type Patient record {|
@@ -152,7 +156,7 @@ type ReservationResponse record {|
 |};
 ```
 
-6. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes calls to the hospital backend services, retrieve relevant details, and responds to the client. 
+6. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes calls to the hospital backend services, retrieves relevant details, and responds to the client. 
 
 Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. Define an HTTP resource that allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` (corresponding to the specialization) is a path parameter. Use `ReservationRequest` as a parameter indicating that the resource expects a JSON object corresponding to `ReservationRequest` as the payload. Use `ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationResponse` on success or the response will be a "NotFound", "BadRequest" or "InternalServerError" response on error.
 
@@ -250,13 +254,16 @@ service /healthcare on new http:Listener(port) {
     ```ballerina
     if hospitalEP is () {
         log:printError(string `Routed to none. Hospital not found: ${hospital_id}`);
-        return <http:NotFound>{body: string `Hospital not found: ${hospital_id}`};
+        return <http:NotFound> {body: string `Hospital not found: ${hospital_id}`};
     }
     ```
 
 - The backend call is a `POST` request to the hospital service to reserve the appointment. The `category` value is used as path parameter. The response is assigned to the `resp` variable.
     ```ballerina
-    ReservationResponse|http:ClientError resp = hospitalEP->/[category]/reserve.post({patient, ...reservationRequest});
+    ReservationResponse|http:ClientError resp = hospitalEP->/[category]/reserve.post({
+        patient, 
+        ...reservationRequest
+    });
     ```
 
 - Use the `is` check to check whether the response is a `ReservationResponse` and return it as such if it is.
@@ -272,10 +279,10 @@ service /healthcare on new http:Listener(port) {
     ```ballerina
     log:printError("Reservation request failed", resp);
     if resp is http:ClientRequestError {
-        return <http:NotFound>{body: "Unknown hospital, doctor or category"};
+        return <http:NotFound> {body: "Unknown hospital, doctor or category"};
     }
 
-    return <http:InternalServerError>{body: resp.message()};
+    return <http:InternalServerError> {body: resp.message()};
     ```
 #### Complete source code
 
@@ -350,10 +357,13 @@ service /healthcare on new http:Listener(port) {
 
         if hospitalEP is () {
             log:printError(string `Routed to none. Hospital not found: ${hospital_id}`);
-            return <http:NotFound>{body: string `Hospital not found: ${hospital_id}`};
+            return <http:NotFound> {body: string `Hospital not found: ${hospital_id}`};
         }
 
-        ReservationResponse|http:ClientError resp = hospitalEP->/[category]/reserve.post({patient, ...reservationRequest});
+        ReservationResponse|http:ClientError resp = hospitalEP->/[category]/reserve.post({
+            patient,
+            ...reservationRequest
+        });
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",
@@ -364,10 +374,10 @@ service /healthcare on new http:Listener(port) {
 
         log:printError("Reservation request failed", resp);
         if resp is http:ClientRequestError {
-            return <http:NotFound>{body: "Unknown hospital, doctor or category"};
+            return <http:NotFound> {body: "Unknown hospital, doctor or category"};
         }
 
-        return <http:InternalServerError>{body: resp.message()};
+        return <http:InternalServerError> {body: resp.message()};
     }
 }
 ```
