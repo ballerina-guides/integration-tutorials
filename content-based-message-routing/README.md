@@ -2,7 +2,7 @@
 
 ## Overview
 
-In this tutorial, you will develop an appointment reservation service for serveral hospitals. Requests are routed to the relevant hospital based on the content of the request payload.
+In this tutorial, you will develop an appointment reservation service for several hospitals. Requests are routed to the relevant hospital based on the content of the request payload.
 
 To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. The resource will receive the user request, select the hospital service based on `hospital_id`, send a request to the hospital service, and respond with the correct reservation details.
 
@@ -277,7 +277,7 @@ service /healthcare on new http:Listener(port) {
     });
     ```
 
-- Use the `is` check to check whether the response is a `ReservationResponse` and return it as is (i.e., reservation successful)..
+- Use the `is` check to check whether the response is a `ReservationResponse` and return it as is (i.e., reservation successful)
 
     ```ballerina
     if resp is ReservationResponse {
