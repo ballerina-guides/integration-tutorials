@@ -284,7 +284,7 @@ The expected payload in the request to make the reservation consists of four fie
     {patient, doctor, ...reservationRequest}
     ```
 
-- Use the `is` check to check whether the response is a `ReservationResponse` and return it as is (i.e., reservation successful)
+- Use the `is` check to check whether the response is a `ReservationResponse` and return it as is (i.e., reservation successful).
 
     ```ballerina
     if resp is ReservationResponse {
