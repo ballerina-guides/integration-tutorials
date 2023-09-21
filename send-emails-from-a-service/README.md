@@ -8,7 +8,7 @@ To implement this use case, you will develop a REST service with a single resour
 
 The flow is as follows.
 
-1. Receive a request with a JSON payload similar to the following form.
+1. Receive a request with a JSON payload in the following form.
 
 ```json
 {
@@ -54,7 +54,7 @@ The flow is as follows.
 }
 ```
 
-3. Call the payment backend service to make the payment and retrieve the reservation response which will have a payload similar to the following. If the payment is successful, send an email to the user with the appointment details.
+3. Call the payment backend service to make the payment and retrieve the reservation response which will have a payload similar to that shown below. If the payment is successful, send an email to the user with the appointment details.
 
 ```json
 {
