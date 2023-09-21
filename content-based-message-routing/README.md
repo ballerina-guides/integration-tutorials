@@ -315,6 +315,12 @@ final http:Client pineValleyEP = check initializeHttpClient("http://localhost:90
 
 function initializeHttpClient(string url) returns http:Client|error => new (url);
 
+enum HospitalId {
+    GRAND_OAK = "grandoak",
+    CLEMENCY = "clemency",
+    PINEVALLEY = "pinevalley"
+};
+
 type Patient record {|
     string name;
     string dob;
@@ -349,12 +355,6 @@ type ReservationResponse record {|
     boolean confirmed;
     string appointmentDate;
 |};
-
-enum HospitalId {
-    GRAND_OAK = "grandoak",
-    CLEMENCY = "clemency",
-    PINEVALLEY = "pinevalley"
-};
 
 service /healthcare on new http:Listener(port) {
     resource function post categories/[string category]/reserve(ReservationRequest payload)
@@ -396,7 +396,6 @@ service /healthcare on new http:Listener(port) {
         return <http:InternalServerError> {body: resp.message()};
     }
 }
-
 ```
 
 #### Diagram
