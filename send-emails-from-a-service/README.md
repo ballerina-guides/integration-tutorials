@@ -8,7 +8,7 @@ To implement this use case, you will develop a REST service with a single resour
 
 The flow is as follows.
 
-1. Receive a request with a JSON payload similar the following form.
+1. Receive a request with a JSON payload similar to the following form.
 
 ```json
 {
@@ -54,7 +54,7 @@ The flow is as follows.
 }
 ```
 
-3. Call the payment backend service to make the payment and retrieve the reservation response which will have a payload similar to that shown below. If the payment is successful, send an email to the user with the appointment details.
+3. Call the payment backend service to make the payment and retrieve the reservation response which will have a payload similar to the following. If the payment is successful, send an email to the user with the appointment details.
 
 ```json
 {
@@ -104,7 +104,7 @@ import ballerina/http;
 import ballerina/log;
 ```
 
-1. Define [configurable variables](https://ballerina.io/learn/by-example/#configurability) for the port on which the listener should listen and the URLs of the backend services. Also define configurable variables for the host, username, and password of the SMTP client.
+3. Define [configurable variables](https://ballerina.io/learn/by-example/#configurability) for the port on which the listener should listen and the URLs of the backend services. Also define configurable variables for the host, username, and password of the SMTP client.
 
 > **Note:** Enable two factor authentication on your Google account, generate an app password, and use the app password in place of your email password. The app password can be generated with [this link](https://myaccount.google.com/apppasswords?pli=1&rapt=AEjHL4Mf5XDD4rE79YJpP5E2NoNwhvXMET_TWyBcQRn-HMzt0PI8BmptpMGRiBVIamW-0ECgVZtXxMRA19bL4Wfnq_hmjBEMqA).
 
@@ -117,7 +117,7 @@ configurable string username = ?;
 configurable string password = ?;
 ```
 
-1. Define two [`http:Client`](https://ballerina.io/learn/by-example/#http-client) clients to send requests to the backend services and one [`email:SmtpClient`](https://ballerina.io/learn/by-example/#email-client) client to send emails.
+4. Define two [`http:Client`](https://ballerina.io/learn/by-example/#http-client) clients to send requests to the backend services and one [`email:SmtpClient`](https://ballerina.io/learn/by-example/#email-client) client to send emails.
 
 ```ballerina
 final http:Client hospitalServicesEP = check initializeHttpClient(hospitalServicesBackend);
@@ -214,7 +214,7 @@ type ReservationResponse record {|
 
 - The initial record definitions can be generated using the "Paste JSON as record" VSCode command with the relevant JSON payloads and the records can then be modified as necessary.
 
-1. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource function that accepts user requests, makes calls to the backend services to retrieve relevant details, and sends emails to the client with appointment details.
+6. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource function that accepts user requests, makes calls to the backend services to retrieve relevant details, and sends emails to the client with appointment details.
 
 ```ballerina
 service /healthcare on new http:Listener(port) {
@@ -233,7 +233,7 @@ service /healthcare on new http:Listener(port) {
 
 - Use `http:Created|http:InternalServerError|http:NotFound` as the return type to indicate that the response will be a "Created" response when the email is sent successfully to the user or the response will be an "InternalServerError" or "NotFound" response on error.
 
-1. Implement the logic.
+7. Implement the logic.
 
 ```ballerina
 service /healthcare on new http:Listener(port) {
@@ -348,7 +348,7 @@ function getEmailContent(int appointmentNumber, Appointment appointment, Payment
     }
     ```
 
-- If the appointment reservation was successful, we can make the payment by making a `POST` request to the payment service. The payload includes details extracted out from the original request (for `card_number`) and the appointment reservation response (for `appointmentNumber`, `doctor`, `patient`, `fee`, and `confirmed`)
+- If the appointment reservation was successful, we can make the payment by making a `POST` request to the payment service. The payload includes details extracted out from the original request (for `card_number`) and the appointment reservation response (for `appointmentNumber`, `doctor`, `patient`, `fee`, and `confirmed`).
 
     ```ballerina
     Payment|http:ClientError payment = paymentEP->/.post({
@@ -369,7 +369,7 @@ function getEmailContent(int appointmentNumber, Appointment appointment, Payment
     }
     ```
 
-- If the payment was successful, the next and final step is to send an email to the user with the appointment details. We send the email specifying the user's email address, the subject, and the email body..
+- If the payment was successful, the next and final step is to send an email to the user with the appointment details. We send the email specifying the user's email address, the subject, and the email body.
 
     ```ballerina
     email:Error? sendMessage = smtpClient->sendMessage({
