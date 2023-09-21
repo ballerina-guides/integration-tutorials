@@ -288,7 +288,7 @@ service /healthcare on new http:Listener(port) {
     }
     ```
 
-- If the response is not a `ReservationResponse`, log information at `ERROR` level and return a "NotFound" response if the response is a `http:ClientRequestError` or an "InternalServerError" response if the response is a `http:ServerError`.
+- If the response is not a `ReservationResponse`, log the information at the `ERROR` level.  Return a "NotFound" response if the response is a `http:ClientRequestError`, or an "InternalServerError" response if the response is a `http:ServerError`.
 
     ```ballerina
     log:printError("Reservation request failed", resp);
