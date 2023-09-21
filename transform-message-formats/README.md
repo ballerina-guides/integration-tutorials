@@ -2,9 +2,9 @@
 
 ## Overview
 
-In this tutorial, you will develop an appointment reservation service. The requests are transformed from one format to another and forwarded to the backend hospital service.
+In this tutorial, you will develop a service via which you can reserve appointments at a hospital. The requests are transformed from one format to another and forwarded to the hospital service.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with Ballerina Swan Lake extension. The resource will receive the user request, transform the request format into another format, send a request to the hospital service, and respond with the correct reservation details.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with Ballerina Swan Lake extension. The resource will receive the user request, transform the request format into another format, send a request to the hospital service to make a reservation, and respond with the correct reservation details.
 
 The flow is as follows
 
@@ -43,9 +43,9 @@ The flow is as follows
 }
 ```
 
-3. Extract `hospital_id` field to construct the URL of the post request to the hospital service.
+3. Extract `hospital_id` field from the JSON payload to construct the URL of the post request to the hospital service.
 
-4. Retrieve the reservation response by calling the hospital service with the transformed request and `hospital_id`. The response will be similar to the following. 
+4. Send a request to the hospital service and retrieve the response which will be similar to the following. 
 
 ```json
 {
@@ -274,7 +274,7 @@ service /healthcare on new http:Listener(port) {
 
 - The `log` functions are used to [log](https://ballerina.io/learn/by-example/#log) information at `INFO`, `DEBUG`, and `ERROR` log levels.
 
-- Use the `is` check to decide the response based on the response to the client call. If the client call was successful and the response is in the type of `ReservationResponse`, then, directly return it. If the request failed, log information at `ERROR` level and send a "NotFound" response if the client call failed with a 4xx status code or return an "InternalServerError" response for other failures.
+- Use the `is` check to check whether the response is `ReservationResponse` and return it as is (i.e., reservation successful).
 
     ```ballerina
     if resp is ReservationResponse {
@@ -284,6 +284,9 @@ service /healthcare on new http:Listener(port) {
         return resp;
     }
 
+- If the response is not a `ReservationResponse`, log the information at `ERROR` level. Return a "NotFound" response if the response is a `http:ClientRequestError` or an "InternalServerError" response if otherwise.
+
+    ```ballerina
     log:printError("Reservation request failed", resp);
     if resp is http:ClientRequestError {
         return <http:NotFound> {body: "Unknown hospital, doctor or category"};
