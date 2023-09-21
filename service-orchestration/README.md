@@ -199,7 +199,7 @@ type ReservationStatus record {|
 
 - The initial record definitions can be generated using the "Paste JSON as record" VS Code command with the relevant JSON payloads and the records can then be modified as necessary.
 
-6. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes calls to the backend services to retrieve relevant details, and responds to the client. Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. Define an HTTP resource that allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` (corresponding to the specialization) is a path parameter. Use `ReservationRequest` as a parameter indicating that the resource expects a JSON object corresponding to `ReservationRequest` as the payload. Use `ReservationStatus|http:NotFound|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationStatus` on success or the response will be a "NotFound" or "InternalServerError" response on error.
+6. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes calls to the backend services to retrieve relevant details, and responds to the client.
 
 ```ballerina
 service /healthcare on new http:Listener(port) {
@@ -209,6 +209,14 @@ service /healthcare on new http:Listener(port) {
     }
 }
 ```
+
+- Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. 
+
+- The HTTP resource allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` (corresponding to the specialization) is a path parameter. 
+
+- Use `ReservationRequest` as a parameter indicating that the resource expects a JSON object corresponding to `ReservationRequest` as the payload. 
+
+- Use `ReservationStatus|http:NotFound|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationStatus` on success or the response will be a "NotFound" or "InternalServerError" response on error.
 
 7. Implement the logic.
 
