@@ -2,9 +2,9 @@
 
 ## Overview
 
-In this tutorial, you will develop an appointment reservation service for several hospitals. Requests are routed to the relevant hospital based on the content of the request payload.
+In this tutorial, you will develop a service via which you can reserve appointments at several hospitals. The requests are routed to the relevant hospital based on the content of the request payload.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. The resource will receive the user request, select the hospital service based on `hospital_id`, send a request to the hospital service, and respond with the correct reservation details.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. The resource will receive the user request, select the hospital endpoint based on the hospital ID, send a request to make a reservation at the hospital service, and respond with the correct reservation details.
 
 The flow is as follows:
 
@@ -23,6 +23,7 @@ The flow is as follows:
     },
     "doctor": "thomas collins",
     "hospital": "grand oak community hospital",
+    "hospital_id": "grandoak",
     "appointment_date": "2017-04-02"
 }
 ```
@@ -33,7 +34,7 @@ The flow is as follows:
 - clemency -> `http://localhost:9090/clemency/categories`
 - pinevalley -> `http://localhost:9090/pinevalley/categories`
 
-3. Send a request to the selected hospital service and retrieve the response which will be similar to the following.
+3. Send a request to the selected hospital endpoint and retrieve the response which will be similar to the following.
 
 ```json
 {
@@ -192,8 +193,8 @@ service /healthcare on new http:Listener(port) {
     resource function post categories/[string category]/reserve(ReservationRequest payload)
             returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
         ReservationRequest {hospital_id, patient, ...reservationRequest} = payload;
-        
-        log:printDebug("Routing to a hospital",
+
+        log:printDebug("Routing reservation request",
                         hospital_id = hospital_id,
                         patient = patient.name,
                         doctor = reservationRequest.doctor);
@@ -309,7 +310,7 @@ import ballerina/log;
 
 configurable int port = 8290;
 
-final http:Client grandOakEP = check initializeHttpClient("http://localhost:9090/grandoaks/categories");
+final http:Client grandOakEP = check initializeHttpClient("http://localhost:9090/grandoak/categories");
 final http:Client clemencyEP = check initializeHttpClient("http://localhost:9090/clemency/categories");
 final http:Client pineValleyEP = check initializeHttpClient("http://localhost:9090/pinevalley/categories");
 
@@ -318,7 +319,7 @@ function initializeHttpClient(string url) returns http:Client|error => new (url)
 enum HospitalId {
     GRAND_OAK = "grandoak",
     CLEMENCY = "clemency",
-    PINEVALLEY = "pinevalley"
+    PINE_VALLEY = "pinevalley"
 };
 
 type Patient record {|
@@ -333,7 +334,7 @@ type Patient record {|
 type ReservationRequest record {|
     Patient patient;
     string doctor;
-    string hospital_id;
+    HospitalId hospital_id;
     string hospital;
     string appointment_date;
 |};
@@ -361,7 +362,7 @@ service /healthcare on new http:Listener(port) {
             returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
         ReservationRequest {hospital_id, patient, ...reservationRequest} = payload;
 
-        log:printDebug("Routing to a hospital",
+        log:printDebug("Routing reservation request",
                         hospital_id = hospital_id,
                         patient = patient.name,
                         doctor = reservationRequest.doctor);
