@@ -4,7 +4,7 @@
 
 In this tutorial, you will develop a service via which you can reserve appointments at several hospitals. The requests are routed to the relevant hospital based on the content of the request payload.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. The resource will receive the user request, select the hospital endpoint based on the hospital ID, send a request to make a reservation at the hospital service, and respond with the correct reservation details.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. The resource will receive the user request, select the hospital endpoint based on the hospital ID, send a request to the relevant hospital service to make a reservation, and respond with the correct reservation details.
 
 The flow is as follows:
 
@@ -28,7 +28,7 @@ The flow is as follows:
 }
 ```
 
-2. Extract `hospital_id` field and select the hospital service endpoint according to the following criteria. 
+2. Extract the `hospital_id` field and select the corresponding hospital service endpoint.
 
 - grandoak -> `http://localhost:9090/grandoak/categories`
 - clemency -> `http://localhost:9090/clemency/categories`
@@ -243,7 +243,7 @@ service /healthcare on new http:Listener(port) {
 - Use a [typed binding pattern with a mapping binding pattern to destructure](https://ballerina.io/learn/by-example/rest-binding-pattern-in-mapping-binding-pattern/) the payload and assign required components of the value to separate variables.
     
     ```ballerina
-    ReservationRequest {hospital_id, patient, ...reservationRequest} = payload;
+    ReservationRequest {hospital_id, patient, doctor, ...reservationRequest} = payload;
     ```
     
     Here,
@@ -269,13 +269,19 @@ service /healthcare on new http:Listener(port) {
         }
     ```
 
-- The backend call is a `POST` request to the backend hospital service to reserve the appointment. The `category` value is used as a path parameter. The response is assigned to the `resp` variable.
+- Make a `POST` request to the backend hospital service to make the reservation. The `category` value is used as a path parameter.
 
     ```ballerina
     ReservationResponse|http:ClientError resp = hospitalEP->/[category]/reserve.post({
-        patient, 
+        patient,
+        doctor,
         ...reservationRequest
     });
+    ```
+The expected payload in the request to make the reservation consists of four fields, namely `patient`, `doctor`, `hospital`, and `appointment_date`. The `reservationRequest` variable is used as a rest argument since it contains `hospital`, and `appointment_date`. The payload is specified directly as an argument to the remote method call.
+
+    ```ballerina
+    {patient, doctor, ...reservationRequest}
     ```
 
 - Use the `is` check to check whether the response is a `ReservationResponse` and return it as is (i.e., reservation successful)
@@ -289,7 +295,7 @@ service /healthcare on new http:Listener(port) {
     }
     ```
 
-- If the response is not a `ReservationResponse`, log the information at the `ERROR` level.  Return a "NotFound" response if the response is a `http:ClientRequestError`, or an "InternalServerError" response if the response is a `http:ServerError`.
+- If the response is not a `ReservationResponse`, log the failure at `ERROR` level.  Return a "NotFound" response if the response is a `http:ClientRequestError`, or an "InternalServerError" response if the response is a `http:ServerError`.
 
     ```ballerina
     log:printError("Reservation request failed", resp);
