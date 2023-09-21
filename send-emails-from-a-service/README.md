@@ -2,7 +2,7 @@
 
 ## Overview
 
-In this tutorial, you will develop a service that accepts requests to make an appointment at a hospital, and sends an email to the client confirming the appointment reservation details.
+In this tutorial, you will develop a service that accepts requests to make an appointment at a hospital, makes the appointment, and sends an email to the client confirming the appointment details.
 
 To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. This resource will receive the user request, reserve the appointment, and send an email to the user with the appointment details.
 
@@ -54,7 +54,7 @@ The flow is as follows.
 }
 ```
 
-3. Finally, call the payment backend service to make the payment and retrieve the reservation response. If the payment is successful send an email to the user with the appointment details.
+3. Call the payment backend service to make the payment and retrieve the reservation response which will have a payload similar to that shown below. If the payment is successful, send an email to the user with the appointment details.
 
 ```json
 {
@@ -219,7 +219,7 @@ type ReservationResponse record {|
 ```ballerina
 service /healthcare on new http:Listener(port) {
     resource function post categories/[string category]/reserve(ReservationRequest payload) 
-            returns http:InternalServerError|http:NotFound? {
+            returns http:Created|http:InternalServerError|http:NotFound {
         
     }
 }
@@ -231,7 +231,7 @@ service /healthcare on new http:Listener(port) {
 
 - Use `ReservationRequest` as a parameter indicating that the resource expects a JSON object corresponding to `ReservationRequest` as the payload. 
 
-- Use `http:InternalServerError|http:NotFound?` as the return type to indicate that the response will be an "Accepted" response when the email is sent successfully to the user or the response will be an "InternalServerError" or "NotFound" response on error.
+- Use `http:Created|http:InternalServerError|http:NotFound` as the return type to indicate that the response will be a "Created" response when the email is sent successfully to the user or the response will be an "InternalServerError" or "NotFound" response on error.
 
 1. Implement the logic.
 
@@ -239,7 +239,7 @@ service /healthcare on new http:Listener(port) {
 service /healthcare on new http:Listener(port) {
 
     resource function post categories/[string category]/reserve(ReservationRequest payload)
-            returns http:InternalServerError|http:NotFound? {
+            returns http:Created|http:InternalServerError|http:NotFound {
 
         ReservationRequest {
             patient: {cardNo, ...patient},
@@ -296,7 +296,7 @@ service /healthcare on new http:Listener(port) {
         log:printDebug("Email sent successfully",
                         name = patient.name,
                         appointmentNumber = appointmentNumber);
-        return ();
+        <http:Created>{};
     }
 }
 
@@ -404,7 +404,7 @@ function getEmailContent(int appointmentNumber, Appointment appointment, Payment
             Payment Status: ${payment.status}`;
     ```
 
-- If the email is sent successfully, the response will be an "Accepted" response. If the email sending process resulted in an error, an "InternalServerError" response will be returned.
+- If the email is sent successfully, the response will be a "Created" response. If the email sending process resulted in an error, an "InternalServerError" response will be returned.
 
     ```ballerina
     email:Error? sendMessage = smtpClient->sendMessage({
@@ -419,7 +419,7 @@ function getEmailContent(int appointmentNumber, Appointment appointment, Payment
     log:printDebug("Email sent successfully",
                     name = patient.name,
                     appointmentNumber = appointmentNumber);
-    return ();
+    <http:Created>{};
     ```
 
 You have successfully developed the required service.
@@ -517,7 +517,7 @@ function initializeEmailClient() returns email:SmtpClient|error => new (host, us
 service /healthcare on new http:Listener(port) {
 
     resource function post categories/[string category]/reserve(ReservationRequest payload)
-            returns http:InternalServerError|http:NotFound? {
+            returns http:Created|http:InternalServerError|http:NotFound {
 
         ReservationRequest {
             patient: {cardNo, ...patient},
@@ -574,7 +574,7 @@ service /healthcare on new http:Listener(port) {
         log:printDebug("Email sent successfully",
                         name = patient.name,
                         appointmentNumber = appointmentNumber);
-        return ();
+        return <http:Created>{};
     }
 }
 

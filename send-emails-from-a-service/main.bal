@@ -88,7 +88,7 @@ function initializeEmailClient() returns email:SmtpClient|error => new (host, us
 service /healthcare on new http:Listener(port) {
 
     resource function post categories/[string category]/reserve(ReservationRequest payload)
-            returns http:InternalServerError|http:NotFound? {
+            returns http:Created|http:InternalServerError|http:NotFound {
 
         ReservationRequest {
             patient: {cardNo, ...patient},
@@ -145,7 +145,7 @@ service /healthcare on new http:Listener(port) {
         log:printDebug("Email sent successfully",
                         name = patient.name,
                         appointmentNumber = appointmentNumber);
-        return ();
+        return <http:Created>{};
     }
 }
 
