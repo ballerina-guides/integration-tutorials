@@ -54,18 +54,21 @@ service /healthcare on new http:Listener(port) {
     resource function post categories/[string category]/reserve(ReservationRequest payload)
             returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
         ReservationRequest {hospital_id, patient, ...reservationRequest} = payload;
+
+        log:printDebug("Routing to a hospital",
+                        hospital_id = hospital_id,
+                        patient = patient.name,
+                        doctor = reservationRequest.doctor);
+
         http:Client hospitalEP;
         match hospital_id {
             GRAND_OAK => {
-                log:printInfo("Routed to Grand Oak Community Hospital");
                 hospitalEP = grandOakEP;
             }
             CLEMENCY => {
-                log:printInfo("Routed to Clemency Medical Center");
                 hospitalEP = clemencyEP;
             }
             _ => {
-                log:printInfo("Routed to Pine Valley Community Hospital");
                 hospitalEP = pineValleyEP;
             }
         }
