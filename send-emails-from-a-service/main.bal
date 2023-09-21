@@ -88,7 +88,7 @@ function initializeEmailClient() returns email:SmtpClient|error => new (host, us
 service /healthcare on new http:Listener(port) {
 
     resource function post categories/[string category]/reserve(ReservationRequest payload)
-            returns http:Created|http:InternalServerError|http:NotFound {
+            returns http:InternalServerError|http:NotFound? {
 
         ReservationRequest {
             patient: {cardNo, ...patient},
@@ -145,7 +145,7 @@ service /healthcare on new http:Listener(port) {
         log:printDebug("Email sent successfully",
                         name = patient.name,
                         appointmentNumber = appointmentNumber);
-        return <http:Created>{};
+        return ();
     }
 }
 
@@ -155,19 +155,19 @@ function getEmailContent(int appointmentNumber, Appointment appointment, Payment
     string `Appointment Confirmation
 
     Appointment Details
-        Appointment Number : ${appointmentNumber}
+        Appointment Number: ${appointmentNumber}
         Appointment Date: ${appointment.appointmentDate}
 
     Patient Details
-        Name : ${patient.name}
-        Contact Number : ${patient.phone}
+        Name: ${patient.name}
+        Contact Number: ${patient.phone}
 
     Doctor Details
-        Name : ${doctor.name}
-        Specialization : ${doctor.category}
+        Name: ${doctor.name}
+        Specialization: ${doctor.category}
 
     Payment Details
-        Doctor Fee : ${payment.actualFee}
-        Discount : ${payment.discount}
-        Total Fee : ${payment.discounted}
-        Payment Status : ${payment.status}`;
+        Doctor Fee: ${payment.actualFee}
+        Discount: ${payment.discount}
+        Total Fee: ${payment.discounted}
+        Payment Status: ${payment.status}`;

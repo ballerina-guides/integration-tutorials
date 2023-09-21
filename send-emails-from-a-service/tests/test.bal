@@ -31,22 +31,22 @@ isolated function testSuccessfulReservation() returns error? {
     string expectedResp = string `Appointment Confirmation
 
     Appointment Details
-        Appointment Number : ${app.appointmentNumber}
+        Appointment Number: ${app.appointmentNumber}
         Appointment Date: ${app.appointmentDate}
 
     Patient Details
-        Name : ${app.patient.name}
-        Contact Number : ${app.patient.phone}
+        Name: ${app.patient.name}
+        Contact Number: ${app.patient.phone}
 
     Doctor Details
-        Name : ${app.doctor.name}
-        Specialization : ${app.doctor.category}
+        Name: ${app.doctor.name}
+        Specialization: ${app.doctor.category}
 
     Payment Details
-        Doctor Fee : ${app.doctor.fee}
-        Discount : ${20}
-        Total Fee : ${5600.0}
-        Payment Status : ${"settled"}`;
+        Doctor Fee: ${app.doctor.fee}
+        Discount: 20
+        Total Fee: 5600.0
+        Payment Status: settled`;
 
     lock {
         test:assertEquals(emailContent, expectedResp, "Response mismatched");
@@ -179,18 +179,18 @@ isolated function handleAppointment(http:PathParamType[] path, http:RequestMessa
         "surgery" => {
             lock {
                 appointment = {
-                    "appointmentNumber": checkpanic random:createIntInRange(1, 1500),
-                    "doctor": {
-                        "name": payload.doctor,
-                        "hospital": "grand oak community hospital",
-                        "category": "surgery",
-                        "availability": "9.00 a.m - 11.00 a.m",
-                        "fee": 7000.0
+                    appointmentNumber: checkpanic random:createIntInRange(1, 1500),
+                    doctor: {
+                        name: payload.doctor,
+                        hospital: "grand oak community hospital",
+                        category: "surgery",
+                        availability: "9.00 a.m - 11.00 a.m",
+                        fee: 7000.0
                     },
-                    "patient": payload.patient.cloneReadOnly(),
-                    "hospital": payload.hospital,
-                    "confirmed": false,
-                    "appointmentDate": payload.appointment_date
+                    patient: payload.patient.cloneReadOnly(),
+                    hospital: payload.hospital,
+                    confirmed: false,
+                    appointmentDate: payload.appointment_date
                 };
                 return <Appointment & readonly> appointment;
             }
@@ -225,14 +225,14 @@ isolated function handlePayment(http:RequestMessage message)
     }
 
     return {
-        "appointmentNo": payload.appointmentNumber,
-        "doctorName": payload.doctor.name,
-        "patient": payload.patient.name,
-        "actualFee": payload.fee,
-        "discount": 20,
-        "discounted": 5600.0,
-        "paymentID": "f130e2ed-a34e-4434-9b40-6a0a8054ee6b",
-        "status": "settled"   
+        appointmentNo: payload.appointmentNumber,
+        doctorName: payload.doctor.name,
+        patient: payload.patient.name,
+        actualFee: payload.fee,
+        discount: 20,
+        discounted: 5600.0,
+        paymentID: "f130e2ed-a34e-4434-9b40-6a0a8054ee6b",
+        status: "settled"   
     };
 
 }
