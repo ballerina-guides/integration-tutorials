@@ -4,7 +4,7 @@
 
 In this tutorial, you will develop a service via which you can reserve appointments at several hospitals. The requests are routed to the relevant hospital based on the content of the request payload.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. The resource will receive the user request, select the hospital endpoint based on the hospital ID, send a request to the relevant hospital service to make a reservation, and respond with the correct reservation details.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. The resource will receive the user request, select the hospital endpoint based on the hospital ID, send a request to the relevant hospital service to make a reservation, and respond with the reservation details.
 
 The flow is as follows:
 
