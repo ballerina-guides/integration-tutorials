@@ -2,9 +2,9 @@
 
 ## Overview
 
-In this tutorial, we will develop a service that accepts requests to make an appointment at a hospital, takes the request in one format, transforms that into another format and forwards to a backend hospital service.
+In this tutorial, you will develop an appointment reservation service. The requests are transformed from one format to another and forwarded to the backend hospital service.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with Ballerina Swan Lake extension. The resource will receive the user request, transform the request format into another format, retrieve the reservation details by calling the backend hospital service, and respond with the correct reservation details.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with Ballerina Swan Lake extension. The resource will receive the user request, transform the request format into another format, send a request to the hospital service, and respond with the correct reservation details.
 
 The flow is as follows
 
@@ -209,7 +209,13 @@ type ReservationResponse record {|
 
 7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes a call to the backend hospital service, retrieves reservation details, and responds to the client.
 
-Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. Define an HTTP resource that allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` (corresponding to the specialization) is a path parameter. Use `RequestData` as a parameter indicating that the resource expects a JSON object corresponding to `RequestData` as the payload. Use `ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationResponse` on success or the response will be a "NotFound", "BadRequest" or "InternalServerError" response on error.
+- Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. 
+
+- The HTTP resource allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` (corresponding to the specialization) is a path parameter.
+
+- Use `RequestData` as a parameter indicating that the resource expects a JSON object corresponding to `RequestData` as the payload. 
+
+- Use `ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationResponse` on success or the response will be a "NotFound", "BadRequest" or "InternalServerError" response on error.
 
 ```ballerina
 service /healthcare on new http:Listener(port) {
@@ -267,10 +273,6 @@ service /healthcare on new http:Listener(port) {
     ```
 
 - The `log` functions are used to [log](https://ballerina.io/learn/by-example/#log) information at `INFO`, `DEBUG`, and `ERROR` log levels.
-
-    ```ballerina
-    log:printError("Reservation request failed", resp);
-    ```
 
 - Use the `is` check to decide the response based on the response to the client call. If the client call was successful and the response is in the type of `ReservationResponse`, then, directly return it. If the request failed, log information at `ERROR` level and send a "NotFound" response if the client call failed with a 4xx status code or return an "InternalServerError" response for other failures.
 
