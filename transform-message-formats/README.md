@@ -45,7 +45,7 @@ The flow is as follows
 }
 ```
 
-4. Send a request to the hospital service and retrieve the response which will be similar to the following. 
+3. Send a request to the hospital service and retrieve the response which will be similar to the following. 
 
 ```json
 {
