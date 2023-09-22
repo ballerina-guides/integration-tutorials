@@ -4,7 +4,7 @@
 
 In this tutorial, you will develop a service via which you can reserve appointments at a hospital. The requests are transformed from one format to another and forwarded to the hospital service.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with Ballerina Swan Lake extension. The resource will receive the user request, transform the request format into another format, send a request to the hospital service to make a reservation, and respond with the correct reservation details.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with Ballerina Swan Lake extension. The resource will receive the user request, transform the request format into a format expected by the hospital service, send a request to the hospital service to make a reservation, and respond with the correct reservation details.
 
 The flow is as follows
 
@@ -44,8 +44,6 @@ The flow is as follows
     "appointment_date": "2017-04-02"
 }
 ```
-
-3. Extract `hospital_id` field from the JSON payload to construct the URL of the post request to the hospital service.
 
 4. Send a request to the hospital service and retrieve the response which will be similar to the following. 
 
@@ -211,8 +209,8 @@ type ReservationResponse record {|
 ```
 
 - `HospitalReservation` is the type of the data the resource takes as the payload.
-- `ReservationRequest` is the type of the data that will be sent to the hospital service.
-- `ReservationResponse` is the type of the response received from the hospital service.
+- `ReservationRequest` is the type of the data that the backend hospital service expects.
+- `ReservationResponse` is the type of the response the hospital service return.
 
 
 7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes a call to the backend hospital service to retrieve reservation details, and responds to the client.
@@ -288,6 +286,7 @@ service /healthcare on new http:Listener(port) {
                         appointmentNumber = resp.appointmentNumber);
         return resp;
     }
+    ```
 
 - If the response is not a `ReservationResponse`, log the information at `ERROR` level. Return a "NotFound" response if the response is a `http:ClientRequestError` or an "InternalServerError" response if otherwise.
 
