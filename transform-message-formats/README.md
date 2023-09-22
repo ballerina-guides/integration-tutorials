@@ -9,6 +9,7 @@ To implement this use case, you will develop a REST service with a single resour
 The flow is as follows
 
 1. Receive a request with a JSON payload similar to the following.
+
 ```json
 {
     "name": "John Doe",
@@ -18,12 +19,13 @@ The flow is as follows
     "phone": "8770586755",
     "email": "johndoe@gmail.com",
     "doctor": "thomas collins",
-    "hospital_id": "grandoaks",
+    "hospital_id": "grandoak",
     "hospital": "grand oak community hospital",
     "card_no": "7844481124110331",
     "appointment_date": "2017-04-02"
 }
 ```
+
 2. Transform the request data into a form that is similar to the following.
 
 ```json
@@ -76,7 +78,7 @@ The flow is as follows
 
 - REST API
 - HTTP client
-- Data Mapper
+- Data mapper
 
 ## Develop the application
 
@@ -128,9 +130,51 @@ function initializeHttpClient() returns http:Client|error => new (hospitalServic
 > final http:Client hospitalServiceEP = new (hospitalServiceUrl);
 >```
 
-5. Define records corresponding to the request payload and response payloads.
+5. Use the data-mapper to define the `transform` function which transform the payload from `HospitalReservation` to `ReservationRequest`. 
+
+    Follow the guide shown below to create the `transform` function.
+
+    ![Data mapper guide](./resources/tutorial_transform_message_formats_data_mapper_guide.gif)
+
+    The data mapper view of the completed `transform` function is shown below.
+
+    ![Data mapper view](./resources/tutorial_transform_message_formats_data_mapper_view.png)
+
+    The source code of the `transform` function will be as follows.
+
+    ```ballerina
+    isolated function transform(HospitalReservation details) returns ReservationRequest => {
+        patient: {
+            name: details.name,
+            dob: details.dob,
+            ssn: details.ssn,
+            address: details.address,
+            phone: details.phone,
+            email: details.email
+        },
+        doctor: details.doctor,
+        hospital: details.hospital,
+        appointment_date: details.appointment_date
+    };
+    ```
+
+6. Define rest of the records corresponding to the response payloads. The final set of records will look like this.
 
 ```ballerina
+type HospitalReservation record {|
+    string name;
+    string dob;
+    string ssn;
+    string address;
+    string phone;
+    string email;
+    string doctor;
+    string hospital_id;
+    string hospital;
+    string card_no;
+    string appointment_date;
+|};
+
 type Patient record {|
     string name;
     string dob;
@@ -138,15 +182,6 @@ type Patient record {|
     string address;
     string phone;
     string email;
-|};
-
-type RequestData record {|
-    *Patient;
-    string doctor;
-    string hospital_id;
-    string hospital;
-    string card_no;
-    string appointment_date;
 |};
 
 type ReservationRequest record {|
@@ -175,67 +210,40 @@ type ReservationResponse record {|
 |};
 ```
 
-- `RequestData` is the type of the data the resource takes as the payload.
+- `HospitalReservation` is the type of the data the resource takes as the payload.
 - `ReservationRequest` is the type of the data that will be sent to the hospital service.
 - `ReservationResponse` is the type of the response received from the hospital service.
 
-6. Use data-mapper to define the function which transform the payload from `RequestData` to `ReservationRequest`. 
 
-    Follow the guide shown below to create the `transform` function.
-
-    ![Data Mapper Guide](./resources/tutorial_transform_message_formats_data_mapper_guide.gif)
-
-    The data mapper diagram of the `transform` function is shown below.
-
-    ![Data Mapper Diagram](./resources/tutorial_transform_message_formats_data_mapper_diagram_transform_function.png)
-
-    The `transform` function will finally look like this:
-
-    ```ballerina
-    isolated function transform(RequestData details) returns ReservationRequest => {
-        patient: {
-            name: details.name,
-            dob: details.dob,
-            ssn: details.ssn,
-            address: details.address,
-            phone: details.phone,
-            email: details.email
-        },
-        doctor: details.doctor,
-        hospital: details.hospital,
-        appointment_date: details.appointment_date
-    };
-    ```
-
-7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes a call to the backend hospital service, retrieves reservation details, and responds to the client.
-
-- Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. 
-
-- The HTTP resource allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` (corresponding to the specialization) is a path parameter.
-
-- Use `RequestData` as a parameter indicating that the resource expects a JSON object corresponding to `RequestData` as the payload. 
-
-- Use `ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationResponse` on success or the response will be a "NotFound", "BadRequest" or "InternalServerError" response on error.
+7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes a call to the backend hospital service to retrieve reservation details, and responds to the client.
 
 ```ballerina
 service /healthcare on new http:Listener(port) {
-    isolated resource function post categories/[string category]/reserve(RequestData payload) 
+    isolated resource function post categories/[string category]/reserve(HospitalReservation payload) 
             returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
         
    }
 }
 ```
 
+- Use `/healthcare` as the service path (or the context) of the service which is attached to the listener listening on port `port`. 
+
+- The HTTP resource allows the `POST` operation on resource path `/categories/{category}/reserve`, where `category` (corresponding to the specialization) is a path parameter.
+
+- Use `HospitalReservation` as a parameter indicating that the resource expects a JSON object corresponding to `HospitalReservation` as the payload. 
+
+- Use `ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationResponse` on success or the response will be a "NotFound", "BadRequest" or "InternalServerError" response on error.
+
 8. Implement the logic.
 
 ```ballerina
 service /healthcare on new http:Listener(port) {
-    isolated resource function post categories/[string category]/reserve(RequestData payload) 
+    isolated resource function post categories/[string category]/reserve(HospitalReservation payload)
             returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
-        ReservationRequest req = transform(payload);
-        string hospitalId = payload.hospital_id;
+        ReservationRequest reservationReq = transform(payload);
+
         ReservationResponse|http:ClientError resp =
-                    hospitalServiceEP->/[hospitalId]/categories/[category]/reserve.post(req);
+                    hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(reservationReq);
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",
@@ -254,23 +262,20 @@ service /healthcare on new http:Listener(port) {
 }
 ```
 
-- Use the `transform` function to transform the data from `RequestData` to `ReservationRequest`.
+- Use the `transform` function to transform the data from `HospitalReservation` to `ReservationRequest`.
 
     ```ballerina
-    ReservationRequest req = transform(payload);
-    ```
-
-- Extract `hospital_id` from the payload and use it to construct the URL of the post request.
-
-    ```ballerina
-    string hospitalId = payload.hospital_id;
+    ReservationRequest reservationReq = transform(payload);
     ```
 
 - Send the transformed payload to the hospital service and get the response. Here, The `hospital_id` and `category` values are used as path parameters.
 
     ```ballerina
-    ReservationResponse|http:ClientError resp = hospitalServiceEP->/[hospitalId]/categories/[category]/reserve.post(req);
+    ReservationResponse|http:ClientError resp =
+                    hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(reservationReq);
     ```
+
+    The payload is specified directly as an argument to the remote method call.
 
 - The `log` functions are used to [log](https://ballerina.io/learn/by-example/#log) information at `INFO`, `DEBUG`, and `ERROR` log levels.
 
@@ -295,9 +300,9 @@ service /healthcare on new http:Listener(port) {
     return <http:InternalServerError> {body: resp.message()};
     ```
 
-#### Complete source code
-
 You have successfully developed the required service.
+
+#### Complete source code
 
 ```ballerina
 import ballerina/http;
@@ -310,6 +315,20 @@ final http:Client hospitalServiceEP = check initializeHttpClient();
 
 function initializeHttpClient() returns http:Client|error => new (hospitalServiceUrl);
 
+type HospitalReservation record {|
+    string name;
+    string dob;
+    string ssn;
+    string address;
+    string phone;
+    string email;
+    string doctor;
+    string hospital_id;
+    string hospital;
+    string card_no;
+    string appointment_date;
+|};
+
 type Patient record {|
     string name;
     string dob;
@@ -317,15 +336,6 @@ type Patient record {|
     string address;
     string phone;
     string email;
-|};
-
-type RequestData record {|
-    *Patient;
-    string doctor;
-    string hospital_id;
-    string hospital;
-    string card_no;
-    string appointment_date;
 |};
 
 type ReservationRequest record {|
@@ -354,13 +364,12 @@ type ReservationResponse record {|
 |};
 
 service /healthcare on new http:Listener(port) {
-    isolated resource function post categories/[string category]/reserve(
-            RequestData payload
-        ) returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
-        ReservationRequest req = transform(payload);
-        string hospitalId = payload.hospital_id;
+    isolated resource function post categories/[string category]/reserve(HospitalReservation payload)
+            returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
+        ReservationRequest reservationReq = transform(payload);
+
         ReservationResponse|http:ClientError resp =
-                    hospitalServiceEP->/[hospitalId]/categories/[category]/reserve.post(req);
+                    hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(reservationReq);
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",
@@ -378,20 +387,19 @@ service /healthcare on new http:Listener(port) {
     }
 }
 
-isolated function transform(RequestData details) returns ReservationRequest => {
+isolated function transform(HospitalReservation hospitalReservation) returns ReservationRequest => {
     patient: {
-        name: details.name,
-        dob: details.dob,
-        ssn: details.ssn,
-        address: details.address,
-        phone: details.phone,
-        email: details.email
+        name: hospitalReservation.name,
+        dob: hospitalReservation.dob,
+        ssn: hospitalReservation.ssn,
+        address: hospitalReservation.address,
+        phone: hospitalReservation.phone,
+        email: hospitalReservation.email
     },
-    doctor: details.doctor,
-    hospital: details.hospital,
-    appointment_date: details.appointment_date
+    doctor: hospitalReservation.doctor,
+    hospital: hospitalReservation.hospital,
+    appointment_date: hospitalReservation.appointment_date
 };
-
 ```
 
 #### Diagram
@@ -441,7 +449,7 @@ Let's send a request to the service using cURL as follows.
     "phone": "8770586755",
     "email": "johndoe@gmail.com",
     "doctor": "thomas collins",
-    "hospital_id": "grandoaks",
+    "hospital_id": "grandoak",
     "hospital": "grand oak community hospital",
     "card_no": "7844481124110331",
     "appointment_date": "2017-04-02"

@@ -8,6 +8,20 @@ final http:Client hospitalServiceEP = check initializeHttpClient();
 
 function initializeHttpClient() returns http:Client|error => new (hospitalServiceUrl);
 
+type HospitalReservation record {|
+    string name;
+    string dob;
+    string ssn;
+    string address;
+    string phone;
+    string email;
+    string doctor;
+    string hospital_id;
+    string hospital;
+    string card_no;
+    string appointment_date;
+|};
+
 type Patient record {|
     string name;
     string dob;
@@ -15,15 +29,6 @@ type Patient record {|
     string address;
     string phone;
     string email;
-|};
-
-type RequestData record {|
-    *Patient;
-    string doctor;
-    string hospital_id;
-    string hospital;
-    string card_no;
-    string appointment_date;
 |};
 
 type ReservationRequest record {|
@@ -52,12 +57,12 @@ type ReservationResponse record {|
 |};
 
 service /healthcare on new http:Listener(port) {
-    isolated resource function post categories/[string category]/reserve(RequestData payload)
+    isolated resource function post categories/[string category]/reserve(HospitalReservation payload)
             returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
-        ReservationRequest req = transform(payload);
-        string hospitalId = payload.hospital_id;
+        ReservationRequest reservationReq = transform(payload);
+
         ReservationResponse|http:ClientError resp =
-                    hospitalServiceEP->/[hospitalId]/categories/[category]/reserve.post(req);
+                    hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(reservationReq);
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",
@@ -75,16 +80,16 @@ service /healthcare on new http:Listener(port) {
     }
 }
 
-isolated function transform(RequestData details) returns ReservationRequest => {
+isolated function transform(HospitalReservation hospitalReservation) returns ReservationRequest => {
     patient: {
-        name: details.name,
-        dob: details.dob,
-        ssn: details.ssn,
-        address: details.address,
-        phone: details.phone,
-        email: details.email
+        name: hospitalReservation.name,
+        dob: hospitalReservation.dob,
+        ssn: hospitalReservation.ssn,
+        address: hospitalReservation.address,
+        phone: hospitalReservation.phone,
+        email: hospitalReservation.email
     },
-    doctor: details.doctor,
-    hospital: details.hospital,
-    appointment_date: details.appointment_date
+    doctor: hospitalReservation.doctor,
+    hospital: hospitalReservation.hospital,
+    appointment_date: hospitalReservation.appointment_date
 };
