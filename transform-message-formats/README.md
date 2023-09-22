@@ -238,7 +238,7 @@ service /healthcare on new http:Listener(port) {
 
 - The `log` functions are used to [log](https://ballerina.io/learn/by-example/#log) information at `INFO`, `DEBUG`, and `ERROR` log levels.
 
-- Use the `is` check to check whether the response is a `ReservationResponse` and return it as is (i.e., reservation successful).
+- Use the `is` check to check whether the response is `ReservationResponse` and return it as is (i.e., reservation successful).
 
     ```ballerina
     if resp is ReservationResponse {
