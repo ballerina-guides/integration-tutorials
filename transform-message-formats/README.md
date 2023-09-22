@@ -2,9 +2,9 @@
 
 ## Overview
 
-In this tutorial, you will develop a service via which you can reserve appointments at hospitals. The requests are transformed from one format to another and forwarded to the hospital service.
+In this tutorial, you will develop a service via which you can reserve appointments at hospitals. The requests are transformed from one format to another and forwarded to the hospital service to reserve the appointment.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with Ballerina Swan Lake extension. The resource will receive the user request, transform the request format into a format expected by the hospital service, send a request to the hospital service to make a reservation, and respond with the correct reservation details.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. The resource will receive the user request, transform the payload to the format expected by the hospital service, send a request with the transformed payload to the hospital service to make a reservation, and respond with the reservation details.
 
 The flow is as follows
 
@@ -26,7 +26,7 @@ The flow is as follows
 }
 ```
 
-2. Transform the request data into a form that is similar to the following.
+2. Transform the request payload to the following form.
 
 ```json
 {
@@ -122,15 +122,13 @@ function initializeHttpClient() returns http:Client|error => new (hospitalServic
 
 > **Note** The argument passed to the `new` expression (`hospitalServiceUrl`) is the URL of the backend hospital service.
 > 
-> Here, a separate function is used to initialize the clients to aid with testing. Alternatively, the `new` expression can be used directly to initialize the clients.
+> Here, a separate function is used to initialize the client to aid with testing. Alternatively, the `new` expression can be used directly to initialize the client.
 >
 > ```ballerina
 > final http:Client hospitalServiceEP = new (hospitalServiceUrl);
 >```
 
-5. Use the data-mapper to define the `transform` function which transform the payload from `HealthcareReservation` to `HospitalReservation`. 
-
-    Follow the guide shown below to create the `transform` function.
+5. Use the data mapper to define the `transform` function which transforms a `HealthcareReservation` record, representing the payload, to a `HospitalReservation` record.
 
     ![Data mapper guide](./resources/tutorial_transform_message_formats_data_mapper_guide.gif)
 
@@ -142,53 +140,23 @@ function initializeHttpClient() returns http:Client|error => new (hospitalServic
 
     ```ballerina
     isolated function transform(HealthcareReservation healthcareReservation) returns HospitalReservation => {
-    patient: {
-        name: healthcareReservation.name,
-        dob: healthcareReservation.dob,
-        ssn: healthcareReservation.ssn,
-        address: healthcareReservation.address,
-        phone: healthcareReservation.phone,
-        email: healthcareReservation.email
-    },
-    doctor: healthcareReservation.doctor,
-    hospital: healthcareReservation.hospital,
-    appointment_date: healthcareReservation.appointment_date
-};
+        patient: {
+            name: healthcareReservation.name,
+            dob: healthcareReservation.dob,
+            ssn: healthcareReservation.ssn,
+            address: healthcareReservation.address,
+            phone: healthcareReservation.phone,
+            email: healthcareReservation.email
+        },
+        doctor: healthcareReservation.doctor,
+        hospital: healthcareReservation.hospital,
+        appointment_date: healthcareReservation.appointment_date
+    };
     ```
 
-6. Define rest of the records corresponding to the response payloads. The final set of records will look like this.
+6. Define the rest of the records corresponding to the response payload.
 
 ```ballerina
-type HealthcareReservation record {|
-    string name;
-    string dob;
-    string ssn;
-    string address;
-    string phone;
-    string email;
-    string doctor;
-    string hospital_id;
-    string hospital;
-    string card_no;
-    string appointment_date;
-|};
-
-type Patient record {|
-    string name;
-    string dob;
-    string ssn;
-    string address;
-    string phone;
-    string email;
-|};
-
-type HospitalReservation record {|
-    Patient patient;
-    string doctor;
-    string hospital;
-    string appointment_date;
-|};
-
 type Doctor record {|
     string name;
     string hospital;
@@ -208,11 +176,11 @@ type ReservationResponse record {|
 |};
 ```
 
-- `HealthcareReservation` is the type of the payload the resource takes as the payload.
-- `HospitalReservation` is the type of the payload that the hospital service expects.
-- `ReservationResponse` is the type of the response that the hospital service returns.
+- `HealthcareReservation` is the record representing the request payload.
+- `HospitalReservation` is the record representing the payload expected by the hospital.
+- `ReservationResponse` is the record representing the payload of the response from the hospital service.
 
-7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, makes a call to the backend hospital service to retrieve reservation details, and responds to the client.
+7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, transforms the payload, makes a call to the backend hospital service to make the reservation, and responds to the client.
 
 ```ballerina
 service /healthcare on new http:Listener(port) {
@@ -229,18 +197,18 @@ service /healthcare on new http:Listener(port) {
 
 - Use `HealthcareReservation` as a parameter indicating that the resource expects a JSON object corresponding to `HealthcareReservation` as the payload. 
 
-- Use `ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationResponse` on success or the response will be a "NotFound", "BadRequest" or "InternalServerError" response on error.
+- Use `ReservationResponse|http:NotFound|http:InternalServerError` as the return type to indicate that the response will have a JSON payload corresponding to `ReservationResponse` on success or the response will be a "NotFound", or "InternalServerError" response on error.
 
 8. Implement the logic.
 
 ```ballerina
 service /healthcare on new http:Listener(port) {
     isolated resource function post categories/[string category]/reserve(HealthcareReservation payload)
-            returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
-        HospitalReservation reservationReq = transform(payload);
+            returns ReservationResponse|http:NotFound|http:InternalServerError {
+        HospitalReservation hospitalReservation = transform(payload);
 
         ReservationResponse|http:ClientError resp =
-                    hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(reservationReq);
+                    hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(hospitalReservation);
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",
@@ -259,20 +227,20 @@ service /healthcare on new http:Listener(port) {
 }
 ```
 
-- Use the `transform` function to transform the data from `HealthcareReservation` to `HospitalReservation`.
+- Use the `transform` function to transform the payload from a `HealthcareReservation` record to a `HospitalReservation` record.
 
     ```ballerina
-    HospitalReservation reservationReq = transform(payload);
+    HospitalReservation hospitalReservation = transform(payload);
     ```
 
 - Send the transformed payload to the hospital service and get the response. Here, The `hospital_id` and `category` values are used as path parameters.
 
     ```ballerina
     ReservationResponse|http:ClientError resp =
-                    hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(reservationReq);
+                    hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(hospitalReservation);
     ```
 
-    The payload is specified directly as an argument to the remote method call.
+    The transformed payload (`hospitalReservation`) is passed directly as an argument to the remote method call.
 
 - The `log` functions are used to [log](https://ballerina.io/learn/by-example/#log) information at `INFO`, `DEBUG`, and `ERROR` log levels.
 
@@ -287,7 +255,7 @@ service /healthcare on new http:Listener(port) {
     }
     ```
 
-- If the response is not a `ReservationResponse`, log the information at `ERROR` level. Return a "NotFound" response if the response is a `http:ClientRequestError` or an "InternalServerError" response if otherwise.
+- If the response is not a `ReservationResponse` record, log the information at `ERROR` level. Return a "NotFound" response if the response from the hospital service is a `http:ClientRequestError` response or an "InternalServerError" response otherwise..
 
     ```ballerina
     log:printError("Reservation request failed", resp);
@@ -363,11 +331,11 @@ type ReservationResponse record {|
 
 service /healthcare on new http:Listener(port) {
     isolated resource function post categories/[string category]/reserve(HealthcareReservation payload)
-            returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
-        HospitalReservation reservationReq = transform(payload);
+            returns ReservationResponse|http:NotFound|http:InternalServerError {
+        HospitalReservation hospitalReservation = transform(payload);
 
         ReservationResponse|http:ClientError resp =
-                    hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(reservationReq);
+                    hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(hospitalReservation);
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",
@@ -385,7 +353,7 @@ service /healthcare on new http:Listener(port) {
     }
 }
 
-isolated function transform(HealthcareReservation healthcareReservation) returns healthcareReservation => {
+isolated function transform(HealthcareReservation healthcareReservation) returns HospitalReservation => {
     patient: {
         name: healthcareReservation.name,
         dob: healthcareReservation.dob,
@@ -408,12 +376,12 @@ The [sequence diagram view](https://wso2.com/ballerina/vscode/docs/implement-the
 
 ### Step 3: Build and run the service
 
-You can run this service by using `bal run` command after navigating to the project root.
+You can run this service by navigating to the project root and using the `bal run` command.
 
 ```bash
 transform-message-formats$ bal run
 Compiling source
-        integration_tutorials/transform-message-formats:0.1.0
+        integration_tutorials/transform_message_formats:0.1.0
 
 Running executable
 ```

@@ -58,11 +58,11 @@ type ReservationResponse record {|
 
 service /healthcare on new http:Listener(port) {
     isolated resource function post categories/[string category]/reserve(HealthcareReservation payload)
-            returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
-        HospitalReservation reservationReq = transform(payload);
+            returns ReservationResponse|http:NotFound|http:InternalServerError {
+        HospitalReservation hospitalReservation = transform(payload);
 
         ReservationResponse|http:ClientError resp =
-                    hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(reservationReq);
+                    hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(hospitalReservation);
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",
