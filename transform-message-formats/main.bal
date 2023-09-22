@@ -8,7 +8,7 @@ final http:Client hospitalServiceEP = check initializeHttpClient();
 
 function initializeHttpClient() returns http:Client|error => new (hospitalServiceUrl);
 
-type HospitalReservation record {|
+type HealthcareReservation record {|
     string name;
     string dob;
     string ssn;
@@ -31,7 +31,7 @@ type Patient record {|
     string email;
 |};
 
-type ReservationRequest record {|
+type HospitalReservation record {|
     Patient patient;
     string doctor;
     string hospital;
@@ -57,9 +57,9 @@ type ReservationResponse record {|
 |};
 
 service /healthcare on new http:Listener(port) {
-    isolated resource function post categories/[string category]/reserve(HospitalReservation payload)
+    isolated resource function post categories/[string category]/reserve(HealthcareReservation payload)
             returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
-        ReservationRequest reservationReq = transform(payload);
+        HospitalReservation reservationReq = transform(payload);
 
         ReservationResponse|http:ClientError resp =
                     hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(reservationReq);
@@ -80,7 +80,7 @@ service /healthcare on new http:Listener(port) {
     }
 }
 
-isolated function transform(HospitalReservation hospitalReservation) returns ReservationRequest => {
+isolated function transform(HealthcareReservation hospitalReservation) returns HospitalReservation => {
     patient: {
         name: hospitalReservation.name,
         dob: hospitalReservation.dob,
