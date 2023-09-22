@@ -141,19 +141,19 @@ function initializeHttpClient() returns http:Client|error => new (hospitalServic
     The source code of the `transform` function will be as follows.
 
     ```ballerina
-    isolated function transform(HealthcareReservation details) returns HospitalReservation => {
-        patient: {
-            name: details.name,
-            dob: details.dob,
-            ssn: details.ssn,
-            address: details.address,
-            phone: details.phone,
-            email: details.email
-        },
-        doctor: details.doctor,
-        hospital: details.hospital,
-        appointment_date: details.appointment_date
-    };
+    isolated function transform(HealthcareReservation healthcareReservation) returns HospitalReservation => {
+    patient: {
+        name: healthcareReservation.name,
+        dob: healthcareReservation.dob,
+        ssn: healthcareReservation.ssn,
+        address: healthcareReservation.address,
+        phone: healthcareReservation.phone,
+        email: healthcareReservation.email
+    },
+    doctor: healthcareReservation.doctor,
+    hospital: healthcareReservation.hospital,
+    appointment_date: healthcareReservation.appointment_date
+};
     ```
 
 6. Define rest of the records corresponding to the response payloads. The final set of records will look like this.

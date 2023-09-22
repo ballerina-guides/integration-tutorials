@@ -80,16 +80,16 @@ service /healthcare on new http:Listener(port) {
     }
 }
 
-isolated function transform(HealthcareReservation hospitalReservation) returns HospitalReservation => {
+isolated function transform(HealthcareReservation healthcareReservation) returns HospitalReservation => {
     patient: {
-        name: hospitalReservation.name,
-        dob: hospitalReservation.dob,
-        ssn: hospitalReservation.ssn,
-        address: hospitalReservation.address,
-        phone: hospitalReservation.phone,
-        email: hospitalReservation.email
+        name: healthcareReservation.name,
+        dob: healthcareReservation.dob,
+        ssn: healthcareReservation.ssn,
+        address: healthcareReservation.address,
+        phone: healthcareReservation.phone,
+        email: healthcareReservation.email
     },
-    doctor: hospitalReservation.doctor,
-    hospital: hospitalReservation.hospital,
-    appointment_date: hospitalReservation.appointment_date
+    doctor: healthcareReservation.doctor,
+    hospital: healthcareReservation.hospital,
+    appointment_date: healthcareReservation.appointment_date
 };
