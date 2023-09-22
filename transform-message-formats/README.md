@@ -97,7 +97,7 @@ $ bal new transform-message-formats
 2. Introduce the source code in files with the `.bal` extension (e.g., the `main.bal` file).
 
 Import the
-- `ballerina/http` module to develop the REST API and define the clients that can be used to send requests to the backend services
+- `ballerina/http` module to develop the REST API and define the client that can be used to send requests to the backend services
 - `ballerina/log` module to log debug, error, or info level information for each client request
 
 ```ballerina
@@ -112,7 +112,7 @@ configurable int port = 8290;
 configurable string hospitalServiceUrl = "http://localhost:9090";
 ```
 
-4. Define an [`http:Client`](https://ballerina.io/learn/by-example/#http-client) client to send requests to the backend hospital services.
+4. Define an [`http:Client`](https://ballerina.io/learn/by-example/#http-client) client to send requests to the backend hospital service.
 
 ```ballerina
 final http:Client hospitalServiceEP = check initializeHttpClient();
@@ -154,7 +154,7 @@ function initializeHttpClient() returns http:Client|error => new (hospitalServic
     };
     ```
 
-6. Define the rest of the records corresponding to the response payload.
+6. Define the rest of the records corresponding to the response payload from the hospital service.
 
 ```ballerina
 type Doctor record {|
@@ -175,10 +175,6 @@ type ReservationResponse record {|
     string appointmentDate;
 |};
 ```
-
-- `HealthcareReservation` is the record representing the request payload.
-- `HospitalReservation` is the record representing the payload expected by the hospital.
-- `ReservationResponse` is the record representing the payload of the response from the hospital service.
 
 7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, transforms the payload, makes a call to the backend hospital service to make the reservation, and responds to the client.
 
@@ -233,18 +229,16 @@ service /healthcare on new http:Listener(port) {
     HospitalReservation hospitalReservation = transform(payload);
     ```
 
-- Send the transformed payload to the hospital service and get the response. Here, The `hospital_id` and `category` values are used as path parameters.
+- Use the transformed payload in the request to the hospital service and get the response. Here, The `hospital_id` and `category` values are used as path parameters.
 
     ```ballerina
     ReservationResponse|http:ClientError resp =
                     hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(hospitalReservation);
     ```
 
-    The transformed payload (`hospitalReservation`) is passed directly as an argument to the remote method call.
-
 - The `log` functions are used to [log](https://ballerina.io/learn/by-example/#log) information at `INFO`, `DEBUG`, and `ERROR` log levels.
 
-- Use the `is` check to check whether the response is `ReservationResponse` and return it as is (i.e., reservation successful).
+- Use the `is` check to check whether the response is a `ReservationResponse` and return it as is (i.e., reservation successful).
 
     ```ballerina
     if resp is ReservationResponse {
@@ -255,7 +249,7 @@ service /healthcare on new http:Listener(port) {
     }
     ```
 
-- If the response is not a `ReservationResponse` record, log the information at `ERROR` level. Return a "NotFound" response if the response from the hospital service is a `http:ClientRequestError` response or an "InternalServerError" response otherwise..
+- If the response is not a `ReservationResponse` record, log the information at `ERROR` level. Return a "NotFound" response if the response from the hospital service is a `http:ClientRequestError` response or an "InternalServerError" response otherwise.
 
     ```ballerina
     log:printError("Reservation request failed", resp);
