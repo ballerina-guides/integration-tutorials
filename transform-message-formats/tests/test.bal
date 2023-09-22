@@ -37,7 +37,7 @@ function testInvalidHospital() {
         phone: "8770586755",
         email: "johndoe@gmail.com",
         doctor: "thomas collins",
-        hospital_id: "monach",
+        hospital_id: "monarch",
         hospital: "monarch hospital",
         card_no: "7844481124110331",
         appointment_date: "2025-04-02"
