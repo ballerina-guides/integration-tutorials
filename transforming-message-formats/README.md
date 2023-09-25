@@ -183,7 +183,7 @@ Follow the instructions given in this section to develop the service.
         isolated resource function post categories/[string category]/reserve(HealthcareReservation payload)
                 returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
             
-    }
+        }
     }
     ```
 
