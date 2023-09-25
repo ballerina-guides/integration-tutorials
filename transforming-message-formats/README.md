@@ -1,4 +1,4 @@
-# Transform message formats
+# Transforming message formats
 
 ## Overview
 
@@ -91,7 +91,7 @@ Follow the instructions given in this section to develop the service.
 1. Create a new Ballerina project using the `bal` command and open it in VS Code.
 
     ```bash
-    $ bal new transform-message-formats
+    $ bal new transforming-message-formats
     ```
 
 2. Introduce the source code in files with the `.bal` extension (e.g., the `main.bal` file).
@@ -130,11 +130,11 @@ Follow the instructions given in this section to develop the service.
 
 5. Use the data mapper to define the `transform` function which transforms a `HealthcareReservation` record, representing the payload, to a `HospitalReservation` record.
 
-    ![Data mapper guide](./resources/tutorial_transform_message_formats_data_mapper_guide.gif)
+    ![Data mapper guide](./resources/tutorial_transforming_message_formats_data_mapper_guide.gif)
 
     The data mapper view of the completed `transform` function is shown below.
 
-    ![Data mapper view](./resources/tutorial_transform_message_formats_data_mapper_view.png)
+    ![Data mapper view](./resources/tutorial_transforming_message_formats_data_mapper_view.png)
 
     The source code of the `transform` function will be as follows.
 
@@ -366,16 +366,16 @@ isolated function transform(HealthcareReservation healthcareReservation) returns
 
 The [sequence diagram view](https://wso2.com/ballerina/vscode/docs/implement-the-code/sequence-diagram-view/) for the implemented resource method is the following.
 
-![sequence diagram](./resources/tutorial_transform_message_formats_diagram.png)
+![sequence diagram](./resources/tutorial_transforming_message_formats_diagram.png)
 
 ### Step 3: Build and run the service
 
 You can run this service by navigating to the project root and using the `bal run` command.
 
 ```bash
-transform-message-formats$ bal run
+transforming-message-formats$ bal run
 Compiling source
-        integration_tutorials/transform_message_formats:0.1.0
+        integration_tutorials/transforming_message_formats:0.1.0
 
 Running executable
 ```
