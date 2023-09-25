@@ -10,64 +10,64 @@ The flow is as follows.
 
 1. Receive a request with a JSON payload in the following form.
 
-```json
-{
-    "patient": {
-        "name": "John Doe",
-        "dob": "1940-03-19",
-        "ssn": "234-23-525",
-        "address": "California",
-        "phone": "8770586755",
-        "email": "johndoe@gmail.com",
-        "cardNo": "7844481124110331"
-    },
-    "doctor": "thomas collins",
-    "hospital_id": "grandoaks",
-    "hospital": "grand oak community hospital",
-    "appointment_date": "2023-10-02"
-}
-```
+    ```json
+    {
+        "patient": {
+            "name": "John Doe",
+            "dob": "1940-03-19",
+            "ssn": "234-23-525",
+            "address": "California",
+            "phone": "8770586755",
+            "email": "johndoe@gmail.com",
+            "cardNo": "7844481124110331"
+        },
+        "doctor": "thomas collins",
+        "hospital_id": "grandoaks",
+        "hospital": "grand oak community hospital",
+        "appointment_date": "2023-10-02"
+    }
+    ```
 
 2. Extract necessary details from the request (e.g., hospital, patient, doctor, etc.) and make a call to the hospital backend service to request an appointment. A response similar to the following will be returned from the hospital backend service on success.
 
-```json
-{
-    "appointmentNumber": 1,
-    "doctor": {
-        "name": "thomas collins",
+    ```json
+    {
+        "appointmentNumber": 1,
+        "doctor": {
+            "name": "thomas collins",
+            "hospital": "grand oak community hospital",
+            "category": "surgery",
+            "availability": "9.00 a.m - 11.00 a.m",
+            "fee": 7000.0
+        },
+        "patient": {
+            "name": "John Doe",
+            "dob": "1940-03-19",
+            "ssn": "234-23-525",
+            "address": "California",
+            "phone": "8770586755",
+            "email": "johndoe@gmail.com"
+        },
         "hospital": "grand oak community hospital",
-        "category": "surgery",
-        "availability": "9.00 a.m - 11.00 a.m",
-        "fee": 7000.0
-    },
-    "patient": {
-        "name": "John Doe",
-        "dob": "1940-03-19",
-        "ssn": "234-23-525",
-        "address": "California",
-        "phone": "8770586755",
-        "email": "johndoe@gmail.com"
-    },
-    "hospital": "grand oak community hospital",
-    "confirmed": false,
-    "appointmentDate": "2023-10-02"
-}
-```
+        "confirmed": false,
+        "appointmentDate": "2023-10-02"
+    }
+    ```
 
-3. Call the payment backend service to make the payment and retrieve the reservation response which will have a payload similar to that shown below. If the payment is successful, send an email to the user with the appointment details.
+3. Call the payment backend service to make the payment and retrieve the reservation response, which will have a payload similar to that shown below. If the payment is successful, send an email to the user with the appointment details.
 
-```json
-{
-    "appointmentNo": 1,
-    "doctorName": "thomas collins",
-    "patient": "John Doe",
-    "actualFee": 7000,
-    "discount": 20,
-    "discounted": 5600.0,
-    "paymentID": "8458c75a-c8e0-4d49-8da4-5e56043b1a20",
-    "status": "settled"
-}
-```
+    ```json
+    {
+        "appointmentNo": 1,
+        "doctorName": "thomas collins",
+        "patient": "John Doe",
+        "actualFee": 7000,
+        "discount": 20,
+        "discounted": 5600.0,
+        "paymentID": "8458c75a-c8e0-4d49-8da4-5e56043b1a20",
+        "status": "settled"
+    }
+    ```
 
 ### Concepts covered
 
@@ -79,7 +79,7 @@ The flow is as follows.
 
 ### Step 1: Set up the workspace
 
-Install [Ballerina Swan Lake](https://ballerina.io/downloads/) and the [Ballerina Swan Lake VS Code extension](https://marketplace.visualstudio.com/items?itemName=wso2.ballerina) on VS Code.
+Install [Ballerina Swan Lake](https://ballerina.io/downloads/) and the [Ballerina Swan Lake extension](https://marketplace.visualstudio.com/items?itemName=wso2.ballerina) on VS Code.
 
 ### Step 2: Develop the service
 
@@ -87,9 +87,9 @@ Follow the instructions given in this section to develop the service.
 
 1. Create a new Ballerina project using the `bal` command and open it in VS Code.
 
-```bash
-$ bal new send-emails-from-a-service
-```
+    ```bash
+    $ bal new send-emails-from-a-service
+    ```
 
 2. Introduce the source code in files with the `.bal` extension (e.g., the `main.bal` file). 
 
@@ -98,36 +98,36 @@ Import the
 - `ballerina/http` module to develop the REST API and define the clients that can be used to send requests to the backend services
 - `ballerina/log` module to log debug, error or info level information for each client request
 
-```ballerina
-import ballerina/email;
-import ballerina/http;
-import ballerina/log;
-```
+    ```ballerina
+    import ballerina/email;
+    import ballerina/http;
+    import ballerina/log;
+    ```
 
-3. Define [configurable variables](https://ballerina.io/learn/by-example/#configurability) for the port on which the listener should listen and the URLs of the backend services. Also define configurable variables for the host, username, and password of the SMTP client.
+3. Define [configurable variables](https://ballerina.io/learn/by-example/#configurability) for the port on which the listener should listen and the URLs of the backend services. Also, define configurable variables for the host, username, and password of the SMTP client.
 
-> **Note:** Enable two factor authentication on your Google account, generate an app password, and use the app password in place of your email password. The app password can be generated with [this link](https://myaccount.google.com/apppasswords?pli=1&rapt=AEjHL4Mf5XDD4rE79YJpP5E2NoNwhvXMET_TWyBcQRn-HMzt0PI8BmptpMGRiBVIamW-0ECgVZtXxMRA19bL4Wfnq_hmjBEMqA).
+> **Note:** Enable two-factor authentication on your Google account, generate an app password, and use the app password in place of your email password. The app password can be generated with [this link](https://myaccount.google.com/apppasswords?pli=1&rapt=AEjHL4Mf5XDD4rE79YJpP5E2NoNwhvXMET_TWyBcQRn-HMzt0PI8BmptpMGRiBVIamW-0ECgVZtXxMRA19bL4Wfnq_hmjBEMqA).
 
-```ballerina
-configurable int port = 8290;
-configurable string hospitalServicesBackend = "http://localhost:9090";
-configurable string paymentBackend = "http://localhost:9090/healthcare/payments";
-configurable string host = "smtp.gmail.com";
-configurable string username = ?;
-configurable string password = ?;
-```
+    ```ballerina
+    configurable int port = 8290;
+    configurable string hospitalServicesBackend = "http://localhost:9090";
+    configurable string paymentBackend = "http://localhost:9090/healthcare/payments";
+    configurable string host = "smtp.gmail.com";
+    configurable string username = ?;
+    configurable string password = ?;
+    ```
 
 4. Define two [`http:Client`](https://ballerina.io/learn/by-example/#http-client) clients to send requests to the backend services and one [`email:SmtpClient`](https://ballerina.io/learn/by-example/#email-client) client to send emails.
 
-```ballerina
-final http:Client hospitalServicesEP = check initializeHttpClient(hospitalServicesBackend);
-final http:Client paymentEP = check initializeHttpClient(paymentBackend);
-final email:SmtpClient smtpClient = check initializeEmailClient();
+    ```ballerina
+    final http:Client hospitalServicesEP = check initializeHttpClient(hospitalServicesBackend);
+    final http:Client paymentEP = check initializeHttpClient(paymentBackend);
+    final email:SmtpClient smtpClient = check initializeEmailClient();
 
-function initializeHttpClient(string url) returns http:Client|error => new (url);
+    function initializeHttpClient(string url) returns http:Client|error => new (url);
 
-function initializeEmailClient() returns email:SmtpClient|error => new (host, username, password);
-```
+    function initializeEmailClient() returns email:SmtpClient|error => new (host, username, password);
+    ```
 
 > **Note:** The argument to the `new` expression is the URL for the backend service. 
 > 
@@ -140,75 +140,75 @@ function initializeEmailClient() returns email:SmtpClient|error => new (host, us
 
 5. Define records corresponding to the request payload and response payloads.
 
-```ballerina
-type Patient record {|
-    string name;
-    string dob;
-    string ssn;
-    string address;
-    string phone;
-    string email;
-|};
+    ```ballerina
+    type Patient record {|
+        string name;
+        string dob;
+        string ssn;
+        string address;
+        string phone;
+        string email;
+    |};
 
-type Doctor record {|
-    string name;
-    string hospital;
-    string category;
-    string availability;
-    decimal fee;
-|};
+    type Doctor record {|
+        string name;
+        string hospital;
+        string category;
+        string availability;
+        decimal fee;
+    |};
 
-type Appointment record {|
-    int appointmentNumber;
-    Doctor doctor;
-    Patient patient;
-    boolean confirmed;
-    string hospital;
-    string appointmentDate;
-|};
+    type Appointment record {|
+        int appointmentNumber;
+        Doctor doctor;
+        Patient patient;
+        boolean confirmed;
+        string hospital;
+        string appointmentDate;
+    |};
 
-type PaymentSettlement record {|
-    int appointmentNumber;
-    Doctor doctor;
-    Patient patient;
-    decimal fee;
-    boolean confirmed;
-    string card_number;
-|};
+    type PaymentSettlement record {|
+        int appointmentNumber;
+        Doctor doctor;
+        Patient patient;
+        decimal fee;
+        boolean confirmed;
+        string card_number;
+    |};
 
-type Payment record {|
-    int appointmentNo;
-    string doctorName;
-    string patient;
-    decimal actualFee;
-    int discount;
-    decimal discounted;
-    string paymentID;
-    string status;
-|};
+    type Payment record {|
+        int appointmentNo;
+        string doctorName;
+        string patient;
+        decimal actualFee;
+        int discount;
+        decimal discounted;
+        string paymentID;
+        string status;
+    |};
 
-type ReservationRequest record {|
-    record {|
-        *Patient;
-        string cardNo;
-    |} patient;
-    string doctor;
-    string hospital_id;
-    string hospital;
-    string appointment_date;
-|};
+    type ReservationRequest record {|
+        record {|
+            *Patient;
+            string cardNo;
+        |} patient;
+        string doctor;
+        string hospital_id;
+        string hospital;
+        string appointment_date;
+    |};
 
-type ReservationResponse record {|
-    int appointmentNo;
-    string doctorName;
-    string patient;
-    decimal actualFee;
-    int discount;
-    decimal discounted;
-    string paymentID;
-    string status;
-|};
-```
+    type ReservationResponse record {|
+        int appointmentNo;
+        string doctorName;
+        string patient;
+        decimal actualFee;
+        int discount;
+        decimal discounted;
+        string paymentID;
+        string status;
+    |};
+    ```
 
 - The `ReservationRequest` record uses [record type inclusion](https://ballerina.io/learn/by-example/type-inclusion-for-records/) in the type of the `patient` field to include all the fields from the `Patient` record along with the `cardNo` field.
 
@@ -216,14 +216,14 @@ type ReservationResponse record {|
 
 6. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource function that accepts user requests, makes calls to the backend services to retrieve relevant details, and sends emails to the client with appointment details.
 
-```ballerina
-service /healthcare on new http:Listener(port) {
-    resource function post categories/[string category]/reserve(ReservationRequest payload) 
-            returns http:Created|http:InternalServerError|http:NotFound {
-        
+    ```ballerina
+    service /healthcare on new http:Listener(port) {
+        resource function post categories/[string category]/reserve(ReservationRequest payload) 
+                returns http:Created|http:InternalServerError|http:NotFound {
+            
+        }
     }
-}
-```
+    ```
 
 - Use `/healthcare` as the service path (or the context) for the service attached to the listener that is listening on port `port`.
   
@@ -235,94 +235,94 @@ service /healthcare on new http:Listener(port) {
 
 7. Implement the logic.
 
-```ballerina
-service /healthcare on new http:Listener(port) {
+    ```ballerina
+    service /healthcare on new http:Listener(port) {
 
-    resource function post categories/[string category]/reserve(ReservationRequest payload)
-            returns http:Created|http:InternalServerError|http:NotFound {
+        resource function post categories/[string category]/reserve(ReservationRequest payload)
+                returns http:Created|http:InternalServerError|http:NotFound {
 
-        ReservationRequest {
-            patient: {cardNo, ...patient},
-            doctor,
-            hospital,
-            hospital_id,
-            appointment_date
-        } = payload;
+            ReservationRequest {
+                patient: {cardNo, ...patient},
+                doctor,
+                hospital,
+                hospital_id,
+                appointment_date
+            } = payload;
 
-        Appointment|http:ClientError appointment =
-                hospitalServicesEP->/[hospital_id]/categories/[category]/reserve.post({
-            patient,
-            doctor,
-            hospital,
-            appointment_date
-        });
+            Appointment|http:ClientError appointment =
+                    hospitalServicesEP->/[hospital_id]/categories/[category]/reserve.post({
+                patient,
+                doctor,
+                hospital,
+                appointment_date
+            });
 
-        if appointment !is Appointment {
-            log:printError("Appointment reservation failed", appointment);
-            if appointment is http:ClientRequestError {
-                return <http:NotFound>{body: string `unknown hospital, doctor, or category`};
+            if appointment !is Appointment {
+                log:printError("Appointment reservation failed", appointment);
+                if appointment is http:ClientRequestError {
+                    return <http:NotFound>{body: string `unknown hospital, doctor, or category`};
+                }
+                return <http:InternalServerError>{body: appointment.message()};
             }
-            return <http:InternalServerError>{body: appointment.message()};
-        }
 
-        int appointmentNumber = appointment.appointmentNumber;
+            int appointmentNumber = appointment.appointmentNumber;
 
-        Payment|http:ClientError payment = paymentEP->/.post({
-            appointmentNumber,
-            doctor: appointment.doctor,
-            patient: appointment.patient,
-            fee: appointment.doctor.fee,
-            confirmed: appointment.confirmed,
-            card_number: cardNo
-        });
+            Payment|http:ClientError payment = paymentEP->/.post({
+                appointmentNumber,
+                doctor: appointment.doctor,
+                patient: appointment.patient,
+                fee: appointment.doctor.fee,
+                confirmed: appointment.confirmed,
+                card_number: cardNo
+            });
 
-        if payment !is Payment {
-            log:printError("Payment settlement failed", payment);
-            if payment is http:ClientRequestError {
-                return <http:NotFound>{body: string `payment failed: unknown appointment number`};
+            if payment !is Payment {
+                log:printError("Payment settlement failed", payment);
+                if payment is http:ClientRequestError {
+                    return <http:NotFound>{body: string `payment failed: unknown appointment number`};
+                }
+                return <http:InternalServerError>{body: payment.message()};
             }
-            return <http:InternalServerError>{body: payment.message()};
-        }
 
-        email:Error? sendMessage = smtpClient->sendMessage({
-            to: patient.email,
-            subject: "Appointment reservation confirmed at " + hospital,
-            body: getEmailContent(appointmentNumber, appointment, payment)
-        });
+            email:Error? sendMessage = smtpClient->sendMessage({
+                to: patient.email,
+                subject: "Appointment reservation confirmed at " + hospital,
+                body: getEmailContent(appointmentNumber, appointment, payment)
+            });
 
-        if sendMessage is email:Error {
-            return <http:InternalServerError>{body: sendMessage.message()};
+            if sendMessage is email:Error {
+                return <http:InternalServerError>{body: sendMessage.message()};
+            }
+            log:printDebug("Email sent successfully",
+                            name = patient.name,
+                            appointmentNumber = appointmentNumber);
+            <http:Created>{};
         }
-        log:printDebug("Email sent successfully",
-                        name = patient.name,
-                        appointmentNumber = appointmentNumber);
-        <http:Created>{};
     }
-}
 
-function getEmailContent(int appointmentNumber, Appointment appointment, Payment payment)
-        returns string =>
-    let Patient patient = appointment.patient, Doctor doctor = appointment.doctor in
-    string `Appointment Confirmation
+    function getEmailContent(int appointmentNumber, Appointment appointment, Payment payment)
+            returns string =>
+        let Patient patient = appointment.patient, Doctor doctor = appointment.doctor in
+        string `Appointment Confirmation
 
-    Appointment Details
-        Appointment Number: ${appointmentNumber}
-        Appointment Date: ${appointment.appointmentDate}
+        Appointment Details
+            Appointment Number: ${appointmentNumber}
+            Appointment Date: ${appointment.appointmentDate}
 
-    Patient Details
-        Name: ${patient.name}
-        Contact Number: ${patient.phone}
+        Patient Details
+            Name: ${patient.name}
+            Contact Number: ${patient.phone}
 
-    Doctor Details
-        Name: ${doctor.name}
-        Specialization: ${doctor.category}
+        Doctor Details
+            Name: ${doctor.name}
+            Specialization: ${doctor.category}
 
-    Payment Details
-        Doctor Fee: ${payment.actualFee}
-        Discount: ${payment.discount}
-        Total Fee: ${payment.discounted}
-        Payment Status: ${payment.status}`;
-```
+        Payment Details
+            Doctor Fee: ${payment.actualFee}
+            Discount: ${payment.discount}
+            Total Fee: ${payment.discounted}
+            Payment Status: ${payment.status}`;
+    ```
 
 - The first backend call is a `POST` request to the hospital service to reserve the appointment. The `hospital_id` and `category` values are used as path parameters.
 
@@ -620,7 +620,7 @@ Let's test the use case by sending a request to the service.
 
 #### Start the backend service
 
-Download the JAR file for the backend service from the [backend service](https://github.com/ballerina-guides/integration-tutorials/blob/main/backends/hospital-service/) and execute the following command to start the service:
+Download the JAR file for the [backend service](https://github.com/ballerina-guides/integration-tutorials/blob/main/backends/hospital-service/hospitalservice.jar) and execute the following command to start the service:
 
 ```bash
 bal run hospitalservice.jar
@@ -634,29 +634,29 @@ Let's send a request to the service using cURL as follows.
 
 2. Create a file named `request.json` with the request payload.
 
-```json
-{
-    "patient": {
-        "name": "John Doe",
-        "dob": "1940-03-19",
-        "ssn": "234-23-525",
-        "address": "California",
-        "phone": "8770586755",
-        "email": "johndoe@gmail.com",
-        "cardNo": "7844481124110331"
-    },
-    "doctor": "thomas collins",
-    "hospital_id": "grandoaks",
-    "hospital": "grand oak community hospital",
-    "appointment_date": "2023-10-02"
-}
-```
+    ```json
+    {
+        "patient": {
+            "name": "John Doe",
+            "dob": "1940-03-19",
+            "ssn": "234-23-525",
+            "address": "California",
+            "phone": "8770586755",
+            "email": "johndoe@gmail.com",
+            "cardNo": "7844481124110331"
+        },
+        "doctor": "thomas collins",
+        "hospital_id": "grandoaks",
+        "hospital": "grand oak community hospital",
+        "appointment_date": "2023-10-02"
+    }
+    ```
 
 3. Execute the following command.
 
-```bash
-curl -v -X POST --data @request.json http://localhost:8290/healthcare/categories/surgery/reserve --header "Content-Type:application/json"
-```
+    ```bash
+    curl -v -X POST --data @request.json http://localhost:8290/healthcare/categories/surgery/reserve --header "Content-Type:application/json"
+    ```
 
 #### Verify the email
 
