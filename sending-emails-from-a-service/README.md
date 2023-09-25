@@ -88,7 +88,7 @@ Follow the instructions given in this section to develop the service.
 1. Create a new Ballerina project using the `bal` command and open it in VS Code.
 
     ```bash
-    $ bal new send-emails-from-a-service
+    $ bal new sending-emails-from-a-service
     ```
 
 2. Introduce the source code in files with the `.bal` extension (e.g., the `main.bal` file). 
@@ -607,9 +607,9 @@ function getEmailContent(int appointmentNumber, Appointment appointment, Payment
 You can run this service by navigating to the project root and using the `bal run` command.
 
 ```bash
-send-emails-from-a-service$ bal run
+sending-emails-from-a-service$ bal run
 Compiling source
-        integration_tutorials/send_emails_from_a_service:0.1.0
+        integration_tutorials/sending_emails_from_a_service:0.1.0
 
 Running executable
 ```
