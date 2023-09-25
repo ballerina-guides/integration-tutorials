@@ -334,7 +334,7 @@ modules = [
 
 [[package]]
 org = "integration_tutorials"
-name = "send_emails_from_a_service"
+name = "sending_emails_from_a_service"
 version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "email"},
@@ -345,6 +345,6 @@ dependencies = [
 	{org = "ballerinai", name = "observe"}
 ]
 modules = [
-	{org = "integration_tutorials", packageName = "send_emails_from_a_service", moduleName = "send_emails_from_a_service"}
+	{org = "integration_tutorials", packageName = "sending_emails_from_a_service", moduleName = "sending_emails_from_a_service"}
 ]
 
