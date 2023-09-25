@@ -468,6 +468,7 @@ Let's send a request to the service using cURL as follows.
     ```bash
     curl -v -X POST --data @request.json http://localhost:8290/healthcare/categories/surgery/reserve --header "Content-Type:application/json"
     ```
+
 #### Verify the response
 
 You will see a response similar to the following for a successful appointment reservation.
