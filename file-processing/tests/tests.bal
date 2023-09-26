@@ -12,11 +12,11 @@ function testValidFileProcessing() returns error? {
     int successfulFileCount = (check file:readDir(mvOnSuccessPath)).length();
     int failedFileCount = (check file:readDir(mvOnFailurePath)).length();
 
-    string filename = string `testfile_${time:monotonicNow()}.txt`;
+    string filename = string `testfile_${time:monotonicNow()}.csv`;
     string[] content = [
-        "firstName, lastName, phone",
-        "amy, roy, 0112222222",
-        "joy, williams, 0111111111"
+        "First Name, Last Name, Phone",
+        "Amy, Roy, 0112222222",
+        "Joy, Williams, 0111111111"
     ];
 
     check io:fileWriteLines(
@@ -60,15 +60,15 @@ function getPerson(string content) returns store:Person {
 @test:Config {
     dependsOn: [testValidFileProcessing]
 }
-function testInvalidFileProcessing() returns error? {
+function testInvalidCSVFileProcessing() returns error? {
     int successfulFileCount = (check file:readDir(mvOnSuccessPath)).length();
     int failedFileCount = (check file:readDir(mvOnFailurePath)).length();
 
-    string filename = string `testfile_${time:monotonicNow()}.txt`;
+    string filename = string `testfile_${time:monotonicNow()}.csv`;
     string[] content = [
-        "firstName, phone",
-        "joy, 0111111111",
-        "amy, 0112222222"
+        "First Name, Phone",
+        "Joy, 0111111111",
+        "Amy, 0112222222"
     ];
 
     check io:fileWriteLines(
@@ -86,5 +86,40 @@ function testInvalidFileProcessing() returns error? {
     test:assertFalse(
         check file:test(string `${inPath}${file:pathSeparator}${filename}`, file:EXISTS));
     test:assertTrue(
+        check file:test(string `${mvOnFailurePath}${file:pathSeparator}${filename}`, file:EXISTS));
+}
+
+
+@test:Config {
+    dependsOn: [testInvalidCSVFileProcessing]
+}
+function testNonCSVFileProcessing() returns error? {
+    int inDirFileCount = (check file:readDir(inPath)).length();
+    int successfulFileCount = (check file:readDir(mvOnSuccessPath)).length();
+    int failedFileCount = (check file:readDir(mvOnFailurePath)).length();
+
+    string filename = string `testfile_${time:monotonicNow()}.txt`;
+    string[] content = [
+        "First Name, Last Name, Phone",
+        "Amy, Roy, 0112222222",
+        "Joy, Williams, 0111111111"
+    ];
+
+    check io:fileWriteLines(
+        string `${inPath}${file:pathSeparator}${filename}`,
+        content
+    );
+
+    runtime:sleep(3);
+
+    test:assertEquals((check file:readDir(inPath)).length(), inDirFileCount + 1);
+    test:assertEquals((check file:readDir(mvOnSuccessPath)).length(), successfulFileCount);
+    test:assertEquals((check file:readDir(mvOnFailurePath)).length(), failedFileCount);
+
+    test:assertTrue(
+        check file:test(string `${inPath}${file:pathSeparator}${filename}`, file:EXISTS));
+    test:assertFalse(
+        check file:test(string `${mvOnSuccessPath}${file:pathSeparator}${filename}`, file:EXISTS));
+    test:assertFalse(
         check file:test(string `${mvOnFailurePath}${file:pathSeparator}${filename}`, file:EXISTS));
 }

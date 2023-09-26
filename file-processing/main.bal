@@ -5,11 +5,17 @@ import ballerina/io;
 import ballerina/log;
 import ballerina/persist;
 
-const string TEXT_EXT = ".txt";
+const string CSV_EXT = ".csv";
 
 configurable string inPath = "./in";
 configurable string mvOnSuccessPath = "./out";
 configurable string mvOnFailurePath = "./failed";
+
+type Person record {|
+    string First\ Name;
+    string Last\ Name;
+    string Phone;
+|};
 
 function init() returns error? {
     check createDirIfNotExists(mvOnSuccessPath);
@@ -29,14 +35,20 @@ service on fileListener {
     remote function onCreate(file:FileEvent event) {
         string file = event.name;
 
-        if !file.endsWith(TEXT_EXT) {
-            log:printInfo("Ignoring non-text file", filename = file);
+        if !file.endsWith(CSV_EXT) {
+            log:printInfo("Ignoring non-CSV file", filename = file);
             return;
         }
 
         do {
-            store:Person[] persons = check io:fileReadCsv(file);
-            _ = check storeClient->/people.post(persons);
+            Person[] csvPersons = check io:fileReadCsv(file);
+            store:Person[] storePersons = from Person person in csvPersons
+                                            select {
+                                                firstName: person.First\ Name,
+                                                lastName: person.Last\ Name,
+                                                phone: person.Phone
+                                            };
+            _ = check storeClient->/people.post(storePersons);
             move(file, mvOnSuccessPath);
         } on fail io:Error|persist:Error err {
             if err is io:Error {
