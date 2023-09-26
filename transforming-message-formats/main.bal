@@ -8,19 +8,20 @@ final http:Client hospitalServiceEP = check initializeHttpClient();
 
 function initializeHttpClient() returns http:Client|error => new (hospitalServiceUrl);
 
-type HealthcareReservation record {|
-    string name;
+type HealthcareReservation record {
+    string firstName;
+    string lastName;
     string dob;
-    string ssn;
+    int[3] ssn;
     string address;
     string phone;
     string email;
     string doctor;
-    string hospital_id;
+    string hospitalId;
     string hospital;
-    string card_no;
-    string appointment_date;
-|};
+    string cardNo;
+    string appointmentDate;
+};
 
 type Patient record {|
     string name;
@@ -62,11 +63,11 @@ service /healthcare on new http:Listener(port) {
         HospitalReservation hospitalReservation = transform(payload);
 
         ReservationResponse|http:ClientError resp =
-                    hospitalServiceEP->/[payload.hospital_id]/categories/[category]/reserve.post(hospitalReservation);
+                    hospitalServiceEP->/[payload.hospitalId]/categories/[category]/reserve.post(hospitalReservation);
 
         if resp is ReservationResponse {
             log:printDebug("Reservation request successful",
-                            name = payload.name,
+                            name = hospitalReservation.patient.name,
                             appointmentNumber = resp.appointmentNumber);
             return resp;
         }
@@ -80,16 +81,17 @@ service /healthcare on new http:Listener(port) {
     }
 }
 
-isolated function transform(HealthcareReservation healthcareReservation) returns HospitalReservation => {
-    patient: {
-        name: healthcareReservation.name,
-        dob: healthcareReservation.dob,
-        ssn: healthcareReservation.ssn,
-        address: healthcareReservation.address,
-        phone: healthcareReservation.phone,
-        email: healthcareReservation.email
-    },
-    doctor: healthcareReservation.doctor,
-    hospital: healthcareReservation.hospital,
-    appointment_date: healthcareReservation.appointment_date
-};
+isolated function transform(HealthcareReservation reservation) returns HospitalReservation => 
+    let var ssn = reservation.ssn in {
+        patient: {
+            name: reservation.firstName + " " + reservation.lastName,
+            dob: reservation.dob,
+            ssn: string `${ssn[0]}-${ssn[1]}-${ssn[2]}`,
+            address: reservation.address,
+            phone: reservation.phone,
+            email: reservation.email
+        },
+        doctor: reservation.doctor,
+        hospital: reservation.hospital,
+        appointment_date: reservation.appointmentDate
+    };
