@@ -52,7 +52,7 @@ type ReservationResponse record {|
 
 service /healthcare on new http:Listener(port) {
     resource function post categories/[string category]/reserve(ReservationRequest payload)
-            returns ReservationResponse|http:NotFound|http:BadRequest|http:InternalServerError {
+            returns ReservationResponse|http:NotFound|http:InternalServerError {
         ReservationRequest {hospital_id, patient, doctor, ...reservationRequest} = payload;
 
         log:printDebug("Routing reservation request",
