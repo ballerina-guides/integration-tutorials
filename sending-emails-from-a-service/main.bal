@@ -88,7 +88,7 @@ function initializeEmailClient() returns email:SmtpClient|error => new (host, us
 service /healthcare on new http:Listener(port) {
 
     resource function post categories/[string category]/reserve(ReservationRequest payload)
-            returns http:Created|http:InternalServerError|http:NotFound {
+            returns http:Created|http:NotFound|http:InternalServerError {
 
         ReservationRequest {
             patient: {cardNo, ...patient},
