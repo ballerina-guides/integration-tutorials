@@ -23,21 +23,21 @@ type HealthcareReservation record {
     string appointmentDate;
 };
 
-type Patient record {
+type Patient record {|
     string name;
     string dob;
     string ssn;
     string address;
     string phone;
     string email;
-};
+|};
 
-type HospitalReservation record {
+type HospitalReservation record {|
     Patient patient;
     string doctor;
     string hospital;
     string appointment_date;
-};
+|};
 
 type Doctor record {|
     string name;
