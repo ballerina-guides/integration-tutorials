@@ -348,7 +348,7 @@ Follow the instructions given in this section to develop the service.
         });
         ```
 
-        Use the `is` check to decide the flow based on the response to the client call. If the request failed with a `4xx` status code, respond with a "NotFound" response. Else, if the payload could not be bound to `Appointment` as expected or there was some other failure, respond with an "InternalServerError" response. If the client call was successful and the response payload was successfully bound to `Appointment` we can proceed with the subsequent calls. 
+        Use the `is` check to decide the flow based on the response to the client call. If the request failed with a `4xx` status code, respond with an `http:NotFound` response. Else, if the payload could not be bound to `Appointment` as expected or there was some other failure, respond with an `http:InternalServerError` response. If the client call was successful and the response payload was successfully bound to `Appointment` we can proceed with the subsequent calls. 
 
         ```ballerina
         if appointment !is Appointment {

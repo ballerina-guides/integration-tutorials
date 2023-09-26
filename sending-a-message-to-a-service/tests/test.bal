@@ -28,8 +28,10 @@ isolated function getSurgeryResponsePayload() returns map<json>[] & readonly => 
 ];
 
 public client class MockHttpClient {
-    isolated resource function get [string... path](map<string|string[]>? headers = (), http:TargetType targetType = http:Response,
-            *http:QueryParams params) returns http:Response|anydata|http:ClientError {
+        isolated resource function get [string... path](map<string|string[]>? headers = (), 
+                                                        http:TargetType targetType = http:Response,
+                                                        *http:QueryParams params) 
+                                                    returns http:Response|anydata|http:ClientError {
         match path[0] {
             "surgery" => {
                 return getSurgeryResponsePayload();
