@@ -140,10 +140,8 @@ Follow the instructions given in this section to develop the service.
     The source code of the `transform` function will be as follows.
 
     ```ballerina
-    isolated function transform(HealthcareReservation reservation) returns HospitalReservation =>
-        let var ssn = from int part in reservation.ssn
-            select part
-        in {
+    isolated function transform(HealthcareReservation reservation) returns HospitalReservation => 
+        let var ssn = reservation.ssn in {
             patient: {
                 name: reservation.firstName + " " + reservation.lastName,
                 dob: reservation.dob,
@@ -283,7 +281,7 @@ type HealthcareReservation record {
     string firstName;
     string lastName;
     string dob;
-    int[] ssn;
+    int[3] ssn;
     string address;
     string phone;
     string email;
@@ -352,10 +350,8 @@ service /healthcare on new http:Listener(port) {
     }
 }
 
-isolated function transform(HealthcareReservation reservation) returns HospitalReservation =>
-    let var ssn = from int part in reservation.ssn
-        select part
-    in {
+isolated function transform(HealthcareReservation reservation) returns HospitalReservation => 
+    let var ssn = reservation.ssn in {
         patient: {
             name: reservation.firstName + " " + reservation.lastName,
             dob: reservation.dob,
