@@ -11,17 +11,18 @@ const THOMAS_COLLINS = "thomas collins";
 @test:Config
 function testSuccessfulReservation() returns error? {
     ReservationResponse resp = check cl->/categories/surgery/reserve.post({
-        name: "John Doe",
+        firstName: "John",
+        lastName: "Doe",
         dob: "1940-03-19",
-        ssn: "234-23-525",
+        ssn: [234, 23, 525],
         address: "California",
         phone: "8770586755",
         email: "johndoe@gmail.com",
         doctor: "thomas collins",
-        hospital_id: "grandoaks",
+        hospitalId: "grandoaks",
         hospital: "grand oak community hospital",
-        card_no: "7844481124110331",
-        appointment_date: "2025-04-02"
+        cardNo: "7844481124110331",
+        appointmentDate: "2025-04-02"
     });
     ReservationResponse expResp = getSuccessfulAppointmentResponse(GRAND_OAK_HOSPITAL);
     test:assertEquals(resp, expResp, "Response mismatched");
@@ -30,17 +31,18 @@ function testSuccessfulReservation() returns error? {
 @test:Config
 function testInvalidHospital() {
     ReservationResponse|http:ClientError resp = cl->/categories/surgery/reserve.post({
-        name: "John Doe",
+        firstName: "John",
+        lastName: "Doe",
         dob: "1940-03-19",
-        ssn: "234-23-525",
+        ssn: [234, 23, 525],
         address: "California",
         phone: "8770586755",
         email: "johndoe@gmail.com",
         doctor: "thomas collins",
-        hospital_id: "monarch",
+        hospitalId: "monarch",
         hospital: "monarch hospital",
-        card_no: "7844481124110331",
-        appointment_date: "2025-04-02"
+        cardNo: "7844481124110331",
+        appointmentDate: "2025-04-02"
     });
 
     if resp !is http:ClientRequestError {
@@ -56,17 +58,18 @@ function testInvalidHospital() {
 @test:Config
 function testInvalidDoctor() {
     ReservationResponse|http:ClientError resp = cl->/categories/surgery/reserve.post({
-        name: "John Doe",
+        firstName: "John",
+        lastName: "Doe",
         dob: "1940-03-19",
-        ssn: "234-23-525",
+        ssn: [234, 23, 525],
         address: "California",
         phone: "8770586755",
         email: "johndoe@gmail.com",
         doctor: "thomas chandler",
-        hospital_id: "grandoaks",
+        hospitalId: "grandoaks",
         hospital: "grand oak community hospital",
-        card_no: "7844481124110331",
-        appointment_date: "2025-04-02"
+        cardNo: "7844481124110331",
+        appointmentDate: "2025-04-02"
     });
 
     if resp !is http:ClientRequestError {
@@ -83,15 +86,15 @@ function testInvalidDoctor() {
 function testMissingPatientData() {
     ReservationResponse|http:ClientError resp = cl->/categories/surgery/reserve.post({
         dob: "1940-03-19",
-        ssn: "234-23-525",
+        ssn: [234, 23, 525],
         address: "California",
         phone: "8770586755",
         email: "johndoe@gmail.com",
         doctor: "thomas collins",
-        hospital_id: "grandoaks",
+        hospitalId: "grandoaks",
         hospital: "grand oak community hospital",
-        card_no: "7844481124110331",
-        appointment_date: "2025-04-02"
+        cardNo: "7844481124110331",
+        appointmentDate: "2025-04-02"
     });
 
     if resp !is http:ClientRequestError {
@@ -105,17 +108,18 @@ function testMissingPatientData() {
 @test:Config
 function testInvalidCategory() {
     ReservationResponse|http:ClientError resp = cl->/categories/chickenpox/reserve.post({
-        name: "John Doe",
+        firstName: "John",
+        lastName: "Doe",
         dob: "1940-03-19",
-        ssn: "234-23-525",
+        ssn: [234, 23, 525],
         address: "California",
         phone: "8770586755",
         email: "johndoe@gmail.com",
         doctor: "thomas chandler",
-        hospital_id: "grandoaks",
+        hospitalId: "grandoaks",
         hospital: "grand oak community hospital",
-        card_no: "7844481124110331",
-        appointment_date: "2025-04-02"
+        cardNo: "7844481124110331",
+        appointmentDate: "2025-04-02"
     });
 
     if resp !is http:ClientRequestError {
