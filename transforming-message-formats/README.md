@@ -277,7 +277,7 @@ final http:Client hospitalServiceEP = check initializeHttpClient();
 
 function initializeHttpClient() returns http:Client|error => new (hospitalServiceUrl);
 
-type HealthcareReservation record {
+type HealthcareReservation record {|
     string firstName;
     string lastName;
     string dob;
@@ -290,7 +290,7 @@ type HealthcareReservation record {
     string hospital;
     string cardNo;
     string appointmentDate;
-};
+|};
 
 type Patient record {|
     string name;
