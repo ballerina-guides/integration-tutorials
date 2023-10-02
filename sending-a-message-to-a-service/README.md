@@ -55,7 +55,19 @@ Follow the instructions given in this section to develop the service.
 
     The argument to the `new` expression is the URL for the backend service.
 
-5. Define a record corresponding to the payload from the backend service.
+5. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, retrieves relevant details from the backend service, and responds to the request.
+
+    - Open Ballerina diagram view in VS Code.
+
+    - Use `/healthcare` as the service path (or the context) of the service, which is attached to the listener listening on port `port`.
+
+        ![Define the service](./resources/tutorial_sending_a_message_to_a_service_define_a_service.gif)
+
+    - Define an HTTP resource that allows the `GET` operation on resource path `/querydoctor` and accepts the `category` (corresponding to the specialization) as a path parameter.
+
+        ![Define the resource](./resources/tutorial_sending_a_message_to_a_service_define_a_resource.gif)
+
+6. Define a record corresponding to the payload from the backend service.
 
     ```ballerina
     type Doctor record {|
@@ -68,16 +80,6 @@ Follow the instructions given in this section to develop the service.
     ```
 
     The payload will be an array of JSON objects in which, the structure of each JSON object matches this record. Note that you can use the "Paste JSON as record" VS Code command to generate the record if you have the JSON payload.
-
-6. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, retrieves relevant details from the backend service, and responds to the request. Use `/healthcare` as the service path (or the context) of the service, which is attached to the listener listening on port `port`. Define an HTTP resource that allows the `GET` operation on resource path `/querydoctor` and accepts the `category` (corresponding to the specialization) as a path parameter.
-
-    ```ballerina
-    service /healthcare on new http:Listener(port) {
-        resource function get querydoctor/[string category]() {
-            
-        }
-    }
-    ```
 
 7. Implement the logic to retrieve and respond with relevant details.
 
