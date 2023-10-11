@@ -57,7 +57,7 @@ Follow the instructions given in this section to develop the service.
 
 5. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests, retrieves relevant details from the backend service, and responds to the request.
 
-    - Open Ballerina diagram view in VS Code.
+    - Open Ballerina diagram view with [Ballerina HTTP API Designer](https://wso2.com/ballerina/vscode/docs/design-the-services/http-api-designer) in VS Code.
 
     - Use `/healthcare` as the service path (or the context) of the service, which is attached to the listener listening on port `port`.
 
