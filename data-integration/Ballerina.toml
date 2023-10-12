@@ -1,0 +1,18 @@
+[package]
+org = "integration_turorial"
+name = "data_integration"
+version = "0.1.0"
+distribution = "2201.7.2"
+
+[build-options]
+observabilityIncluded = true
+
+[persist]
+datastore = "mysql"
+module = "data_integration.db"
+
+[[platform.java11.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.1.0"
+
