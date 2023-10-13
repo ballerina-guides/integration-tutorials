@@ -6,7 +6,7 @@ import data_integration.db;
 
 configurable int port = 9090;
 
-service /employees on new http:Listener(9090) {
+service /employees on new http:Listener(port) {
     private final db:Client dbClient;
 
     function init() returns error? {
@@ -38,7 +38,14 @@ service /employees on new http:Listener(9090) {
         return http:CREATED;
     }
 
-    isolated resource function get tasks(int empId) returns db:EmployeeTask[]|error {
+    isolated resource function get tasks(int taskId) returns db:EmployeeTask[]|error {
+        stream<db:EmployeeTask, persist:Error?> tasks = self.dbClient->/employeetasks;
+        return from db:EmployeeTask task in tasks
+            where task.taskId == taskId
+            select task;
+    }
+
+    isolated resource function get tasks/employee(int empId) returns db:EmployeeTask[]|error {
         stream<db:EmployeeTask, persist:Error?> tasks = self.dbClient->/employeetasks;
         return from db:EmployeeTask task in tasks
             where task.employeeId == empId
@@ -52,7 +59,7 @@ service /employees on new http:Listener(9090) {
             select employee;
     }
 
-    isolated resource function put [int taskId](db:EmployeeTaskUpdate emp) returns db:EmployeeTask|persist:Error {
+    isolated resource function put tasks/[int taskId](db:EmployeeTaskUpdate emp) returns db:EmployeeTask|persist:Error {
         return check self.dbClient->/employeetasks/[taskId].put(emp);
     }
 
@@ -83,7 +90,7 @@ function startDBService() returns os:Process|os:Error {
     os:Command command = {value: "docker-compose", 
     arguments: ["up"]};
     os:Process|os:Error exec = os:exec(command);
-    runtime:sleep(4);
+    runtime:sleep(10);
     return exec;
 }
 
@@ -91,6 +98,6 @@ isolated function stopDBService() returns os:Process|os:Error {
     os:Command command = {value: "docker-compose", 
     arguments: ["down"]};
     os:Process|os:Error exec = os:exec(command);
-    runtime:sleep(4);
+    runtime:sleep(10);
     return exec;
 }
