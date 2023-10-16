@@ -1,5 +1,5 @@
 [package]
-org = "integration_turorial"
+org = "integration_tutorials"
 name = "data_integration"
 version = "0.1.0"
 distribution = "2201.7.2"

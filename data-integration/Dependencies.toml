@@ -98,9 +98,6 @@ dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "lang.value"}
 ]
-modules = [
-	{org = "ballerina", packageName = "io", moduleName = "io"}
-]
 
 [[package]]
 org = "ballerina"
@@ -278,7 +275,7 @@ modules = [
 [[package]]
 org = "ballerina"
 name = "sql"
-version = "1.10.0"
+version = "1.10.1"
 dependencies = [
 	{org = "ballerina", name = "io"},
 	{org = "ballerina", name = "jballerina.java"},
@@ -374,12 +371,11 @@ modules = [
 ]
 
 [[package]]
-org = "integration_turorial"
+org = "integration_tutorials"
 name = "data_integration"
 version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "http"},
-	{org = "ballerina", name = "io"},
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "lang.runtime"},
 	{org = "ballerina", name = "os"},
@@ -391,7 +387,7 @@ dependencies = [
 	{org = "ballerinax", name = "persist.sql"}
 ]
 modules = [
-	{org = "integration_turorial", packageName = "data_integration", moduleName = "data_integration"},
-	{org = "integration_turorial", packageName = "data_integration", moduleName = "data_integration.db"}
+	{org = "integration_tutorials", packageName = "data_integration", moduleName = "data_integration"},
+	{org = "integration_tutorials", packageName = "data_integration", moduleName = "data_integration.db"}
 ]
 
