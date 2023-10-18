@@ -7,7 +7,7 @@ type Employee record {|
     string phone;
     string email;
     string department;
-	EmployeeTask[] employeeTask;
+    EmployeeTask[] employeeTask;
 |};
 
 type EmployeeTask record {|
@@ -17,7 +17,6 @@ type EmployeeTask record {|
     TaskStatus status;
     Employee employee;
 |};
-
 
 public enum TaskStatus {
     NOT_STARTED,

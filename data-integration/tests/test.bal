@@ -1,8 +1,10 @@
-import ballerina/http;
-import ballerina/test;
 import data_integration.db;
+import ballerina/http;
+import ballerina/lang.runtime;
+import ballerina/os;
+import ballerina/test;
 
-final http:Client cl = check new (string `http://localhost:${port}/employees`, retryConfig = {maxWaitInterval: 12});
+final http:Client cl = check new (string `http://localhost:${port}/taskmanager`, retryConfig = {maxWaitInterval: 12});
 
 @test:AfterSuite {}
 function afterSuite() returns error? {
@@ -10,8 +12,8 @@ function afterSuite() returns error? {
 }
 
 @test:Config
-isolated function testEmployee() returns error? {
-    http:Response res = check cl->/employees.post({
+function testEmployee() returns error? {
+    http:Response res = check cl->/employee.post({
         id: 4,
         name: "John Doe",
         age: 22,
@@ -24,8 +26,8 @@ isolated function testEmployee() returns error? {
 }
 
 @test:Config
-isolated function testTask() returns error? {
-    http:Response res = check cl->/tasks.post({
+function testTask() returns error? {
+    http:Response res = check cl->/task.post({
         taskId: 1008,
         taskName: "IT Training Workshop'",
         description: "Organize a workshop",
@@ -37,8 +39,8 @@ isolated function testTask() returns error? {
 }
 
 @test:Config
-isolated function testGetEmployee() returns error? {
-    db:Employee[] res = check cl->/employees(empId = 1);
+function testGetEmployee() returns error? {
+    db:Employee res = check cl->/employee/[1];
     db:Employee expectedRes = {
         id: 1,
         name: "John Doe",
@@ -48,12 +50,12 @@ isolated function testGetEmployee() returns error? {
         department: "IT"
     };
 
-    test:assertEquals(res[0], expectedRes);
+    test:assertEquals(res, expectedRes);
 }
 
 @test:Config
-isolated function testGetTask() returns error? {
-    db:EmployeeTask[] res = check cl->/tasks(taskId = 1001);
+function testGetTask() returns error? {
+    db:EmployeeTask res = check cl->/task/[1001];
     db:EmployeeTask expectedRes = {
         taskId: 1001,
         taskName: "Update Server Security",
@@ -62,12 +64,12 @@ isolated function testGetTask() returns error? {
         employeeId: 1
     };
 
-    test:assertEquals(res[0], expectedRes);
+    test:assertEquals(res, expectedRes);
 }
 
 @test:Config
-isolated function testGetEmployeeTasks() returns error? {
-    db:EmployeeTask[] res = check cl->/tasks/employee(empId = 1);
+function testGetEmployeeTasks() returns error? {
+    db:EmployeeTask[] res = check cl->/employeetasks/[1];
     db:EmployeeTask[] expectedRes = [
         {
             taskId: 1001,
@@ -96,20 +98,49 @@ isolated function testGetEmployeeTasks() returns error? {
 }
 
 @test:Config
-isolated function testPutEmployee() returns error? {
-    db:EmployeeTask[] res = check cl->/tasks(taskId = 1001);
-    test:assertEquals(res[0].status, "IN_PROGRESS");
+function testPutEmployee() returns error? {
+    db:EmployeeTask res = check cl->/task/[1001];
+    test:assertEquals(res.status, "IN_PROGRESS");
 
     db:EmployeeTaskUpdate updatedTask = {
         status: "COMPLETED"
     };
 
-    db:EmployeeTask updatedRes = check cl->/tasks/[1001].put(updatedTask);
+    db:EmployeeTask updatedRes = check cl->/task/[1001].put(updatedTask);
     test:assertEquals(updatedRes.status, "COMPLETED");
 }
 
 @test:Config
-isolated function testDeleteEmployeeTask() returns error? {
-    http:Response res = check cl->/tasks/[1001].delete();
+function testDeleteEmployeeTask() returns error? {
+    http:Response res = check cl->/task/[1001].delete();
     test:assertEquals(res.statusCode, http:NO_CONTENT.status.code);
+}
+
+@test:Mock {
+    functionName: "getDBClient"
+}
+
+function getDBClientMock() returns db:Client|error {
+    _ = check startDBService();
+    return new db:Client();
+}
+
+function startDBService() returns os:Process|os:Error {
+    os:Command command = {
+        value: "docker-compose",
+        arguments: ["up"]
+    };
+    os:Process|os:Error exec = os:exec(command);
+    runtime:sleep(10);
+    return exec;
+}
+
+isolated function stopDBService() returns os:Process|os:Error {
+    os:Command command = {
+        value: "docker-compose",
+        arguments: ["down"]
+    };
+    os:Process|os:Error exec = os:exec(command);
+    runtime:sleep(10);
+    return exec;
 }
