@@ -1,4 +1,4 @@
 target
-generated
 Config.toml
 dockerup.sh
+docker-compose.yaml
