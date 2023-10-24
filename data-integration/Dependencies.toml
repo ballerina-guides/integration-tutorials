@@ -372,7 +372,7 @@ modules = [
 
 [[package]]
 org = "integration_tutorials"
-name = "data_integration"
+name = "store"
 version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "http"},
@@ -387,7 +387,7 @@ dependencies = [
 	{org = "ballerinax", name = "persist.sql"}
 ]
 modules = [
-	{org = "integration_tutorials", packageName = "data_integration", moduleName = "data_integration"},
-	{org = "integration_tutorials", packageName = "data_integration", moduleName = "data_integration.db"}
+	{org = "integration_tutorials", packageName = "store", moduleName = "store"},
+	{org = "integration_tutorials", packageName = "store", moduleName = "store.db"}
 ]
 

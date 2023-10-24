@@ -1,4 +1,4 @@
-import data_integration.db;
+import store.db;
 import ballerina/http;
 import ballerina/lang.runtime;
 import ballerina/os;

@@ -1,4 +1,4 @@
-import data_integration.db;
+import store.db;
 import ballerina/http;
 import ballerina/persist;
 
@@ -12,7 +12,7 @@ service /taskmanager on new http:Listener(port) {
     }
 
     isolated resource function post employee(db:EmployeeInsert employee)
-            returns http:InternalServerError|http:Created|http:Conflict {
+            returns http:Created|http:Conflict|http:InternalServerError {
         int[]|persist:Error result = self.dbClient->/employees.post([employee]);
         if result is persist:Error {
             if result is persist:AlreadyExistsError {
@@ -24,7 +24,7 @@ service /taskmanager on new http:Listener(port) {
     }
 
     isolated resource function post task(db:EmployeeTaskInsert task)
-            returns http:InternalServerError|http:Created|http:Conflict {
+            returns http:Created|http:Conflict|http:InternalServerError {
         int[]|persist:Error result = self.dbClient->/employeetasks.post([task]);
         if result is persist:Error {
             if result is persist:AlreadyExistsError {
@@ -35,7 +35,7 @@ service /taskmanager on new http:Listener(port) {
         return http:CREATED;
     }
 
-    isolated resource function get task/[int taskId]() returns http:InternalServerError|http:NotFound|http:Ok {
+    isolated resource function get task/[int taskId]() returns http:Ok|http:NotFound|http:InternalServerError {
         db:EmployeeTask|persist:Error result = self.dbClient->/employeetasks/[taskId];
         if result is persist:Error {
             if result is persist:NotFoundError {
@@ -80,10 +80,10 @@ service /taskmanager on new http:Listener(port) {
     }
 
     isolated resource function delete task/[int taskId]()
-            returns http:InternalServerError|http:NoContent|http:NotFound {
+            returns http:NoContent|http:NotFound|http:InternalServerError {
         db:EmployeeTask[]|persist:Error result = from db:EmployeeTask task in self.dbClient->/employeetasks(db:EmployeeTask)
             where task.taskId == taskId
-                && task.status == "COMPLETED"
+                && task.status == db:COMPLETED
             select task;
         if result is persist:Error {
             if result is persist:NotFoundError {
@@ -101,6 +101,4 @@ service /taskmanager on new http:Listener(port) {
     }
 }
 
-function getDBClient() returns db:Client|error {
-    return check new ();
-}
+function getDBClient() returns db:Client|error => new ();
