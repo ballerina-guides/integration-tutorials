@@ -186,9 +186,6 @@ version = "0.0.0"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
 ]
-modules = [
-	{org = "ballerina", packageName = "lang.runtime", moduleName = "lang.runtime"}
-]
 
 [[package]]
 org = "ballerina"
@@ -256,9 +253,6 @@ version = "1.7.0"
 dependencies = [
 	{org = "ballerina", name = "io"},
 	{org = "ballerina", name = "jballerina.java"}
-]
-modules = [
-	{org = "ballerina", packageName = "os", moduleName = "os"}
 ]
 
 [[package]]
@@ -372,13 +366,11 @@ modules = [
 
 [[package]]
 org = "integration_tutorials"
-name = "store"
+name = "data_integration"
 version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "http"},
 	{org = "ballerina", name = "jballerina.java"},
-	{org = "ballerina", name = "lang.runtime"},
-	{org = "ballerina", name = "os"},
 	{org = "ballerina", name = "persist"},
 	{org = "ballerina", name = "test"},
 	{org = "ballerinai", name = "observe"},
@@ -387,7 +379,7 @@ dependencies = [
 	{org = "ballerinax", name = "persist.sql"}
 ]
 modules = [
-	{org = "integration_tutorials", packageName = "store", moduleName = "store"},
-	{org = "integration_tutorials", packageName = "store", moduleName = "store.db"}
+	{org = "integration_tutorials", packageName = "data_integration", moduleName = "data_integration"},
+	{org = "integration_tutorials", packageName = "data_integration", moduleName = "data_integration.store"}
 ]
 

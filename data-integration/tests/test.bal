@@ -1,4 +1,4 @@
-import store.db;
+import data_integration.store;
 import ballerina/http;
 import ballerina/lang.runtime;
 import ballerina/os;
@@ -40,8 +40,8 @@ function testTask() returns error? {
 
 @test:Config
 function testGetEmployee() returns error? {
-    db:Employee res = check cl->/employee/[1];
-    db:Employee expectedRes = {
+    store:Employee res = check cl->/employee/[1];
+    store:Employee expectedRes = {
         id: 1,
         name: "John Doe",
         age: 22,
@@ -55,8 +55,8 @@ function testGetEmployee() returns error? {
 
 @test:Config
 function testGetTask() returns error? {
-    db:EmployeeTask res = check cl->/task/[1001];
-    db:EmployeeTask expectedRes = {
+    store:EmployeeTask res = check cl->/task/[1001];
+    store:EmployeeTask expectedRes = {
         taskId: 1001,
         taskName: "Update Server Security",
         description: "Implement the latest security patches and configurations",
@@ -69,8 +69,8 @@ function testGetTask() returns error? {
 
 @test:Config
 function testGetEmployeeTasks() returns error? {
-    db:EmployeeTask[] res = check cl->/employeetasks/[1];
-    db:EmployeeTask[] expectedRes = [
+    store:EmployeeTask[] res = check cl->/employeetasks/[1];
+    store:EmployeeTask[] expectedRes = [
         {
             taskId: 1001,
             taskName: "Update Server Security",
@@ -99,14 +99,14 @@ function testGetEmployeeTasks() returns error? {
 
 @test:Config
 function testPutEmployee() returns error? {
-    db:EmployeeTask res = check cl->/task/[1001];
+    store:EmployeeTask res = check cl->/task/[1001];
     test:assertEquals(res.status, "IN_PROGRESS");
 
-    db:EmployeeTaskUpdate updatedTask = {
+    store:EmployeeTaskUpdate updatedTask = {
         status: "COMPLETED"
     };
 
-    db:EmployeeTask updatedRes = check cl->/task/[1001].put(updatedTask);
+    store:EmployeeTask updatedRes = check cl->/task/[1001].put(updatedTask);
     test:assertEquals(updatedRes.status, "COMPLETED");
 }
 
@@ -120,9 +120,9 @@ function testDeleteEmployeeTask() returns error? {
     functionName: "getDBClient"
 }
 
-function getDBClientMock() returns db:Client|error {
+function getDBClientMock() returns store:Client|error {
     _ = check startDBService();
-    return new db:Client();
+    return new store:Client();
 }
 
 function startDBService() returns os:Process|os:Error {
