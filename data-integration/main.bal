@@ -8,7 +8,7 @@ service /taskmanager on new http:Listener(port) {
     private final store:Client dbClient;
 
     function init() returns error? {
-        self.dbClient = check getDBClient();
+        self.dbClient = check new();
     }
 
     isolated resource function post employee(store:EmployeeInsert employee)
@@ -100,5 +100,3 @@ service /taskmanager on new http:Listener(port) {
         return http:NO_CONTENT;
     }
 }
-
-function getDBClient() returns store:Client|error => new ();

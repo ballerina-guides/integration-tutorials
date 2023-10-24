@@ -1,15 +1,8 @@
 import data_integration.store;
 import ballerina/http;
-import ballerina/lang.runtime;
-import ballerina/os;
 import ballerina/test;
 
-final http:Client cl = check new (string `http://localhost:${port}/taskmanager`, retryConfig = {maxWaitInterval: 12});
-
-@test:AfterSuite {}
-function afterSuite() returns error? {
-    _ = check stopDBService();
-}
+final http:Client cl = check new (string `http://localhost:${port}/taskmanager`);
 
 @test:Config
 function testEmployee() returns error? {
@@ -114,33 +107,4 @@ function testPutEmployee() returns error? {
 function testDeleteEmployeeTask() returns error? {
     http:Response res = check cl->/task/[1001].delete();
     test:assertEquals(res.statusCode, http:NO_CONTENT.status.code);
-}
-
-@test:Mock {
-    functionName: "getDBClient"
-}
-
-function getDBClientMock() returns store:Client|error {
-    _ = check startDBService();
-    return new store:Client();
-}
-
-function startDBService() returns os:Process|os:Error {
-    os:Command command = {
-        value: "docker-compose",
-        arguments: ["up"]
-    };
-    os:Process|os:Error exec = os:exec(command);
-    runtime:sleep(10);
-    return exec;
-}
-
-isolated function stopDBService() returns os:Process|os:Error {
-    os:Command command = {
-        value: "docker-compose",
-        arguments: ["down"]
-    };
-    os:Process|os:Error exec = os:exec(command);
-    runtime:sleep(10);
-    return exec;
 }
