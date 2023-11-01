@@ -37,14 +37,13 @@ type Doctor record {|
     string hospital;
     string category;
     string availability;
-    float fee;
+    decimal fee;
 |};
 
 type ReservationResponse record {|
     int appointmentNumber;
     Doctor doctor;
     Patient patient;
-    float fee;
     string hospital;
     boolean confirmed;
     string appointmentDate;

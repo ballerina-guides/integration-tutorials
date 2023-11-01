@@ -190,7 +190,6 @@ isolated function getSuccessAppointmentResponse(string hospital) returns Reserva
         email: "johndoe@gmail.com"
     },
     hospital,
-    fee: 7000,
     confirmed: false,
     appointmentDate: "2025-04-02"
 };
