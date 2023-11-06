@@ -189,7 +189,6 @@ isolated function getSuccessfulAppointmentResponse(string hospital) returns Rese
         email: "johndoe@gmail.com"
     },
     hospital: hospital,
-    fee: 7000,
     confirmed: false,
     appointmentDate: "2025-04-02"
 };

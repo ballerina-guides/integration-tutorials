@@ -77,7 +77,7 @@ public client class MockHttpClient {
 
     isolated resource function post [http:PathParamType... path](
             http:RequestMessage message, map<string|string[]>? headers = (), string?
-            mediaType = (), http:TargetType targetType = <>, *http:QueryParams params) 
+            mediaType = (), http:TargetType targetType = http:Response, *http:QueryParams params) 
                 returns http:Response|anydata|http:ClientError {
         if self.url == hospitalServicesBackend {
             return handleAppointment(path, message);
