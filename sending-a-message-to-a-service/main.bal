@@ -9,14 +9,13 @@ type Doctor record {|
     decimal fee;
 |};
 
-configurable int port = 8290;
 configurable string healthcareBackend = "http://localhost:9090/healthcare";
 
 final http:Client queryDoctorEP = check initializeHttpClient();
 
 function initializeHttpClient() returns http:Client|error => new (healthcareBackend);
 
-service /healthcare on new http:Listener(port) {
+service /healthcare on new http:Listener(8290) {
     resource function get querydoctor/[string category]() 
             returns Doctor[]|http:NotFound|http:InternalServerError {
         log:printInfo("Retrieving information", specialization = category);
