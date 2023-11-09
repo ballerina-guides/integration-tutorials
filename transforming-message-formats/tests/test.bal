@@ -1,7 +1,7 @@
 import ballerina/http;
 import ballerina/test;
 
-final http:Client cl = check new (string `http://localhost:${port}/healthcare`);
+final http:Client cl = check new (string `http://localhost:8290/healthcare`);
 
 const GRAND_OAK_HOSPITAL = "grand oak community hospital";
 const CLEMENCY_MEDICAL_CENTER = "clemency medical center";
