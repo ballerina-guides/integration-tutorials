@@ -7,10 +7,10 @@ type Employee record {|
     string phone;
     string email;
     string department;
-    EmployeeTask[] employeeTask;
+    Task[] tasks;
 |};
 
-type EmployeeTask record {|
+type Task record {|
     readonly int taskId;
     string taskName;
     string description;

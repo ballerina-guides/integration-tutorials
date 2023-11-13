@@ -19,9 +19,9 @@ service / on new http:Listener(port) {
         return http:CREATED;
     }
 
-    resource function post task(store:EmployeeTaskInsert task)
+    resource function post task(store:TaskInsert task)
             returns http:Created|http:Conflict|http:InternalServerError {
-        int[]|persist:Error result = dbClient->/employeetasks.post([task]);
+        int[]|persist:Error result = dbClient->/tasks.post([task]);
         if result is persist:AlreadyExistsError {
             return http:CONFLICT;
         }
@@ -32,7 +32,7 @@ service / on new http:Listener(port) {
     }
 
     resource function get task/[int taskId]() returns http:Ok|http:NotFound|http:InternalServerError {
-        store:EmployeeTask|persist:Error task = dbClient->/employeetasks/[taskId];
+        store:Task|persist:Error task = dbClient->/tasks/[taskId];
         if task is persist:Error {
             if task is persist:NotFoundError {
                 return http:NOT_FOUND;
@@ -43,8 +43,8 @@ service / on new http:Listener(port) {
     }
 
     resource function get employeetasks/[int empId]() returns http:Ok|http:NotFound|http:InternalServerError {
-        store:EmployeeTask[]|persist:Error tasks = from store:EmployeeTask task
-                in dbClient->/employeetasks(store:EmployeeTask)
+        store:Task[]|persist:Error tasks = from store:Task task
+                in dbClient->/tasks(store:Task)
             where task.employeeId == empId
             select task;
         if tasks is persist:Error {
@@ -67,9 +67,9 @@ service / on new http:Listener(port) {
         return <http:Ok>{body: employee};
     }
 
-    resource function put task/[int taskId](store:EmployeeTaskUpdate emp)
+    resource function put task/[int taskId](store:TaskUpdate emp)
             returns http:Ok|http:InternalServerError {
-        store:EmployeeTask|persist:Error result = dbClient->/employeetasks/[taskId].put(emp);
+        store:Task|persist:Error result = dbClient->/tasks/[taskId].put(emp);
         if result is persist:Error {
             return <http:InternalServerError>{body: result.message()};
         }
@@ -78,7 +78,7 @@ service / on new http:Listener(port) {
 
     resource function delete task/[int taskId]()
             returns http:NoContent|http:NotFound|http:InternalServerError {
-        store:EmployeeTask|persist:Error task = dbClient->/employeetasks/[taskId];
+        store:Task|persist:Error task = dbClient->/tasks/[taskId];
         if task is persist:Error {
             if task is persist:NotFoundError {
                 return http:NOT_FOUND;
@@ -88,7 +88,7 @@ service / on new http:Listener(port) {
         if task.status != store:COMPLETED {
             return <http:InternalServerError>{body: "Task is not completed yet"};
         }
-        store:EmployeeTask|persist:Error deleteResult = dbClient->/employeetasks/[taskId].delete;
+        store:Task|persist:Error deleteResult = dbClient->/tasks/[taskId].delete;
         if deleteResult is persist:Error {
             return <http:InternalServerError>{body: deleteResult.message()};
         }

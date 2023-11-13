@@ -10,7 +10,7 @@ import ballerinax/mysql.driver as _;
 import ballerinax/persist.sql as psql;
 
 const EMPLOYEE = "employees";
-const EMPLOYEE_TASK = "employeetasks";
+const TASK = "tasks";
 
 public isolated client class Client {
     *persist:AbstractPersistClient;
@@ -30,18 +30,18 @@ public isolated client class Client {
                 phone: {columnName: "phone"},
                 email: {columnName: "email"},
                 department: {columnName: "department"},
-                "employeeTask[].taskId": {relation: {entityName: "employeeTask", refField: "taskId"}},
-                "employeeTask[].taskName": {relation: {entityName: "employeeTask", refField: "taskName"}},
-                "employeeTask[].description": {relation: {entityName: "employeeTask", refField: "description"}},
-                "employeeTask[].status": {relation: {entityName: "employeeTask", refField: "status"}},
-                "employeeTask[].employeeId": {relation: {entityName: "employeeTask", refField: "employeeId"}}
+                "tasks[].taskId": {relation: {entityName: "tasks", refField: "taskId"}},
+                "tasks[].taskName": {relation: {entityName: "tasks", refField: "taskName"}},
+                "tasks[].description": {relation: {entityName: "tasks", refField: "description"}},
+                "tasks[].status": {relation: {entityName: "tasks", refField: "status"}},
+                "tasks[].employeeId": {relation: {entityName: "tasks", refField: "employeeId"}}
             },
             keyFields: ["id"],
-            joinMetadata: {employeeTask: {entity: EmployeeTask, fieldName: "employeeTask", refTable: "EmployeeTask", refColumns: ["employeeId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE}}
+            joinMetadata: {tasks: {entity: Task, fieldName: "tasks", refTable: "Task", refColumns: ["employeeId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE}}
         },
-        [EMPLOYEE_TASK] : {
-            entityName: "EmployeeTask",
-            tableName: "EmployeeTask",
+        [TASK] : {
+            entityName: "Task",
+            tableName: "Task",
             fieldMetadata: {
                 taskId: {columnName: "taskId"},
                 taskName: {columnName: "taskName"},
@@ -68,7 +68,7 @@ public isolated client class Client {
         self.dbClient = dbClient;
         self.persistClients = {
             [EMPLOYEE] : check new (dbClient, self.metadata.get(EMPLOYEE), psql:MYSQL_SPECIFICS),
-            [EMPLOYEE_TASK] : check new (dbClient, self.metadata.get(EMPLOYEE_TASK), psql:MYSQL_SPECIFICS)
+            [TASK] : check new (dbClient, self.metadata.get(TASK), psql:MYSQL_SPECIFICS)
         };
     }
 
@@ -111,40 +111,40 @@ public isolated client class Client {
         return result;
     }
 
-    isolated resource function get employeetasks(EmployeeTaskTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get tasks(TaskTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
-    isolated resource function get employeetasks/[int taskId](EmployeeTaskTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+    isolated resource function get tasks/[int taskId](TaskTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
-    isolated resource function post employeetasks(EmployeeTaskInsert[] data) returns int[]|persist:Error {
+    isolated resource function post tasks(TaskInsert[] data) returns int[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get(EMPLOYEE_TASK);
+            sqlClient = self.persistClients.get(TASK);
         }
         _ = check sqlClient.runBatchInsertQuery(data);
-        return from EmployeeTaskInsert inserted in data
+        return from TaskInsert inserted in data
             select inserted.taskId;
     }
 
-    isolated resource function put employeetasks/[int taskId](EmployeeTaskUpdate value) returns EmployeeTask|persist:Error {
+    isolated resource function put tasks/[int taskId](TaskUpdate value) returns Task|persist:Error {
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get(EMPLOYEE_TASK);
+            sqlClient = self.persistClients.get(TASK);
         }
         _ = check sqlClient.runUpdateQuery(taskId, value);
-        return self->/employeetasks/[taskId].get();
+        return self->/tasks/[taskId].get();
     }
 
-    isolated resource function delete employeetasks/[int taskId]() returns EmployeeTask|persist:Error {
-        EmployeeTask result = check self->/employeetasks/[taskId].get();
+    isolated resource function delete tasks/[int taskId]() returns Task|persist:Error {
+        Task result = check self->/tasks/[taskId].get();
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get(EMPLOYEE_TASK);
+            sqlClient = self.persistClients.get(TASK);
         }
         _ = check sqlClient.runDeleteQuery(taskId);
         return result;

@@ -29,7 +29,7 @@ public type EmployeeOptionalized record {|
 
 public type EmployeeWithRelations record {|
     *EmployeeOptionalized;
-    EmployeeTaskOptionalized[] employeeTask?;
+    TaskOptionalized[] tasks?;
 |};
 
 public type EmployeeTargetType typedesc<EmployeeWithRelations>;
@@ -44,7 +44,7 @@ public type EmployeeUpdate record {|
     string department?;
 |};
 
-public type EmployeeTask record {|
+public type Task record {|
     readonly int taskId;
     string taskName;
     string description;
@@ -52,7 +52,7 @@ public type EmployeeTask record {|
     int employeeId;
 |};
 
-public type EmployeeTaskOptionalized record {|
+public type TaskOptionalized record {|
     int taskId?;
     string taskName?;
     string description?;
@@ -60,16 +60,16 @@ public type EmployeeTaskOptionalized record {|
     int employeeId?;
 |};
 
-public type EmployeeTaskWithRelations record {|
-    *EmployeeTaskOptionalized;
+public type TaskWithRelations record {|
+    *TaskOptionalized;
     EmployeeOptionalized employee?;
 |};
 
-public type EmployeeTaskTargetType typedesc<EmployeeTaskWithRelations>;
+public type TaskTargetType typedesc<TaskWithRelations>;
 
-public type EmployeeTaskInsert EmployeeTask;
+public type TaskInsert Task;
 
-public type EmployeeTaskUpdate record {|
+public type TaskUpdate record {|
     string taskName?;
     string description?;
     TaskStatus status?;

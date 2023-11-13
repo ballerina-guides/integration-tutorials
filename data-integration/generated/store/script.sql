@@ -3,7 +3,7 @@
 -- This file is an auto-generated file by Ballerina persistence layer for model.
 -- Please verify the generated scripts and execute them against the target DB server.
 
-DROP TABLE IF EXISTS `EmployeeTask`;
+DROP TABLE IF EXISTS `Task`;
 DROP TABLE IF EXISTS `Employee`;
 
 CREATE TABLE `Employee` (
@@ -16,7 +16,7 @@ CREATE TABLE `Employee` (
 	PRIMARY KEY(`id`)
 );
 
-CREATE TABLE `EmployeeTask` (
+CREATE TABLE `Task` (
 	`taskId` INT NOT NULL,
 	`taskName` VARCHAR(191) NOT NULL,
 	`description` VARCHAR(191) NOT NULL,

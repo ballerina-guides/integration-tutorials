@@ -28,7 +28,7 @@ function testEmployee() returns error? {
 
 @test:Config
 function testTask() returns error? {
-    store:EmployeeTask task = {
+    store:Task task = {
         taskId: 1008,
         taskName: "IT Training Workshop'",
         description: "Organize a workshop",
@@ -39,7 +39,7 @@ function testTask() returns error? {
     http:Response res = check cl->/task.post(task);
     test:assertEquals(res.statusCode, http:STATUS_CREATED);
 
-    store:EmployeeTask|persist:Error empTask = dbClient->/employeetasks/[1008];
+    store:Task|persist:Error empTask = dbClient->/tasks/[1008];
     if empTask is persist:Error {
         test:assertFail(empTask.message());  
     }
@@ -63,8 +63,8 @@ function testGetEmployee() returns error? {
 
 @test:Config
 function testGetTask() returns error? {
-    store:EmployeeTask res = check cl->/task/[1001];
-    store:EmployeeTask expectedRes = {
+    store:Task res = check cl->/task/[1001];
+    store:Task expectedRes = {
         taskId: 1001,
         taskName: "Update Server Security",
         description: "Implement the latest security patches and configurations",
@@ -77,8 +77,8 @@ function testGetTask() returns error? {
 
 @test:Config
 function testGetEmployeeTasks() returns error? {
-    store:EmployeeTask[] res = check cl->/employeetasks/[1];
-    store:EmployeeTask[] expectedRes = [
+    store:Task[] res = check cl->/employeetasks/[1];
+    store:Task[] expectedRes = [
         {
             taskId: 1001,
             taskName: "Update Server Security",
@@ -107,14 +107,14 @@ function testGetEmployeeTasks() returns error? {
 
 @test:Config
 function testPutEmployee() returns error? {
-    store:EmployeeTask res = check cl->/task/[1001];
+    store:Task res = check cl->/task/[1001];
     test:assertEquals(res.status, "IN_PROGRESS");
 
-    store:EmployeeTaskUpdate updatedTask = {
+    store:TaskUpdate updatedTask = {
         status: store:COMPLETED
     };
 
-    store:EmployeeTask updatedRes = check cl->/task/[1001].put(updatedTask);
+    store:Task updatedRes = check cl->/task/[1001].put(updatedTask);
     test:assertEquals(updatedRes.status, "COMPLETED");
 }
 
