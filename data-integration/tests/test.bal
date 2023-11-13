@@ -1,34 +1,49 @@
 import data_integration.store;
 import ballerina/http;
 import ballerina/test;
+import ballerina/persist;
 
-final http:Client cl = check new (string `http://localhost:${port}/taskmanager`);
+final http:Client cl = check new (string `http://localhost:${port}/`);
 
 @test:Config
 function testEmployee() returns error? {
-    http:Response res = check cl->/employee.post({
+    store:Employee emp = {
         id: 4,
         name: "John Doe",
         age: 22,
         phone: "8770586755",
         email: "johnDoe@gmail.com",
         department: "IT"
-    });
+    };
 
-    test:assertEquals(res.statusCode, http:CREATED.status.code);
+    http:Response res = check cl->/employee.post(emp);
+    test:assertEquals(res.statusCode, http:STATUS_CREATED);
+    
+    store:Employee|persist:Error employee = dbClient->/employees/[4];
+    if employee is persist:Error {
+        test:assertFail(employee.message());
+    }
+    test:assertEquals(emp, employee);
 }
 
 @test:Config
 function testTask() returns error? {
-    http:Response res = check cl->/task.post({
+    store:EmployeeTask task = {
         taskId: 1008,
         taskName: "IT Training Workshop'",
         description: "Organize a workshop",
-        status: "IN_PROGRESS",
+        status: store:IN_PROGRESS,
         employeeId: 2
-    });
+    };
 
-    test:assertEquals(res.statusCode, http:CREATED.status.code);
+    http:Response res = check cl->/task.post(task);
+    test:assertEquals(res.statusCode, http:STATUS_CREATED);
+
+    store:EmployeeTask|persist:Error empTask = dbClient->/employeetasks/[1008];
+    if empTask is persist:Error {
+        test:assertFail(empTask.message());  
+    }
+    test:assertEquals(task, empTask);
 }
 
 @test:Config
@@ -53,7 +68,7 @@ function testGetTask() returns error? {
         taskId: 1001,
         taskName: "Update Server Security",
         description: "Implement the latest security patches and configurations",
-        status: "IN_PROGRESS",
+        status: store:IN_PROGRESS,
         employeeId: 1
     };
 
@@ -68,21 +83,21 @@ function testGetEmployeeTasks() returns error? {
             taskId: 1001,
             taskName: "Update Server Security",
             description: "Implement the latest security patches and configurations",
-            status: "IN_PROGRESS",
+            status: store:IN_PROGRESS,
             employeeId: 1
         },
         {
             taskId: 1002,
             taskName: "Network Optimization",
             description: "Analyze network performance",
-            status: "NOT_STARTED",
+            status: store:NOT_STARTED,
             employeeId: 1
         },
         {
             taskId: 1003,
             taskName: "Database Migration",
             description: "Migrate database from MySQL to PostgreSQL",
-            status: "COMPLETED",
+            status: store:COMPLETED,
             employeeId: 1
         }
     ];
@@ -96,7 +111,7 @@ function testPutEmployee() returns error? {
     test:assertEquals(res.status, "IN_PROGRESS");
 
     store:EmployeeTaskUpdate updatedTask = {
-        status: "COMPLETED"
+        status: store:COMPLETED
     };
 
     store:EmployeeTask updatedRes = check cl->/task/[1001].put(updatedTask);
@@ -105,6 +120,6 @@ function testPutEmployee() returns error? {
 
 @test:Config
 function testDeleteEmployeeTask() returns error? {
-    http:Response res = check cl->/task/[1001].delete();
-    test:assertEquals(res.statusCode, http:NO_CONTENT.status.code);
+    http:Response res = check cl->/task/[1004].delete();
+    test:assertEquals(res.statusCode, http:STATUS_NO_CONTENT);
 }
