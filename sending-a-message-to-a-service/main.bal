@@ -16,7 +16,7 @@ final http:Client queryDoctorEP = check initializeHttpClient();
 function initializeHttpClient() returns http:Client|error => new (healthcareBackend);
 
 service /healthcare on new http:Listener(8290) {
-    resource function get querydoctor/[string category]() 
+    resource function get doctors/[string category]() 
             returns Doctor[]|http:NotFound|http:InternalServerError {
         log:printInfo("Retrieving information", specialization = category);
         
