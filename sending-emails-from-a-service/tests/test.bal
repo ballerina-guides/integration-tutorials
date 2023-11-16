@@ -3,7 +3,7 @@ import ballerina/http;
 import ballerina/random;
 import ballerina/test;
 
-final http:Client cl = check new (string `http://localhost:${port}/healthcare/categories`);
+final http:Client cl = check new (string `http://localhost:${8290}/healthcare/categories`);
 
 @test:Config
 isolated function testSuccessfulReservation() returns error? {
@@ -118,7 +118,7 @@ public client class MockHttpClient {
     isolated resource function post [http:PathParamType... path](http:RequestMessage message, 
             map<string|string[]>? headers = (), 
             string? mediaType = (), 
-            http:TargetType targetType = <>, *http:QueryParams params) 
+            http:TargetType targetType = http:Response, *http:QueryParams params) 
             returns http:Response|anydata|http:ClientError {
         if self.url == hospitalServicesBackend {
             return handleAppointment(path, message);
