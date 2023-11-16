@@ -1,8 +1,6 @@
 import ballerina/http;
 import ballerina/log;
 
-configurable int port = 8290;
-
 final http:Client grandOakEP = check initializeHttpClient("http://localhost:9090/grandoak/categories");
 final http:Client clemencyEP = check initializeHttpClient("http://localhost:9090/clemency/categories");
 final http:Client pineValleyEP = check initializeHttpClient("http://localhost:9090/pinevalley/categories");
@@ -10,9 +8,9 @@ final http:Client pineValleyEP = check initializeHttpClient("http://localhost:90
 function initializeHttpClient(string url) returns http:Client|error => new (url);
 
 enum HospitalId {
-    GRAND_OAK = "grandoak",
-    CLEMENCY = "clemency",
-    PINE_VALLEY = "pinevalley"
+    grandoak,
+    clemency,
+    pinevalley
 };
 
 type Patient record {|
@@ -22,14 +20,6 @@ type Patient record {|
     string address;
     string phone;
     string email;
-|};
-
-type ReservationRequest record {|
-    Patient patient;
-    string doctor;
-    HospitalId hospital_id;
-    string hospital;
-    string appointment_date;
 |};
 
 type Doctor record {|
@@ -49,22 +39,23 @@ type ReservationResponse record {|
     string appointmentDate;
 |};
 
-service /healthcare on new http:Listener(port) {
-    resource function post categories/[string category]/reserve(ReservationRequest payload)
+type ReservationRequest record {|
+    Patient patient;
+    string doctor;
+    HospitalId hospital_id;
+    string hospital;
+    string appointment_date;
+|};
+
+service /healthcare on new http:Listener(8290) {
+    resource function post categories/[string category]/reserve(ReservationRequest reservation)
             returns ReservationResponse|http:NotFound|http:InternalServerError {
-        ReservationRequest {hospital_id, patient, doctor, ...reservationRequest} = payload;
-
-        log:printDebug("Routing reservation request",
-                        hospital_id = hospital_id,
-                        patient = patient.name,
-                        doctor = doctor);
-
         http:Client hospitalEP;
-        match hospital_id {
-            GRAND_OAK => {
+        match reservation.hospital_id {
+            grandoak => {
                 hospitalEP = grandOakEP;
             }
-            CLEMENCY => {
+            clemency => {
                 hospitalEP = clemencyEP;
             }
             _ => {
@@ -73,15 +64,13 @@ service /healthcare on new http:Listener(port) {
         }
 
         ReservationResponse|http:ClientError resp = hospitalEP->/[category]/reserve.post({
-            patient,
-            doctor,
-            ...reservationRequest
+            patient: reservation.patient,
+            doctor: reservation.doctor,
+            hospital: reservation.hospital,
+            appointment_date: reservation.appointment_date
         });
 
         if resp is ReservationResponse {
-            log:printDebug("Reservation request successful",
-                            name = patient.name,
-                            appointmentNumber = resp.appointmentNumber);
             return resp;
         }
 
