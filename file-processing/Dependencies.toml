@@ -5,12 +5,12 @@
 
 [ballerina]
 dependencies-toml-version = "2"
-distribution-version = "2201.7.2"
+distribution-version = "2201.8.0"
 
 [[package]]
 org = "ballerina"
 name = "crypto"
-version = "2.4.1"
+version = "2.5.0"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "time"}
@@ -19,7 +19,7 @@ dependencies = [
 [[package]]
 org = "ballerina"
 name = "file"
-version = "1.8.1"
+version = "1.9.0"
 dependencies = [
 	{org = "ballerina", name = "io"},
 	{org = "ballerina", name = "jballerina.java"},
@@ -33,7 +33,7 @@ modules = [
 [[package]]
 org = "ballerina"
 name = "io"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "lang.value"}
@@ -46,9 +46,6 @@ modules = [
 org = "ballerina"
 name = "jballerina.java"
 version = "0.0.0"
-modules = [
-	{org = "ballerina", packageName = "jballerina.java", moduleName = "jballerina.java"}
-]
 
 [[package]]
 org = "ballerina"
@@ -87,7 +84,7 @@ dependencies = [
 [[package]]
 org = "ballerina"
 name = "log"
-version = "2.8.1"
+version = "2.9.0"
 dependencies = [
 	{org = "ballerina", name = "io"},
 	{org = "ballerina", name = "jballerina.java"},
@@ -101,7 +98,7 @@ modules = [
 [[package]]
 org = "ballerina"
 name = "observe"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
 ]
@@ -109,32 +106,24 @@ dependencies = [
 [[package]]
 org = "ballerina"
 name = "os"
-version = "1.7.0"
+version = "1.8.0"
 dependencies = [
 	{org = "ballerina", name = "io"},
 	{org = "ballerina", name = "jballerina.java"}
-]
-
-[[package]]
-org = "ballerina"
-name = "persist"
-version = "1.1.0"
-dependencies = [
-	{org = "ballerina", name = "jballerina.java"}
-]
-modules = [
-	{org = "ballerina", packageName = "persist", moduleName = "persist"}
 ]
 
 [[package]]
 org = "ballerina"
 name = "sql"
-version = "1.10.0"
+version = "1.11.1"
 dependencies = [
 	{org = "ballerina", name = "io"},
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "lang.object"},
 	{org = "ballerina", name = "time"}
+]
+modules = [
+	{org = "ballerina", packageName = "sql", moduleName = "sql"}
 ]
 
 [[package]]
@@ -153,7 +142,7 @@ modules = [
 [[package]]
 org = "ballerina"
 name = "time"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
 ]
@@ -176,7 +165,7 @@ modules = [
 [[package]]
 org = "ballerinax"
 name = "mysql"
-version = "1.10.0"
+version = "1.11.0"
 dependencies = [
 	{org = "ballerina", name = "crypto"},
 	{org = "ballerina", name = "io"},
@@ -191,23 +180,9 @@ modules = [
 [[package]]
 org = "ballerinax"
 name = "mysql.driver"
-version = "1.5.0"
+version = "1.6.0"
 modules = [
 	{org = "ballerinax", packageName = "mysql.driver", moduleName = "mysql.driver"}
-]
-
-[[package]]
-org = "ballerinax"
-name = "persist.sql"
-version = "1.1.0"
-dependencies = [
-	{org = "ballerina", name = "jballerina.java"},
-	{org = "ballerina", name = "persist"},
-	{org = "ballerina", name = "sql"},
-	{org = "ballerina", name = "time"}
-]
-modules = [
-	{org = "ballerinax", packageName = "persist.sql", moduleName = "persist.sql"}
 ]
 
 [[package]]
@@ -217,19 +192,16 @@ version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "file"},
 	{org = "ballerina", name = "io"},
-	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "lang.runtime"},
 	{org = "ballerina", name = "log"},
-	{org = "ballerina", name = "persist"},
+	{org = "ballerina", name = "sql"},
 	{org = "ballerina", name = "test"},
 	{org = "ballerina", name = "time"},
 	{org = "ballerinai", name = "observe"},
 	{org = "ballerinax", name = "mysql"},
-	{org = "ballerinax", name = "mysql.driver"},
-	{org = "ballerinax", name = "persist.sql"}
+	{org = "ballerinax", name = "mysql.driver"}
 ]
 modules = [
-	{org = "integration_tutorials", packageName = "file_processing", moduleName = "file_processing"},
-	{org = "integration_tutorials", packageName = "file_processing", moduleName = "file_processing.store"}
+	{org = "integration_tutorials", packageName = "file_processing", moduleName = "file_processing"}
 ]
 

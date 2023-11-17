@@ -1,11 +1,15 @@
-import file_processing.store;
-
 import ballerina/file;
 import ballerina/io;
-import ballerina/test;
 import ballerina/lang.runtime;
-import ballerina/persist;
+import ballerina/sql;
+import ballerina/test;
 import ballerina/time;
+
+type DatabasePerson record {|
+    string firstName;
+    string lastName;
+    string phone;
+|};
 
 @test:Config
 function testValidFileProcessing() returns error? {
@@ -39,15 +43,15 @@ function testValidFileProcessing() returns error? {
     string[] readLines = check io:fileReadLines(string `${mvOnSuccessPath}${file:pathSeparator}${filename}`);
     test:assertEquals(readLines, content);
 
-    stream<store:Person, persist:Error?> personStream = storeClient->/people;
-    store:Person[] personArr = check from store:Person person in personStream select person;
+    stream<DatabasePerson, sql:Error?> personStream = storeClient->query(`SELECT * FROM Persons;`);
+    DatabasePerson[] personArr = check from DatabasePerson person in personStream select person;
     test:assertTrue(personArr.length() >= content.length() - 1);
     foreach int i in 1 ..< content.length() {
         test:assertTrue(personArr.some(p => p == getPerson(content[i])));
     }
 }
 
-function getPerson(string content) returns store:Person {
+function getPerson(string content) returns DatabasePerson {
     string[] split = re `,`.split(content);
     test:assertTrue(split.length() == 3);
     return {
