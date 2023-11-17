@@ -2,7 +2,7 @@ import ballerina/http;
 import ballerina/random;
 import ballerina/test;
 
-final http:Client cl = check new (string `http://localhost:${8290}/healthcare/categories`);
+final http:Client cl = check new ("http://localhost:8290/healthcare/categories");
 
 @test:Config
 function testSuccessfulRequest() returns error? {
