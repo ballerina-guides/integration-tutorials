@@ -28,16 +28,7 @@ type Appointment record {|
     string appointmentDate;
 |};
 
-type PaymentSettlement record {|
-    int appointmentNumber;
-    Doctor doctor;
-    Patient patient;
-    decimal fee;
-    boolean confirmed;
-    string card_number;
-|};
-
-type Payment record {|
+type Payment record {
     int appointmentNo;
     string doctorName;
     string patient;
@@ -46,20 +37,22 @@ type Payment record {|
     decimal discounted;
     string paymentID;
     string status;
-|};
+};
 
-type ReservationRequest record {|
-    record {|
-        *Patient;
-        string cardNo;
-    |} patient;
+type PatientWithCardNo record {
+    *Patient;
+    string cardNo;
+};
+
+type ReservationRequest record {
+    PatientWithCardNo patient;
     string doctor;
     string hospital_id;
     string hospital;
     string appointment_date;
-|};
+};
 
-type ReservationResponse record {|
+type ReservationResponse record {
     int appointmentNo;
     string doctorName;
     string patient;
@@ -68,9 +61,8 @@ type ReservationResponse record {|
     decimal discounted;
     string paymentID;
     string status;
-|};
+};
 
-configurable int port = 8290;
 configurable string hospitalServicesBackend = "http://localhost:9090";
 configurable string paymentBackend = "http://localhost:9090/healthcare/payments";
 configurable string host = "smtp.gmail.com";
@@ -85,25 +77,26 @@ function initializeHttpClient(string url) returns http:Client|error => new (url)
 
 function initializeEmailClient() returns email:SmtpClient|error => new (host, username, password);
 
-service /healthcare on new http:Listener(port) {
+service /healthcare on new http:Listener(8290) {
 
     resource function post categories/[string category]/reserve(ReservationRequest payload)
             returns http:Created|http:NotFound|http:InternalServerError {
 
-        ReservationRequest {
-            patient: {cardNo, ...patient},
-            doctor,
-            hospital,
-            hospital_id,
-            appointment_date
-        } = payload;
+        PatientWithCardNo patient = payload.patient;
 
         Appointment|http:ClientError appointment =
-                hospitalServicesEP->/[hospital_id]/categories/[category]/reserve.post({
-            patient,
-            doctor,
-            hospital,
-            appointment_date
+                hospitalServicesEP->/[payload.hospital_id]/categories/[category]/reserve.post({
+            patient: {
+                name: patient.name,
+                dob: patient.dob,
+                ssn: patient.ssn,
+                address: patient.address,
+                phone: patient.phone,
+                email: patient.email
+            },
+            doctor: payload.doctor,
+            hospital: payload.hospital,
+            appointment_date: payload.appointment_date
         });
 
         if appointment !is Appointment {
@@ -122,7 +115,7 @@ service /healthcare on new http:Listener(port) {
             patient: appointment.patient,
             fee: appointment.doctor.fee,
             confirmed: appointment.confirmed,
-            card_number: cardNo
+            card_number: patient.cardNo
         });
 
         if payment !is Payment {
@@ -135,16 +128,13 @@ service /healthcare on new http:Listener(port) {
 
         email:Error? sendMessage = smtpClient->sendMessage({
             to: patient.email,
-            subject: "Appointment reservation confirmed at " + hospital,
+            subject: "Appointment reservation confirmed at " + payload.hospital,
             body: getEmailContent(appointmentNumber, appointment, payment)
         });
 
         if sendMessage is email:Error {
             return <http:InternalServerError>{body: sendMessage.message()};
         }
-        log:printDebug("Email sent successfully",
-                        name = patient.name,
-                        appointmentNumber = appointmentNumber);
         return <http:Created>{};
     }
 }

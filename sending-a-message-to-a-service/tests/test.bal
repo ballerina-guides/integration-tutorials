@@ -1,7 +1,7 @@
 import ballerina/http;
 import ballerina/test;
 
-final http:Client cl = check new (string `http://localhost:${port}/healthcare/querydoctor`);
+final http:Client cl = check new ("http://localhost:8290/healthcare/doctors");
 
 isolated function getSurgeryResponsePayload() returns map<json>[] & readonly => [
     {

@@ -1,14 +1,11 @@
 import ballerina/http;
 import ballerina/log;
 
-configurable int port = 8290;
-configurable string hospitalServiceUrl = "http://localhost:9090";
-
 final http:Client hospitalServiceEP = check initializeHttpClient();
 
-function initializeHttpClient() returns http:Client|error => new (hospitalServiceUrl);
+function initializeHttpClient() returns http:Client|error => new ("http://localhost:9090");
 
-type HealthcareReservation record {
+type HealthcareReservation record {|
     string firstName;
     string lastName;
     string dob;
@@ -21,7 +18,7 @@ type HealthcareReservation record {
     string hospital;
     string cardNo;
     string appointmentDate;
-};
+|};
 
 type Patient record {|
     string name;
@@ -44,31 +41,27 @@ type Doctor record {|
     string hospital;
     string category;
     string availability;
-    float fee;
+    decimal fee;
 |};
 
 type ReservationResponse record {|
     int appointmentNumber;
     Doctor doctor;
     Patient patient;
-    float fee;
     string hospital;
     boolean confirmed;
     string appointmentDate;
 |};
 
-service /healthcare on new http:Listener(port) {
-    isolated resource function post categories/[string category]/reserve(HealthcareReservation payload)
+service /healthcare on new http:Listener(8290) {
+    isolated resource function post categories/[string category]/reserve(HealthcareReservation reservation)
             returns ReservationResponse|http:NotFound|http:InternalServerError {
-        HospitalReservation hospitalReservation = transform(payload);
+        HospitalReservation hospitalReservation = transform(reservation);
 
         ReservationResponse|http:ClientError resp =
-                    hospitalServiceEP->/[payload.hospitalId]/categories/[category]/reserve.post(hospitalReservation);
+                    hospitalServiceEP->/[reservation.hospitalId]/categories/[category]/reserve.post(hospitalReservation);
 
         if resp is ReservationResponse {
-            log:printDebug("Reservation request successful",
-                            name = hospitalReservation.patient.name,
-                            appointmentNumber = resp.appointmentNumber);
             return resp;
         }
 

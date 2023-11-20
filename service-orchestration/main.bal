@@ -1,7 +1,6 @@
 import ballerina/http;
 import ballerina/log;
 
-configurable int port = 8290;
 configurable string hospitalServicesBackend = "http://localhost:9090";
 configurable string paymentBackend = "http://localhost:9090/healthcare/payments";
 
@@ -17,17 +16,6 @@ type Patient record {|
     string address;
     string phone;
     string email;
-|};
-
-type ReservationRequest record {|
-    record {|
-        *Patient;
-        string cardNo;
-    |} patient;
-    string doctor;
-    string hospital_id;
-    string hospital;
-    string appointment_date;
 |};
 
 type Doctor record {|
@@ -47,6 +35,19 @@ type Appointment record {|
     string appointmentDate;
 |};
 
+type PatientWithCardNo record {|
+    *Patient;
+    string cardNo;
+|};
+
+type ReservationRequest record {|
+    PatientWithCardNo patient;
+    string doctor;
+    string hospital_id;
+    string hospital;
+    string appointment_date;
+|};
+
 type Fee record {|
     string patientName;
     string doctorName;
@@ -64,28 +65,24 @@ type ReservationStatus record {|
     string status;
 |};
 
-service /healthcare on new http:Listener(port) {
+service /healthcare on new http:Listener(8290) {
     resource function post categories/[string category]/reserve(ReservationRequest payload) 
             returns ReservationStatus|http:NotFound|http:InternalServerError {
-        ReservationRequest {
-            patient: {cardNo, ...patient},
-            doctor, 
-            hospital,
-            hospital_id,
-            appointment_date
-        } = payload;
-
-        log:printDebug("Initiating reservation process", 
-                       specialization = category, 
-                       doctor = doctor,
-                       patient = patient.name);
+        PatientWithCardNo patient = payload.patient;
 
         Appointment|http:ClientError appointment =
-                hospitalServicesEP->/[hospital_id]/categories/[category]/reserve.post({
-            patient,
-            doctor,
-            hospital,
-            appointment_date
+                hospitalServicesEP->/[payload.hospital_id]/categories/[category]/reserve.post({
+            patient: {
+                name: patient.name,
+                dob: patient.dob,
+                ssn: patient.ssn,
+                address: patient.address,
+                phone: patient.phone,
+                email: patient.email
+            },
+            doctor: payload.doctor,
+            hospital: payload.hospital,
+            appointment_date: payload.appointment_date
         });
 
         if appointment !is Appointment {
@@ -99,7 +96,7 @@ service /healthcare on new http:Listener(port) {
         int appointmentNumber = appointment.appointmentNumber;
 
         Fee|http:ClientError fee = 
-                hospitalServicesEP->/[hospital_id]/categories/appointments/[appointmentNumber]/fee;
+                hospitalServicesEP->/[payload.hospital_id]/categories/appointments/[appointmentNumber]/fee;
 
         if fee !is Fee {
             log:printError("Retrieving fee failed", fee);
@@ -117,10 +114,10 @@ service /healthcare on new http:Listener(port) {
         ReservationStatus|http:ClientError status = paymentEP->/.post({
             appointmentNumber,
             doctor: appointment.doctor,
-            patient,
+            patient: appointment.patient,
             fee: actualFee,
             confirmed: false,
-            card_number: cardNo
+            card_number: patient.cardNo
         });
 
         if status !is ReservationStatus {
@@ -131,9 +128,6 @@ service /healthcare on new http:Listener(port) {
             return <http:InternalServerError> {body: status.message()};
         }
 
-        log:printDebug("Appointment reservation successful", 
-                       name = patient.name, 
-                       appointmentNumber = appointmentNumber);
         return status;
     }
 }
