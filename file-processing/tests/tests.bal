@@ -43,7 +43,7 @@ function testValidFileProcessing() returns error? {
     string[] readLines = check io:fileReadLines(string `${mvOnSuccessPath}${file:pathSeparator}${filename}`);
     test:assertEquals(readLines, content);
 
-    stream<DatabasePerson, sql:Error?> personStream = storeClient->query(`SELECT * FROM Persons;`);
+    stream<DatabasePerson, sql:Error?> personStream = db->query(`SELECT * FROM Persons;`);
     DatabasePerson[] personArr = check from DatabasePerson person in personStream select person;
     test:assertTrue(personArr.length() >= content.length() - 1);
     foreach int i in 1 ..< content.length() {

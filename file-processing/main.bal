@@ -45,14 +45,14 @@ function createFileListener() returns file:Listener|error {
     return new (({path: inPath}));
 }
 
-final sql:Client storeClient = 
+final mysql:Client db = 
     check new mysql:Client(host, user, password, database, port);
 
 function init() returns error? {
     check createDirIfNotExists(mvOnSuccessPath);
     check createDirIfNotExists(mvOnFailurePath);
 
-    _ = check storeClient->execute(`CREATE TABLE IF NOT EXISTS Persons (
+    _ = check db->execute(`CREATE TABLE IF NOT EXISTS Persons (
                                         firstName VARCHAR(50) NOT NULL,
                                         lastName VARCHAR(50) NOT NULL,
                                         phone VARCHAR(10) NOT NULL
@@ -72,7 +72,7 @@ service on fileListener {
             sql:ParameterizedQuery[] insertQueries = from Person person in persons
                 select `INSERT INTO Persons (firstName, lastName, phone)
                         VALUES (${person.First\ Name}, ${person.Last\ Name}, ${person.Phone})`;
-            _ = check storeClient->batchExecute(insertQueries);
+            _ = check db->batchExecute(insertQueries);
             move(file, mvOnSuccessPath);
         } on fail io:Error|sql:Error err {
             if err is io:Error {
