@@ -82,7 +82,7 @@ Follow the instructions given in this section to develop the service.
     }
     ```
 
-5. Now define a function to move a file from one directory to another. The [`file:copy`](https://central.ballerina.io/ballerina/file/latest#copy) function is used to copy the file from one directory to another and the [`file:remove`](https://central.ballerina.io/ballerina/file/latest#remove) function is used to remove the copied file from the source directory.
+5. Now define a function to move a file from one directory to another. The [`file:copy`](https://central.ballerina.io/ballerina/file/latest#copy) function is used to copy the file from one directory to another and the [`file:remove`](https://central.ballerina.io/ballerina/file/latest#remove) function is used to remove the file from the source directory.
 
     ```ballerina
     function move(string inFilePath, string outFolder) {
@@ -98,7 +98,7 @@ Follow the instructions given in this section to develop the service.
 
     [`check`](https://ballerina.io/learn/by-example/check-expression/) expressions are used to handle errors while moving the file and move control to the [`on fail`](https://ballerina.io/learn/by-example/check-semantics/) block, in which information about the failure is logged at `ERROR` level.
 
-6. Define a `file:Listener` directory listener to listen to changes in the `inPath` directory. Extract the initialization logic to a separate function which will first create the directory at the `inPath` path if it does not exist and then initialize the listener.
+6. Define a [`file:Listener`](https://central.ballerina.io/ballerina/file/latest#Listener) directory listener to listen to changes in the `inPath` directory. Extract the initialization logic to a separate function which will first create the directory at the `inPath` path if it does not exist and then initialize the listener.
 
     ```ballerina
     listener file:Listener fileListener = createFileListener();
@@ -109,14 +109,14 @@ Follow the instructions given in this section to develop the service.
     }
     ```
 
-7. Define a `mysql:Client` object to interact with the database. Import the `ballerinax/mysql` module to use the `mysql` client. Also import the [ballerinax/mysql.driver](https://central.ballerina.io/ballerinax/mysql.driver/latest) driver module as `import ballerinax/mysql.driver as _;` to use the latest MySQL driver required to connect to and interact with the MySQL server. Using as `as _` tells the compiler that the specific module won't be used explicilty in the source.
+7. Define a [`mysql:Client`](https://central.ballerina.io/ballerinax/mysql/latest#Client) object to interact with the database. Import the `ballerinax/mysql` module to use the `mysql` client. Also import the [ballerinax/mysql.driver](https://central.ballerina.io/ballerinax/mysql.driver/latest) driver module as `import ballerinax/mysql.driver as _;` to use the latest MySQL driver required to connect to and interact with the MySQL server. Using `as _` tells the compiler that the specific module won't be used explicilty in the source.
 
     ```ballerina
     final mysql:Client db = 
         check new mysql:Client(host, user, password, database, port);
     ```
 
-8. Introduce the module `init` function and create the output directories if they do not exist. Also use the `db` client to create the `Persons` table if it does not exist already.
+8. Introduce the [module `init` function](https://ballerina.io/learn/by-example/init-function/) and create the output directories if they do not exist. Also use the `db` client to create the `Persons` table if it does not exist already.
 
     ```ballerina
     function init() returns error? {
@@ -133,7 +133,7 @@ Follow the instructions given in this section to develop the service.
 
     The module [`init`](https://ballerina.io/learn/by-example/init-function/) function is called as the last step of the module initialization phase. If the `init` function returns an error module initialization will fail.
 
-9. Let us now define the service that processes the files. Define a service on the `fileListener` listener and implement the `onCreate` remote method which will get called whenever a file is created in the directory the `fileListener` is listening to.
+9. Now define the service that processes the files. Define a service on the `fileListener` listener and implement the `onCreate` remote method which will get called whenever a file is created in the directory the `fileListener` is listening to.
 
     ```ballerina
     service on fileListener {
@@ -165,11 +165,11 @@ Follow the instructions given in this section to develop the service.
 
     - Extract the name of the file from the `file:FileEvent` record to proceed with further processing only if the file has the `.csv` extension. 
 
-    - Next, introduce the logic to read data from CSV files, add entries to the database, and move the file to the relevant folder depending on whether processing was successful. The core logic is wrapped in a `do` block with an `on fail` block attached, to handle all failures in one place and move the file to the directory at `mvOnFailurePath` on failure.
+    - Next, introduce the logic to read data from a CSV file, add entries to the database, and move the file to the relevant folder depending on whether processing was successful. The core logic is wrapped in a `do` block with an `on fail` block attached, to handle all failures in one place and move the file to the directory at `mvOnFailurePath` on failure.
 
     - Within the `do` block, the [`io:fileReadCsv`](https://central.ballerina.io/ballerina/io/latest#fileReadCsv) function is used with `Person[]` to read the CSV data and try and bind each row to a `Person` record.
 
-    - If the CSV data is successfully read as an array of `Person` records, construct an [SQL insert query](https://ballerina.io/learn/by-example/mysql-execute-operation/) for each entry and use the `db` client to do a [batch execute](https://ballerina.io/learn/by-example/mysql-batch-execute-operation/) of the queries.
+    - If the CSV data is successfully read as an array of `Person` records, construct an [SQL insert query](https://ballerina.io/learn/by-example/mysql-execute-operation/) for each entry and use the `db` client to do a [batch execution](https://ballerina.io/learn/by-example/mysql-batch-execute-operation/) of the queries.
 
     - If the database update is successful, move the file to the directory at `mvOnSuccessPath`.
 
