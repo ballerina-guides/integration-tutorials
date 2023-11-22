@@ -46,7 +46,7 @@ final twilio:Client twilioEp = check new (config = {
     autoAck: false
 }
 service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
-    remote function onMessage(RabbitMqMessage message) {
+    remote function onMessage(RabbitMqMessage message, rabbitmq:Caller caller) returns error? {
         record {|*ReservationRequest; string category;|} {category, hospital_id, ...reservation} = message.content;
 
         ReservationResponse|http:ClientError resp =
@@ -71,6 +71,7 @@ service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitm
             log:printError("SMS sending failed", phoneNo = patientPhoneNo,
                                                  appointmentNo = resp.appointmentNumber);
         }
+        check caller->basicAck();
     }
 }
 
