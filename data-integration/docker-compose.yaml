@@ -18,4 +18,3 @@ services:
       - "3307:3306"
     volumes:
       - "./generated/store/script.sql:/docker-entrypoint-initdb.d/1.sql"
-      - "./data-seeds.sql:/docker-entrypoint-initdb.d/2.sql"

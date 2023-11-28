@@ -2,12 +2,10 @@ import data_integration.store;
 import ballerina/http;
 import ballerina/persist;
 
-configurable int port = 9090;
-
 final store:Client dbClient = check new ();
 
-service / on new http:Listener(port) {
-    resource function post employee(store:EmployeeInsert employee)
+service / on new http:Listener(9090) {
+    resource function post employees(store:EmployeeInsert employee)
             returns http:Created|http:Conflict|http:InternalServerError {
         int[]|persist:Error result = dbClient->/employees.post([employee]);
         if result is persist:AlreadyExistsError {

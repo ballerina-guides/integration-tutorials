@@ -12,7 +12,6 @@ type Employee record {|
 
 type Task record {|
     readonly int taskId;
-    string taskName;
     string description;
     TaskStatus status;
     Employee employee;

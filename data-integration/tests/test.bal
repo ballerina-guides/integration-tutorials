@@ -3,23 +3,23 @@ import ballerina/http;
 import ballerina/test;
 import ballerina/persist;
 
-final http:Client cl = check new (string `http://localhost:${port}/`);
+final http:Client cl = check new ("http://localhost:9090/");
 
 @test:Config
 function testEmployee() returns error? {
     store:Employee emp = {
-        id: 4,
+        id: 1,
         name: "John Doe",
         age: 22,
         phone: "8770586755",
-        email: "johnDoe@gmail.com",
+        email: "johndoe@gmail.com",
         department: "IT"
     };
 
-    http:Response res = check cl->/employee.post(emp);
+    http:Response res = check cl->/employees.post(emp);
     test:assertEquals(res.statusCode, http:STATUS_CREATED);
     
-    store:Employee|persist:Error employee = dbClient->/employees/[4];
+    store:Employee|persist:Error employee = dbClient->/employees/[1];
     if employee is persist:Error {
         test:assertFail(employee.message());
     }
@@ -27,19 +27,19 @@ function testEmployee() returns error? {
 }
 
 @test:Config
+{dependsOn: [testEmployee]}
 function testTask() returns error? {
     store:Task task = {
-        taskId: 1008,
-        taskName: "IT Training Workshop'",
+        taskId: 1001,
         description: "Organize a workshop",
         status: store:IN_PROGRESS,
-        employeeId: 2
+        employeeId: 1
     };
 
     http:Response res = check cl->/task.post(task);
     test:assertEquals(res.statusCode, http:STATUS_CREATED);
 
-    store:Task|persist:Error empTask = dbClient->/tasks/[1008];
+    store:Task|persist:Error empTask = dbClient->/tasks/[1001];
     if empTask is persist:Error {
         test:assertFail(empTask.message());  
     }
@@ -47,6 +47,7 @@ function testTask() returns error? {
 }
 
 @test:Config
+{dependsOn: [testEmployee]}
 function testGetEmployee() returns error? {
     store:Employee res = check cl->/employee/[1];
     store:Employee expectedRes = {
@@ -62,12 +63,12 @@ function testGetEmployee() returns error? {
 }
 
 @test:Config
+{dependsOn: [testTask]}
 function testGetTask() returns error? {
     store:Task res = check cl->/task/[1001];
     store:Task expectedRes = {
         taskId: 1001,
-        taskName: "Update Server Security",
-        description: "Implement the latest security patches and configurations",
+        description: "Organize a workshop",
         status: store:IN_PROGRESS,
         employeeId: 1
     };
@@ -76,28 +77,14 @@ function testGetTask() returns error? {
 }
 
 @test:Config
+{dependsOn: [testTask]}
 function testGetEmployeeTasks() returns error? {
     store:Task[] res = check cl->/employeetasks/[1];
     store:Task[] expectedRes = [
         {
             taskId: 1001,
-            taskName: "Update Server Security",
-            description: "Implement the latest security patches and configurations",
+            description: "Organize a workshop",
             status: store:IN_PROGRESS,
-            employeeId: 1
-        },
-        {
-            taskId: 1002,
-            taskName: "Network Optimization",
-            description: "Analyze network performance",
-            status: store:NOT_STARTED,
-            employeeId: 1
-        },
-        {
-            taskId: 1003,
-            taskName: "Database Migration",
-            description: "Migrate database from MySQL to PostgreSQL",
-            status: store:COMPLETED,
             employeeId: 1
         }
     ];
@@ -106,6 +93,7 @@ function testGetEmployeeTasks() returns error? {
 }
 
 @test:Config
+{dependsOn: [testTask]}
 function testPutEmployee() returns error? {
     store:Task res = check cl->/task/[1001];
     test:assertEquals(res.status, "IN_PROGRESS");
@@ -119,7 +107,8 @@ function testPutEmployee() returns error? {
 }
 
 @test:Config
+{dependsOn: [testTask]}
 function testDeleteEmployeeTask() returns error? {
-    http:Response res = check cl->/task/[1004].delete();
+    http:Response res = check cl->/task/[1001].delete();
     test:assertEquals(res.statusCode, http:STATUS_NO_CONTENT);
 }

@@ -18,7 +18,6 @@ CREATE TABLE `Employee` (
 
 CREATE TABLE `Task` (
 	`taskId` INT NOT NULL,
-	`taskName` VARCHAR(191) NOT NULL,
 	`description` VARCHAR(191) NOT NULL,
 	`status` ENUM('NOT_STARTED', 'IN_PROGRESS', 'COMPLETED') NOT NULL,
 	`employeeId` INT NOT NULL,

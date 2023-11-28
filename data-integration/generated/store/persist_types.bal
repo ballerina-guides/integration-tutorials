@@ -46,7 +46,6 @@ public type EmployeeUpdate record {|
 
 public type Task record {|
     readonly int taskId;
-    string taskName;
     string description;
     TaskStatus status;
     int employeeId;
@@ -54,7 +53,6 @@ public type Task record {|
 
 public type TaskOptionalized record {|
     int taskId?;
-    string taskName?;
     string description?;
     TaskStatus status?;
     int employeeId?;
@@ -70,7 +68,6 @@ public type TaskTargetType typedesc<TaskWithRelations>;
 public type TaskInsert Task;
 
 public type TaskUpdate record {|
-    string taskName?;
     string description?;
     TaskStatus status?;
     int employeeId?;
