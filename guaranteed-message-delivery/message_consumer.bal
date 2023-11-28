@@ -20,12 +20,14 @@ type ReservationResponse record {|
     string appointmentDate;
 |};
 
+type MessageContent record {|
+    *ReservationRequest;
+    string category;
+|};
+
 type RabbitMqMessage record {|
     *rabbitmq:AnydataMessage;
-    record {|
-        *ReservationRequest;
-        string category;
-    |} content;
+    MessageContent content;
 |};
 
 configurable string smsFromNumber = ?;
@@ -34,7 +36,7 @@ configurable string twillioAuthToken = ?;
 
 final http:Client hospitalBackend = check new ("http://localhost:9090/");
 
-final twilio:Client twilioEp = check new (config = {
+final twilio:Client twilioEp = check new ({
     twilioAuth: {
         accountSId: twillioAccSId,
         authToken: twillioAuthToken
@@ -47,33 +49,34 @@ final twilio:Client twilioEp = check new (config = {
 }
 service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
     remote function onMessage(RabbitMqMessage message, rabbitmq:Caller caller) returns error? {
-        record {|*ReservationRequest; string category;|} {category, hospital_id, ...reservation} = message.content;
+        MessageContent content = message.content;
 
-        ReservationResponse|http:ClientError resp =
-                    hospitalBackend->/[hospital_id]/categories/[category]/reserve.post(reservation);
+        ReservationResponse|http:ClientError appointment = 
+            hospitalBackend->/[content.hospital_id]/categories/[content.category]/reserve.post({
+                patient: content.patient,
+                doctor: content.doctor,
+                hospital: content.hospital,
+                appointment_date: content.appointment_date
+            });
 
-        if resp !is ReservationResponse {
-            log:printError("Reservation request failed", resp);
+        if appointment !is ReservationResponse {
+            log:printError("Reservation request failed", appointment);
             return;
         }
 
         string patientPhoneNo = message.content.patient.phone;
 
-        twilio:SmsResponse|error smsResponse = twilioEp->sendSms(smsFromNumber, patientPhoneNo,
-            generateSmsText(message.content.patient.name, resp.appointmentNumber, resp.hospital));
+        twilio:SmsResponse|error smsApiStatus = twilioEp->sendSms(smsFromNumber, patientPhoneNo,
+            generateSmsText(message.content.patient.name, appointment.appointmentNumber, appointment.hospital));
 
-        if smsResponse !is twilio:SmsResponse {
-            log:printError("SMS API error", smsResponse);
+        if smsApiStatus !is twilio:SmsResponse {
+            log:printError("SMS sending failed", smsApiStatus);
             return;
         }
 
-        if smsResponse.status == "error" {
-            log:printError("SMS sending failed", phoneNo = patientPhoneNo,
-                                                 appointmentNo = resp.appointmentNumber);
-        }
         check caller->basicAck();
     }
 }
 
 function generateSmsText(string name, int appointmentNo, string hospital) returns string
-        => string `Dear ${name}, Your appintment accepted at ${hospital}. Appointment No: ${appointmentNo}`;
+        => string `Dear ${name}, Your appointment has been accepted at ${hospital}. Appointment No: ${appointmentNo}`;
