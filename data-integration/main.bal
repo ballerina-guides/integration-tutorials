@@ -29,58 +29,57 @@ service / on new http:Listener(9090) {
         return http:CREATED;
     }
 
-    resource function get task/[int taskId]() returns http:Ok|http:NotFound|http:InternalServerError {
+    resource function get task/[int taskId]() returns store:Task|http:NotFound|http:InternalServerError {
         store:Task|persist:Error task = dbClient->/tasks/[taskId];
+        if task is persist:NotFoundError {
+            return http:NOT_FOUND;
+        }
         if task is persist:Error {
-            if task is persist:NotFoundError {
-                return http:NOT_FOUND;
-            }
             return <http:InternalServerError>{body: task.message()};
         }
-        return <http:Ok>{body: task};
+        return task;
     }
 
-    resource function get employeetasks/[int empId]() returns http:Ok|http:NotFound|http:InternalServerError {
-        store:Task[]|persist:Error tasks = from store:Task task
-                in dbClient->/tasks(store:Task)
+    resource function get employeetasks/[int empId]() returns store:Task[]|http:NotFound|http:InternalServerError {
+        store:Task[]|persist:Error tasks = from store:Task task in dbClient->/tasks(store:Task)
             where task.employeeId == empId
             select task;
+        if tasks is persist:NotFoundError {
+            return http:NOT_FOUND;
+        }
         if tasks is persist:Error {
-            if tasks is persist:NotFoundError {
-                return http:NOT_FOUND;
-            }
             return <http:InternalServerError>{body: tasks.message()};
         }
-        return <http:Ok>{body: tasks};
+        return tasks;
     }
 
-    resource function get employee/[int empId]() returns http:Ok|http:NotFound|http:InternalServerError {
+    resource function get employee/[int empId]() returns store:Employee|http:NotFound|http:InternalServerError {
         store:Employee|persist:Error employee = dbClient->/employees/[empId];
+        if employee is persist:NotFoundError {
+            return http:NOT_FOUND;
+        }
         if employee is persist:Error {
-            if employee is persist:NotFoundError {
-                return http:NOT_FOUND;
-            }
             return <http:InternalServerError>{body: employee.message()};
         }
-        return <http:Ok>{body: employee};
+        return employee;
     }
 
     resource function put task/[int taskId](store:TaskUpdate emp)
-            returns http:Ok|http:InternalServerError {
-        store:Task|persist:Error result = dbClient->/tasks/[taskId].put(emp);
-        if result is persist:Error {
-            return <http:InternalServerError>{body: result.message()};
+            returns store:Task|http:InternalServerError {
+        store:Task|persist:Error updatedTask = dbClient->/tasks/[taskId].put(emp);
+        if updatedTask is persist:Error {
+            return <http:InternalServerError>{body: updatedTask.message()};
         }
-        return <http:Ok>{body: result};
+        return updatedTask;
     }
 
     resource function delete task/[int taskId]()
             returns http:NoContent|http:NotFound|http:InternalServerError {
         store:Task|persist:Error task = dbClient->/tasks/[taskId];
+        if task is persist:NotFoundError {
+            return http:NOT_FOUND;
+        }
         if task is persist:Error {
-            if task is persist:NotFoundError {
-                return http:NOT_FOUND;
-            }
             return <http:InternalServerError>{body: task.message()};
         }
         if task.status != store:COMPLETED {
