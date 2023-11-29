@@ -19,7 +19,6 @@ type ReservationRequest record {|
 |};
 
 configurable string queueName = "ReservationQueue";
-configurable string exchangeName = "ReservationExchange";
 
 final rabbitmq:Client rabbitmqClient = check new (rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT);
 
