@@ -61,6 +61,7 @@ service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitm
 
         if appointment !is ReservationResponse {
             log:printError("Reservation request failed", appointment);
+            check caller->basicAck();
             return;
         }
 
@@ -71,7 +72,6 @@ service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitm
 
         if smsApiStatus !is twilio:SmsResponse {
             log:printError("SMS sending failed", smsApiStatus);
-            return;
         }
 
         check caller->basicAck();
