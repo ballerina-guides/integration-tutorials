@@ -60,7 +60,6 @@ function testGetEmployee() returns error? {
         email: "johndoe@gmail.com",
         department: "IT"
     };
-
     test:assertEquals(res, expectedRes);
 }
 
