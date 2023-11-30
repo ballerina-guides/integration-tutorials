@@ -47,9 +47,7 @@ service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitm
             return;
         }
 
-        string patientPhoneNo = content.patient.phone;
-
-        twilio:SmsResponse|error smsApiStatus = twilioEp->sendSms(fromNumber, patientPhoneNo,
+        twilio:SmsResponse|error smsApiStatus = twilioEp->sendSms(fromNumber, content.patient.phone,
             constructMessageBody(content.patient.name, 
                                  reservationResponse.appointmentNumber, 
                                  reservationResponse.hospital));
