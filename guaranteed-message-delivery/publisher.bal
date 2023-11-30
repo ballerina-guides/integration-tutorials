@@ -9,6 +9,7 @@ function initializeRabbitMqClient() returns rabbitmq:Client|error => new (rabbit
 
 service /healthcare on new http:Listener(8290) {
     function init() returns error? {
+        check rabbitmqClient->exchangeDeclare("RR01");
         check rabbitmqClient->queueDeclare(queueName);
     }
 
@@ -18,6 +19,7 @@ service /healthcare on new http:Listener(8290) {
             content: {
                 patient: request.patient,
                 doctor: request.doctor,
+                hospital_id: request.hospital_id,
                 hospital: request.hospital,
                 appointment_date: request.appointment_date,
                 category
