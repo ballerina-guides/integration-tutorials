@@ -2,8 +2,8 @@ import ballerina/http;
 import ballerina/log;
 import ballerina/mime;
 
-xmlns "http://services.samples" as ns;
-xmlns "http://services.samples/xsd" as ax21;
+xmlns "http://services.samples" as ns0;
+xmlns "http://services.samples/xsd" as ns1;
 
 configurable int port = 9000;
 
@@ -12,8 +12,8 @@ enum SoapVersion {
     ONE_TWO
 }
 
-const string GET_QUOTE = "urn:getQuote";
-const string PLACE_ORDER = "urn:placeOrder";
+const string GET_QUOTE = "getQuote";
+const string PLACE_ORDER = "placeOrder";
 
 service /services on new http:Listener(port) {
     resource function default [string... paths](
@@ -42,11 +42,12 @@ service /services on new http:Listener(port) {
 
         match soapAction {
             GET_QUOTE => {
-                string company = (payload.<ns:symbol>).data();
+                string company = (payload.<ns0:symbol>).data();
                 return getQuote(company, soapVersion);
             }
             PLACE_ORDER => {
-                return placeOrder(soapVersion);
+                string company = (payload.<ns0:symbol>).data();
+                return placeOrder(company, soapVersion);
             }
         }
 
@@ -66,34 +67,34 @@ function getSoap12Action(string contentTypeHeader) returns string? {
 }
 
 function getQuote(string company, SoapVersion soapVersion) returns xml {
-    xml body = xml `<ns:getQuoteResponse>
-                        <ax21:change>-2.86843917118114</ax21:change>
-                        <ax21:earnings>-8.540305401672558</ax21:earnings>
-                        <ax21:high>-176.67958828498735</ax21:high>
-                        <ax21:last>177.66987465262923</ax21:last>
-                        <ax21:low>-176.30898912339075</ax21:low>
-                        <ax21:marketCap>5.649557998178506E7</ax21:marketCap>
-                        <ax21:name>${company} Company</ax21:name>
-                        <ax21:open>185.62740369461244</ax21:open>
-                        <ax21:peRatio>24.341353665128693</ax21:peRatio>
-                        <ax21:percentageChange>-1.4930577008849097</ax21:percentageChange>
-                        <ax21:prevClose>192.11844053187397</ax21:prevClose>
-                        <ax21:symbol>${company}</ax21:symbol>
-                        <ax21:volume>7791</ax21:volume>
-                    </ns:getQuoteResponse>`;
+    xml body = xml `<ns0:getQuoteResponse>
+                        <ns1:change>-2.86843917118114</ns1:change>
+                        <ns1:earnings>-8.540305401672558</ns1:earnings>
+                        <ns1:high>-176.67958828498735</ns1:high>
+                        <ns1:last>177.66987465262923</ns1:last>
+                        <ns1:low>-176.30898912339075</ns1:low>
+                        <ns1:marketCap>5.649557998178506E7</ns1:marketCap>
+                        <ns1:name>${company} Company</ns1:name>
+                        <ns1:open>185.62740369461244</ns1:open>
+                        <ns1:peRatio>24.341353665128693</ns1:peRatio>
+                        <ns1:percentageChange>-1.4930577008849097</ns1:percentageChange>
+                        <ns1:prevClose>192.11844053187397</ns1:prevClose>
+                        <ns1:symbol>${company}</ns1:symbol>
+                        <ns1:volume>7791</ns1:volume>
+                    </ns0:getQuoteResponse>`;
     if soapVersion == ONE_ONE {
         xmlns "http://schemas.xmlsoap.org/soap/envelope/" as soapenv;
-         return xml `<soapenv:Envelope><soapenv:Body>${body}</soapenv:Body></soapenv:Envelope>`;
+        return xml `<soapenv:Envelope><soapenv:Body>${body}</soapenv:Body></soapenv:Envelope>`;
     }
 
     xmlns "http://www.w3.org/2003/05/soap-envelope" as soapenv;
     return xml `<soapenv:Envelope><soapenv:Body>${body}</soapenv:Body></soapenv:Envelope>`;
 }
 
-function placeOrder(SoapVersion soapVersion) returns xml {
-    xml body = xml `<ns:placeOrderResponse>
-                        <ax21:status>created</ax21:status>
-                    </ns:placeOrderResponse>`;
+function placeOrder(string company, SoapVersion soapVersion) returns xml {
+    xml body = xml `<ns0:placeOrderResponse>
+                        <ns1:status>created</ns1:status>
+                    </ns0:placeOrderResponse>`;
 
     if soapVersion == ONE_ONE {
         xmlns "http://schemas.xmlsoap.org/soap/envelope/" as soapenv;
