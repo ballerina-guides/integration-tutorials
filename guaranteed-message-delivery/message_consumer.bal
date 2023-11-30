@@ -17,21 +17,22 @@ configurable string fromNumber = ?;
 configurable string accountSId = ?;
 configurable string authToken = ?;
 
-final http:Client hospitalBackend = check new ("http://localhost:9090/");
+final http:Client hospitalBackend = check initializeHttpClient();
+
+function initializeHttpClient() returns http:Client|error => new ("http://localhost:9090");
 
 final twilio:Client twilioEp = check new ({
     twilioAuth: {
-        accountSId: accountSId,
-        authToken: authToken
+        accountSId,
+        authToken
     }
 });
 
 @rabbitmq:ServiceConfig {
-    queueName,
-    autoAck: true
+    queueName
 }
 service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
-    remote function onMessage(RabbitMqMessage message, rabbitmq:Caller caller) returns error? {
+    remote function onMessage(RabbitMqMessage message) {
         MessageContent content = message.content;
 
         ReservationResponse|http:ClientError reservationResponse = 
@@ -42,7 +43,7 @@ service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitm
                 appointment_date: content.appointment_date
             });
 
-        if reservationResponse !is ReservationResponse {
+        if reservationResponse is http:ClientError {
             log:printError("Reservation request failed", reservationResponse);
             return;
         }
