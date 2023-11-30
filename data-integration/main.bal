@@ -2,7 +2,7 @@ import data_integration.store;
 import ballerina/http;
 import ballerina/persist;
 
-final store:Client dbClient = check new ();
+final store:Client dbClient = check new;
 
 service / on new http:Listener(9090) {
     resource function post employees(store:EmployeeInsert employee)
@@ -64,9 +64,9 @@ service / on new http:Listener(9090) {
         return employee;
     }
 
-    resource function put task/[int taskId](store:TaskUpdate emp)
+    resource function put task/[int taskId](store:TaskUpdate task)
             returns store:Task|http:InternalServerError {
-        store:Task|persist:Error updatedTask = dbClient->/tasks/[taskId].put(emp);
+        store:Task|persist:Error updatedTask = dbClient->/tasks/[taskId].put(task);
         if updatedTask is persist:Error {
             return <http:InternalServerError>{body: updatedTask.message()};
         }
