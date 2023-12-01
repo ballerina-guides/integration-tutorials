@@ -19,9 +19,11 @@ configurable string authToken = ?;
 
 final http:Client hospitalBackend = check initializeHttpClient();
 
+final twilio:Client twilioEp = check initializeTwilioClient();
+
 function initializeHttpClient() returns http:Client|error => new ("http://localhost:9090");
 
-final twilio:Client twilioEp = check new ({
+function initializeTwilioClient() returns twilio:Client|error => new ({
     twilioAuth: {
         accountSId,
         authToken
