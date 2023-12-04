@@ -52,7 +52,7 @@ function init() returns error? {
     check createDirIfNotExists(mvOnSuccessPath);
     check createDirIfNotExists(mvOnFailurePath);
 
-    _ = check db->execute(`CREATE TABLE IF NOT EXISTS Persons (
+    _ = check db->execute(`CREATE TABLE IF NOT EXISTS persons (
                                         firstName VARCHAR(50) NOT NULL,
                                         lastName VARCHAR(50) NOT NULL,
                                         phone VARCHAR(10) NOT NULL
@@ -70,7 +70,7 @@ service on fileListener {
         do {
             Person[] persons = check io:fileReadCsv(file);
             sql:ParameterizedQuery[] insertQueries = from Person person in persons
-                select `INSERT INTO Persons (firstName, lastName, phone)
+                select `INSERT INTO persons (firstName, lastName, phone)
                         VALUES (${person.First\ Name}, ${person.Last\ Name}, ${person.Phone})`;
             _ = check db->batchExecute(insertQueries);
             move(file, mvOnSuccessPath);
@@ -78,7 +78,7 @@ service on fileListener {
             if err is io:Error {
                 log:printError("Error occured while reading file", err, filename = file);
             } else {
-                log:printError("Error persisting data to database", err, filename = file);
+                log:printError("Error occured while persisting data", err, filename = file);
             }
             move(file, mvOnFailurePath);
         }
