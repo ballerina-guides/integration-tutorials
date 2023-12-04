@@ -48,7 +48,7 @@ Follow the instructions given in this section to develop the service.
 2. Introduce the source code in files with the `.bal` extension (e.g., the `main.bal` file). Introduce a constant to represent the `.csv` extension and [configurable variables](https://ballerina.io/learn/by-example/#configurability) to denote the paths to the three directories: directory to listen on and directories to move files to once processing is completed. Also introduce configurable variables for database configuration.
 
     ```ballerina
-    const string CSV_EXT = ".csv";
+    const CSV_EXT = ".csv";
 
     configurable string inPath = "./in";
     configurable string mvOnSuccessPath = "./out";
@@ -187,7 +187,7 @@ import ballerina/sql;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
 
-const string CSV_EXT = ".csv";
+const CSV_EXT = ".csv";
 
 configurable string inPath = "./in";
 configurable string mvOnSuccessPath = "./out";

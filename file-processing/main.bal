@@ -5,7 +5,7 @@ import ballerina/sql;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
 
-const string CSV_EXT = ".csv";
+const CSV_EXT = ".csv";
 
 configurable string inPath = "./in";
 configurable string mvOnSuccessPath = "./out";
