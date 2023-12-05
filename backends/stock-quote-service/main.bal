@@ -57,13 +57,13 @@ service /services on new http:Listener(port) {
 }
 
 function getSoap12Action(string contentTypeHeader) returns string? {
-    foreach string component in re `;`.split(contentTypeHeader) {
-        string trimmedComponent = component.trim();
-        if trimmedComponent.startsWith("action=") {
-            return trimmedComponent.substring(7, trimmedComponent.length());
-        }
+    mime:MediaType|mime:InvalidContentTypeError mediaHeader = 
+        mime:getMediaType(contentTypeHeader);
+    if mediaHeader is mime:InvalidContentTypeError {
+        return ();
     }
-    return ();
+    map<string> actionMap = mediaHeader.parameters;
+    return actionMap["action"];
 }
 
 function getQuote(string company, SoapVersion soapVersion) returns xml {
