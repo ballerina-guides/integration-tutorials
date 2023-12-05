@@ -1,4 +1,5 @@
 import ballerina/http;
+import ballerina/log;
 import ballerinax/rabbitmq;
 
 configurable string queueName = "ReservationQueue";
@@ -9,8 +10,7 @@ function initializeRabbitMqClient() returns rabbitmq:Client|error => new (rabbit
 
 service /healthcare on new http:Listener(8290) {
     function init() returns error? {
-        check rabbitmqClient->exchangeDeclare("RR01");
-        check rabbitmqClient->queueDeclare(queueName);
+        return rabbitmqClient->queueDeclare(queueName);
     }
 
     resource function post categories/[string category]/reserve(ReservationRequest request)
@@ -28,6 +28,7 @@ service /healthcare on new http:Listener(8290) {
         });
 
         if response is rabbitmq:Error {
+            log:printError("Failed to publsih the request to message broker", response);
             return <http:InternalServerError>{body: response.message()};
         }
 

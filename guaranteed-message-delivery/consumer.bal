@@ -48,19 +48,19 @@ service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitm
         string smsBody;
         if reservationResponse is http:ClientError {
             log:printError("Reservation request failed", reservationResponse);
-            smsBody = string `Dear ${content.patient.name}, 
-                                your appointment has been failed at ${content.hospital}.`;
+            smsBody = string `Dear ${content.patient.name
+                        }, your appointment request at ${content.hospital
+                        } failed. Please try again.`;
         } else {
-            smsBody = string `Dear ${content.patient.name}, 
-                                your appointment has been accepted at ${content.hospital}. 
-                                Appointment No: ${reservationResponse.appointmentNumber}`;
+            smsBody = string `Dear ${content.patient.name
+                        }, your appointment has been accepted at ${content.hospital
+                        }. Appointment No: ${reservationResponse.appointmentNumber}`;
         }
 
         twilio:SmsResponse|error smsApiStatus = twilioEp->sendSms(fromNumber, content.patient.phone, smsBody);
 
         if smsApiStatus !is twilio:SmsResponse {
-            log:printError("Failed to send an SMS message", phoneNo = content.patient.phone,
-                                                            smsBody = smsBody);
+            log:printError("Failed to send an SMS message", smsApiStatus, phoneNo = content.patient.phone);
         }
     }
 }

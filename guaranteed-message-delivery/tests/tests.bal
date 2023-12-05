@@ -1,4 +1,5 @@
 import ballerina/http;
+import ballerina/lang.runtime;
 import ballerina/test;
 import ballerinax/twilio;
 
@@ -7,11 +8,13 @@ const CLEMENCY_MEDICAL_CENTER = "clemency medical center";
 const PINE_VALLEY_COMMUNITY_HOSPITAL = "pine valley community hospital";
 const THOMAS_COLLINS = "thomas collins";
 
+isolated string smsBody = "";
+
 final http:Client cl = check new ("http://localhost:8290/healthcare/categories");
 
 @test:Config
-function testSuccessfulReservation() returns error? {
-    http:Response _ = check cl->/surgery/reserve.post({
+isolated function testSuccessfulReservation() returns error? {
+    http:Response response = check cl->/surgery/reserve.post({
         patient: {
             name: "John Doe",
             dob: "1940-03-19",
@@ -25,7 +28,38 @@ function testSuccessfulReservation() returns error? {
         hospital_id: "grandoak",
         appointment_date: "2025-04-02"
     });
+    test:assertEquals(response.statusCode, http:STATUS_CREATED);
+    runtime:sleep(5);
+    lock {
+        test:assertEquals(smsBody, "Dear John Doe, " +
+                                   "your appointment has been accepted at grand oak community hospital. " +
+                                   "Appointment No: 1");
+    }
+}
 
+@test:Config
+isolated function testUnknownCategory() returns error? {
+    http:Response response = check cl->/rheumatology/reserve.post({
+        patient: {
+            name: "John Doe",
+            dob: "1940-03-19",
+            ssn: "234-23-525",
+            address: "California",
+            phone: "+1234567890",
+            email: "johndoe@gmail.com"
+        },
+        doctor: "thomas collins",
+        hospital: "grand oak community hospital",
+        hospital_id: "grandoak",
+        appointment_date: "2025-04-02"
+    });
+    test:assertEquals(response.statusCode, http:STATUS_CREATED);
+    runtime:sleep(5);
+    lock {
+        test:assertEquals(smsBody, "Dear John Doe, " +
+                                   "your appointment request at grand oak community hospital failed. " +
+                                   "Please try again.");
+    }
 }
 
 public client class MockHttpClient {
@@ -69,21 +103,22 @@ public client class MockHttpClient {
 }
 
 public client class MockTwilioClient {
-
-    remote function sendSms(
+    isolated remote function sendSms(
             string fromNo,
             string toNo,
             string message,
             string? statusCallbackUrl) returns twilio:SmsResponse|error {
 
-        // TODO: Implement here
+        lock {
+            smsBody = message;
+        }
 
         return <twilio:SmsResponse>{};
     }
 }
 
 isolated function getSuccessAppointmentResponse(string hospital) returns ReservationResponse & readonly => {
-    appointmentNumber: 4,
+    appointmentNumber: 1,
     doctor: {
         name: "thomas collins",
         hospital,
@@ -105,10 +140,9 @@ isolated function getSuccessAppointmentResponse(string hospital) returns Reserva
 };
 
 isolated function getInvalidHospitalOrDoctorErrorResponse() returns http:ClientRequestError
-    => <http:ClientRequestError>error("Not Found",
-                                        body = "requested doctor is not available at the requested hospital",
-                                        headers = {},
-                                        statusCode = http:STATUS_NOT_FOUND);
+    => error("Not Found", body = "requested doctor is not available at the requested hospital",
+                          headers = {},
+                          statusCode = http:STATUS_NOT_FOUND);
 
 @test:Mock {
     functionName: "initializeHttpClient"
