@@ -8,6 +8,13 @@ const CLEMENCY_MEDICAL_CENTER = "clemency medical center";
 const PINE_VALLEY_COMMUNITY_HOSPITAL = "pine valley community hospital";
 const THOMAS_COLLINS = "thomas collins";
 
+const EXPECTED_SUCCESS_MESSAGE = "Dear John Doe, " +
+                                 "your appointment has been accepted at grand oak community hospital. " +
+                                 "Appointment No: 1";
+const EXPECTED_FAIL_MESSAGE = "Dear John Doe, " +
+                              "your appointment request at grand oak community hospital failed. " +
+                              "Please try again.";
+
 isolated string smsBody = "";
 
 final http:Client cl = check new ("http://localhost:8290/healthcare/categories");
@@ -31,9 +38,7 @@ isolated function testSuccessfulReservation() returns error? {
     test:assertEquals(response.statusCode, http:STATUS_CREATED);
     runtime:sleep(5);
     lock {
-        test:assertEquals(smsBody, "Dear John Doe, " +
-                                   "your appointment has been accepted at grand oak community hospital. " +
-                                   "Appointment No: 1");
+        test:assertEquals(smsBody, EXPECTED_SUCCESS_MESSAGE);
     }
 }
 
@@ -56,9 +61,7 @@ isolated function testUnknownCategory() returns error? {
     test:assertEquals(response.statusCode, http:STATUS_CREATED);
     runtime:sleep(5);
     lock {
-        test:assertEquals(smsBody, "Dear John Doe, " +
-                                   "your appointment request at grand oak community hospital failed. " +
-                                   "Please try again.");
+        test:assertEquals(smsBody, EXPECTED_FAIL_MESSAGE);
     }
 }
 

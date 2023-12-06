@@ -28,7 +28,9 @@ service /healthcare on new http:Listener(8290) {
         });
 
         if response is rabbitmq:Error {
-            log:printError("Failed to publsih the request to message broker", response);
+            log:printError("Failed to publish to the message broker", patient = request.patient.name,
+                                                                      doctor = request.doctor,
+                                                                      hospital = request.hospital);
             return <http:InternalServerError>{body: response.message()};
         }
 

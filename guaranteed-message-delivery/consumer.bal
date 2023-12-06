@@ -36,24 +36,29 @@ function initializeTwilioClient() returns twilio:Client|error => new ({
 service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
     remote function onMessage(RabbitMqMessage message) {
         MessageContent content = message.content;
+        string hospital = content.hospital;
+        string patientName = content.patient.name;
+        string doctor = content.doctor;
 
         ReservationResponse|http:ClientError reservationResponse = 
             hospitalBackend->/[content.hospital_id]/categories/[content.category]/reserve.post({
                 patient: content.patient,
-                doctor: content.doctor,
-                hospital: content.hospital,
+                doctor: doctor,
+                hospital: hospital,
                 appointment_date: content.appointment_date
             });
 
         string smsBody;
         if reservationResponse is http:ClientError {
-            log:printError("Reservation request failed", reservationResponse);
-            smsBody = string `Dear ${content.patient.name
-                        }, your appointment request at ${content.hospital
+            log:printError("Reservation request failed", patient = patientName,
+                                                         doctor = doctor,
+                                                         hospital = hospital);
+            smsBody = string `Dear ${patientName
+                        }, your appointment request at ${hospital
                         } failed. Please try again.`;
         } else {
-            smsBody = string `Dear ${content.patient.name
-                        }, your appointment has been accepted at ${content.hospital
+            smsBody = string `Dear ${patientName
+                        }, your appointment has been accepted at ${hospital
                         }. Appointment No: ${reservationResponse.appointmentNumber}`;
         }
 
