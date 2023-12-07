@@ -1,0 +1,8 @@
+[package]
+org = "ballerinademo"
+name = "stock_quote_service"
+version = "0.1.0"
+distribution = "2201.8.0"
+
+[build-options]
+observabilityIncluded = true
