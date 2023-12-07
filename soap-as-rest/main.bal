@@ -1,6 +1,5 @@
 import ballerina/http;
 import ballerina/log;
-import ballerina/mime;
 import ballerina/soap.soap12;
 
 xmlns "http://services.samples" as ns0;
@@ -35,17 +34,13 @@ type Order record {|
 service /stockQuote on new http:Listener(8080) {
     resource function get quote/[string symbol]() returns Quote|http:InternalServerError {
         xml payload = xml `<ns0:symbol>${symbol}</ns0:symbol>`;
-        xml|mime:Entity[]|soap12:Error response = soapEP->sendReceive(payload, "getQuote");
+        xml|soap12:Error response = soapEP->sendReceive(payload, "getQuote");
 
         if response is soap12:Error {
             log:printError("Failed to get quote", response);
             return <http:InternalServerError>{body: response.message()};
         }
 
-        if response is mime:Entity[] {
-            log:printError("Failed to retrieve expected XML payload for quote, received mime:Entity[]");
-            return <http:InternalServerError>{body: "failed to retrieve expected XML payload for quote"};
-        }
         xml:Element quote =
             (response/**/<soapenv:Envelope>/<soapenv:Body>/<ns0:getQuoteResponse>).get(0);
         Quote|error quoteRecord = constructQuoteRecord(quote);
@@ -57,7 +52,7 @@ service /stockQuote on new http:Listener(8080) {
     }
 
     resource function post 'order(Order 'order) returns string|http:InternalServerError {
-        xml|mime:Entity[]|soap12:Error response = soapEP->sendReceive(
+        xml|soap12:Error response = soapEP->sendReceive(
             xml `<ns0:placeOrder>
                     <ns0:order>
                         <ns0:quantity>${'order.quantity}</ns0:quantity>
@@ -70,11 +65,6 @@ service /stockQuote on new http:Listener(8080) {
         if response is soap12:Error {
             log:printError("Failed to place order", response);
             return <http:InternalServerError>{body: response.message()};
-        }
-
-        if response is mime:Entity[] {
-            log:printError("Failed to retrieve expected XML payload for placing an order, received mime:Entity[]");
-            return <http:InternalServerError>{body: "failed to retrieve expected XML payload for placing an order"};
         }
 
         xml:Element orderResponse =
