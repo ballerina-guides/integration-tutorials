@@ -116,7 +116,7 @@ public client class MockTwilioClient {
             smsBody = message;
         }
 
-        return <twilio:SmsResponse>{};
+        return {};
     }
 }
 

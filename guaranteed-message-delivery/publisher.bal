@@ -15,12 +15,16 @@ service /healthcare on new http:Listener(8290) {
 
     resource function post categories/[string category]/reserve(ReservationRequest request)
                     returns http:Created|http:InternalServerError {
+        Patient patient = request.patient;
+        string doctor = request.doctor;
+        string hospital = request.hospital;
+
         rabbitmq:Error? response = rabbitmqClient->publishMessage({
             content: {
-                patient: request.patient,
-                doctor: request.doctor,
+                patient,
+                doctor,
                 hospital_id: request.hospital_id,
-                hospital: request.hospital,
+                hospital: hospital,
                 appointment_date: request.appointment_date,
                 category
             },
@@ -28,9 +32,9 @@ service /healthcare on new http:Listener(8290) {
         });
 
         if response is rabbitmq:Error {
-            log:printError("Failed to publish to the message broker", patient = request.patient.name,
-                                                                      doctor = request.doctor,
-                                                                      hospital = request.hospital);
+            log:printError("Failed to publish to the message broker", patient = patient.name,
+                                                                      doctor = doctor,
+                                                                      hospital = hospital);
             return <http:InternalServerError>{body: response.message()};
         }
 

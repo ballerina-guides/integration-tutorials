@@ -43,8 +43,8 @@ service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitm
         ReservationResponse|http:ClientError reservationResponse = 
             hospitalBackend->/[content.hospital_id]/categories/[content.category]/reserve.post({
                 patient: content.patient,
-                doctor: doctor,
-                hospital: hospital,
+                doctor,
+                hospital,
                 appointment_date: content.appointment_date
             });
 
