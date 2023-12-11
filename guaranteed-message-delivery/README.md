@@ -2,9 +2,9 @@
 
 ## Overview
 
-In this tutorial, you will develop a service via which you can reserve appointments at a hospital. The requests are forwarded to a message broker. The message will be consumed by another service and perform the appointment reservation by calling the hospital backend.
+In this tutorial, you will develop a service which you can reserve appointments at a hospital. You will use a message broker to store the forwarded requests from a one service. The other service will read the requests in the message queue and perform the appointment reservation by calling the hospital backend.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. This resource will receive the user request and forward it to the message broker. The consuming service will recieve the request, make the reservation and send an SMS to the patient phone number.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. This resource will receive the user request and forward it to the message broker. The consuming service will read the request, make the reservation and send an SMS to the patient's phone number.
 
 The flow is as follows.
 
@@ -27,9 +27,9 @@ The flow is as follows.
     }
     ```
 
-2. Publish the recieving payload to the message broker
+2. Publish the receiving payload to the message broker
 
-3. Cosumer acquires the message from the message broker, extracts the necessary details (e.g. patient, doctor, hospital) and makes a call to the hospital backend service to request an appointment. A response similar to the following will be returned from the hospital backend service on success.
+3. Consumer acquires the message from the message broker, extracts the necessary details (e.g. patient, doctor, hospital) and makes a call to the hospital backend service to request an appointment. A response similar to the following will be returned from the hospital backend service on success.
 
     ```json
     {
@@ -77,7 +77,7 @@ Follow the instructions given in this section to develop the service.
 1. Create a new Ballerina project using the `bal` command and open it in VS Code.
 
     ```
-    $ bal new sending-emails-from-a-service
+    $ bal new guaranteed-message-delivery
     ```
 
 2. Remove the `main.bal` file and open the diagram view in VS Code.
@@ -162,7 +162,7 @@ Follow the instructions given in this section to develop the service.
     > **Note:** 
     > When the fields of the JSON objects are expected to be exactly those specified in the sample payload, the generated records can be updated to be [closed records](https://ballerina.io/learn/by-example/controlling-openness/), which would indicate that no other fields are allowed or expected.
 
-4. Create a file named `publisher.bal` and define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests and publsih to the message broker.
+4. Create a file named `publisher.bal` and define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests and publish to the message broker.
 
 - Open the [Ballerina HTTP API Designer](https://wso2.com/ballerina/vscode/docs/design-the-services/http-api-designer) in VS Code.
 
@@ -170,7 +170,7 @@ Follow the instructions given in this section to develop the service.
 
         ![Define the service](./resources/define_a_service.gif)
      
-    - Define an HTTP resource that allows the `POST` operation on the resource path `/categories/{category}/reserve` and accepts the `category` path parameter (corresponding to the specialization). Use `ReservationRequest` as a parameter indicating that the resource expects a JSON object corresponding to `ReservationRequest` as the payload. Use `http:Created`, `http:NotFound`, and `http:InternalServerError` as the response types.
+    - Define an HTTP resource that allows the `POST` operation on the resource path `/categories/{category}/reserve` and accepts the `category` path parameter (corresponding to the specialization). Use `ReservationRequest` as a parameter indicating that the resource expects a JSON object corresponding to `ReservationRequest` as the payload. Use `http:Created` and `http:InternalServerError` as the response types.
 
         ![Define the resource](./resources/define_a_resource.gif)
 
@@ -179,9 +179,219 @@ Follow the instructions given in this section to develop the service.
         ```ballerina
         service /healthcare on new http:Listener(8290) {
             resource function post categories/[string category]/reserve(ReservationRequest payload) 
-                    returns http:Created|http:NotFound|http:InternalServerError {
+                    returns http:Created|http:InternalServerError {
                 
             }
         }
         ```
 
+5. Define a [configurable variable](https://ballerina.io/learn/by-example/#configurability) for the name of the queue.
+
+    ![Define a configurable variable](./resources/define_a_configurable_variable.gif)
+
+    The generated code will be as follows.
+
+    ```ballerina
+    configurable string queueName = "ReservationQueue";
+    ```
+
+6. Create a [rabbitmq: Client](https://central.ballerina.io/ballerinax/rabbitmq/latest#Client) object to forward the message to the message broker.
+    
+    - Use rabbitmq's default host and deafult port to initialize the client object
+
+    ![Define a rabbitmq client](./resources/define_a_crabbitmq_client.gif)
+
+    The generated code will be as follows.
+
+    ```ballerina
+    final rabbitmq:Client rabbitmqClient = check new (rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT)
+    ```
+
+7. Implement the logic
+
+    ```ballerina
+    service /healthcare on new http:Listener(8290) {
+        function init() returns error? {
+            return rabbitmqClient->queueDeclare(queueName);
+        }
+
+        resource function post categories/[string category]/reserve(ReservationRequest request)
+                        returns http:Created|http:InternalServerError {
+            Patient patient = request.patient;
+            string doctor = request.doctor;
+            string hospital = request.hospital;
+
+            rabbitmq:Error? response = rabbitmqClient->publishMessage({
+                content: {
+                    patient,
+                    doctor,
+                    hospital_id: request.hospital_id,
+                    hospital: hospital,
+                    appointment_date: request.appointment_date,
+                    category
+                },
+                routingKey: queueName
+            });
+
+            if response is rabbitmq:Error {
+                log:printError("Failed to publish to the message broker", patient = patient.name,
+                                                                        doctor = doctor,
+                                                                        hospital = hospital);
+                return <http:InternalServerError>{body: response.message()};
+            }
+
+            return http:CREATED;
+        }
+    }
+    ```
+8. Create a file named `consumer.bal` and define the record types needed for rabbitmq listener
+
+    ```ballerina
+    type MessageContent record {|
+        *ReservationRequest;
+        string category;
+    |};
+
+    type RabbitMqMessage record {|
+        *rabbitmq:AnydataMessage;
+        MessageContent content;
+    |};
+    ```
+
+    > **Note:**
+    > Using [record type inclusion](https://ballerina.io/learn/by-example/type-inclusion-for-records/) allows including all the fields from the the included record along with the defined fields.
+
+9. Define configurations for the SMS service endpoints (e.g. `fromNumber`, `accountSId`, `authToken`) as [configurable variables](https://ballerina.io/learn/by-example/#configurability)
+
+    ```ballerina
+    configurable string fromNumber = ?;
+    configurable string accountSId = ?;
+    configurable string authToken = ?;
+    ```
+
+10. Implement the consumer service.
+
+    ```ballerina
+    @rabbitmq:ServiceConfig {
+        queueName
+    }
+    service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
+        remote function onMessage(RabbitMqMessage message) {
+            MessageContent content = message.content;
+            string hospital = content.hospital;
+            string patientName = content.patient.name;
+            string doctor = content.doctor;
+
+            ReservationResponse|http:ClientError reservationResponse = 
+                hospitalBackend->/[content.hospital_id]/categories/[content.category]/reserve.post({
+                    patient: content.patient,
+                    doctor,
+                    hospital,
+                    appointment_date: content.appointment_date
+                });
+
+            string smsBody;
+            if reservationResponse is http:ClientError {
+                log:printError("Reservation request failed", patient = patientName,
+                                                            doctor = doctor,
+                                                            hospital = hospital);
+                smsBody = string `Dear ${patientName
+                            }, your appointment request at ${hospital
+                            } failed. Please try again.`;
+            } else {
+                smsBody = string `Dear ${patientName
+                            }, your appointment has been accepted at ${hospital
+                            }. Appointment No: ${reservationResponse.appointmentNumber}`;
+            }
+
+            twilio:SmsResponse|error smsApiStatus = twilioEp->sendSms(fromNumber, content.patient.phone, smsBody);
+
+            if smsApiStatus !is twilio:SmsResponse {
+                log:printError("Failed to send an SMS message", smsApiStatus, phoneNo = content.patient.phone);
+            }
+        }
+    }
+    ```
+
+    -  Create the `rabbitmq:Service` listening on `rabbitmq:Listener` and remote function named `onMessage` which takes a message as an argument.
+
+    - Extract the necessary values to variables and send a `POST` reuqest to the hospital service to reserve the appointment. The `hospital_id` and `category` values are ued as path parameters
+
+    - Use the `is` check to decide the flow based on the response to the client call. If the request failed with an error, log the error and set the `smsBody` an error message, else, set is as a confirmartion message.
+
+    - Call the twilio endpoint with configurations (e.g. from number, patient's phone number) and SMS body
+
+    - Log an error if the calling twilio endpoint fails.
+
+#### Complete source
+
+<TODO: Complete source code>
+
+### Step 3: Build and run the service
+
+![Run the service](./resources/run_the_service.gif)
+
+> **Note:**
+> Alternatively, you can run this service by navigating to the project root and using the `bal run` command.
+>
+> ```
+> guaranteed-message-delivery$ bal run
+> Compiling source
+>         integration_tutorials/guaranteed-message-delivery:0.1.0
+>
+> Running executable
+> ```
+
+### Step 4: Try out the use case
+
+Let's test the use case by sending a request to the service.
+
+#### Start the backend service
+
+Download the JAR file for the [backend service](https://github.com/ballerina-guides/integration-tutorials/blob/main/backends/hospital-service/hospitalservice.jar) and execute the following command to start the service.
+
+```
+$ bal run hospitalservice.jar
+```
+
+#### Start the rabbitmq message broker
+
+Follow the [rabbitmq guidlines ](<link to the guidelines>) to configure and start the rabbitmq message broker.
+
+#### Send a request
+
+Use the [Try it](https://wso2.com/ballerina/vscode/docs/try-the-services/try-http-services/) feature to send a request to the service. Specify `surgery` as the path parameter. Use the following as the request payload.
+
+```json
+    {
+        "patient": {
+            "name": "John Doe",
+            "dob": "1940-03-19",
+            "ssn": "234-23-525",
+            "address": "California",
+            "phone": "+9470586755",
+            "email": "johndoe@gmail.com",
+        },
+        "doctor": "thomas collins",
+        "hospital_id": "grandoaks",
+        "hospital": "grand oak community hospital",
+        "appointment_date": "2023-10-02"
+    }
+```
+
+![Send a request](./resources/try_it.gif)
+
+#### Verify the SMS
+
+You will receive an SMS with information similar to the following for a successful appointment reservation.
+
+```
+Dear John Doe, your appointment has been accepted at grand oak community hospital. Appointment No: 1
+```
+
+## References
+
+- [`ballerina/http` API docs](https://lib.ballerina.io/ballerina/http/latest)
+- [`ballerina/log` API docs](https://lib.ballerina.io/ballerina/log/latest)
+- Twillio 
+- RabbitMQ
