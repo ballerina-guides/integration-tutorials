@@ -8,7 +8,10 @@ xmlns "http://www.w3.org/2003/05/soap-envelope" as soapenv;
 
 const NS1 = "http://services.samples/xsd";
 
-final soap12:Client soapEP = check new ("http://localhost:9000/services/SimpleStockQuoteService");
+final soap12:Client soapEP = check initializeSoapClient();
+
+function initializeSoapClient() returns soap12:Client|soap12:Error => 
+    new ("http://localhost:9000/services/SimpleStockQuoteService");
 
 type Quote record {|
     decimal change;
@@ -31,7 +34,7 @@ type Order record {|
     string symbol;
 |};
 
-service /stockQuote on new http:Listener(8080) {
+service /stockquote on new http:Listener(8080) {
     resource function get quote/[string symbol]() returns Quote|http:InternalServerError {
         xml payload = xml `<ns0:symbol>${symbol}</ns0:symbol>`;
         xml|soap12:Error response = soapEP->sendReceive(payload, "getQuote");
