@@ -37,7 +37,7 @@ function testAddEmployee() returns error? {
     dependsOn: [testAddEmployee]
 }
 function testAddTask() returns error? {
-    http:Response res = check cl->/task.post(EMPLOYEE_TASK);
+    http:Response res = check cl->/tasks.post(EMPLOYEE_TASK);
     test:assertEquals(res.statusCode, http:STATUS_CREATED);
 
     store:Task|persist:Error empTask = dbClient->/tasks/[1001];
@@ -51,7 +51,7 @@ function testAddTask() returns error? {
     dependsOn: [testAddEmployee]
 }
 function testGetEmployee() returns error? {
-    store:Employee res = check cl->/employee/[1];
+    store:Employee res = check cl->/employees/[1];
     test:assertEquals(res, EMPLOYEE);
 }
 
@@ -59,7 +59,7 @@ function testGetEmployee() returns error? {
     dependsOn: [testAddTask]
 }
 function testGetTask() returns error? {
-    store:Task res = check cl->/task/[1001];
+    store:Task res = check cl->/tasks/[1001];
     test:assertEquals(res, EMPLOYEE_TASK);
 }
 
@@ -67,7 +67,7 @@ function testGetTask() returns error? {
     dependsOn: [testAddTask]
 }
 function testGetEmployeeTasks() returns error? {
-    store:Task[] res = check cl->/employeetasks/[1];
+    store:Task[] res = check cl->/employees/[1]/tasks;
     test:assertEquals(res, [EMPLOYEE_TASK]);
 }
 
@@ -75,14 +75,14 @@ function testGetEmployeeTasks() returns error? {
     dependsOn: [testDeleteInProgressTask]
 }
 function testPutEmployee() returns error? {
-    store:Task res = check cl->/task/[1001];
+    store:Task res = check cl->/tasks/[1001];
     test:assertEquals(res.status, "IN_PROGRESS");
 
     store:TaskUpdate updatedTask = {
         status: store:COMPLETED
     };
 
-    store:Task updatedRes = check cl->/task/[1001].put(updatedTask);
+    store:Task updatedRes = check cl->/tasks/[1001].put(updatedTask);
     test:assertEquals(updatedRes.status, "COMPLETED");
 }
 
@@ -90,7 +90,7 @@ function testPutEmployee() returns error? {
     dependsOn: [testAddTask]
 }
 function testDeleteInProgressTask() returns error? {
-    http:Response res = check cl->/task/[1001].delete();
+    http:Response res = check cl->/tasks/[1001].delete();
     test:assertEquals(res.statusCode, http:STATUS_INTERNAL_SERVER_ERROR);
 }
 
@@ -98,6 +98,6 @@ function testDeleteInProgressTask() returns error? {
     dependsOn: [testPutEmployee]
 }
 function testDeleteEmployeeTask() returns error? {
-    http:Response res = check cl->/task/[1001].delete();
+    http:Response res = check cl->/tasks/[1001].delete();
     test:assertEquals(res.statusCode, http:STATUS_NO_CONTENT);
 }

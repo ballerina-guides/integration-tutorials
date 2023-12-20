@@ -2,13 +2,15 @@
 
 ## Overview
 
-In this tutorial, you will develop a service to manage data stored in a database using bal persist. The service will be used to create, retrieve, update and delete data from the database.
+In this tutorial, you will develop a service to manage data stored in a database using the Ballerina persistence layer. The service will be used to create, retrieve, update and delete data from the database.
 
-To implement this use case, you will develop a REST service with multiple resources using Visual Studio Code with the Ballerina Swan Lake extension and define the `data model` using the `bal persist` feature.
+To implement this use case, you will develop a REST service with multiple resources using Visual Studio Code with the Ballerina Swan Lake extension.
+
+Define the data model using the `bal persist` feature and generate the client objects, types and scripts for the model. Then, define the service and implement the logic to interact with the database.
 
 The flow is as follows.
 
-1. Create an employee.
+1. Send a `POST` request to the service to create an employee.
 
    ```json
    {
@@ -20,7 +22,8 @@ The flow is as follows.
         "department": "IT"
    }
    ```
-2. Create a task and assign it to the employee.
+
+2. Send a `POST` request to the service to create a task for the employee.
 
     ```json
     {
@@ -30,7 +33,8 @@ The flow is as follows.
         "employeeId": 1
     }
     ```
-3. Update the status of the task.
+
+3. Send a `PUT` request to the service to update the task status.
    
     ```json
     {
@@ -39,12 +43,13 @@ The flow is as follows.
         "employeeId": 1
     }
     ```
+
 4. Delete the task by giving the task ID of the completed task that needs to be deleted.
 
 ### Concepts covered
 
 - REST API
-- Bal persist
+- The Ballerina persistence layer
 - CRUD operations
 
 ## Develop the application
@@ -99,20 +104,22 @@ Follow the instructions given in this section to develop the service.
     };
     ```
 
+    - The above data model defines a one to many relationship, where each `Employee` can have multiple assigned `Task`s, and each `Task` is associated with only one `Employee`.   
+
     **Note:** 
     > The entities defined in the `model.bal` file should be based on the [`persist model specification`](https://ballerina.io/learn/persist-model/).
 
-4. Generate the client objects, types and and scripts for the model using the following command. This will parse the `persist/model.bal` file and add the generated files under the generated directory..
+4. Generate the client objects, types and and scripts for the model using the following command. Specify `store` as the module name. This will parse the `persist/model.bal` file and add the generated files under the generated directory.
    
     ```bash
     $ bal persist generate --module store
     ```
 
-5. Remove the generated content in the `main.bal` file and open the diagram view in VS Code.
+5. Remove the generated content in the `main.bal` file in the project root and open the diagram view in VS Code.
 
     ![Open diagram view](./resources/open_diagram_view.gif)
 
-6. Define the generated client object `store:Client`.
+6. Define a variable of the generated client object `store:Client` type to interact with the database.
    
    ```ballerina
    import data_integration.store;
@@ -120,15 +127,15 @@ Follow the instructions given in this section to develop the service.
    final store:Client dbClient = check new;
    ```
    
-7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resources that accepts user requests, interact with the database and manage operations to create, retrieve, update and delete employee and task data.
+7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resources that accept user requests, interact with the database and manage operations to create, retrieve, update, and delete employee and task data.
   
-  - Open the [Ballerina HTTP API Designer](https://wso2.com/ballerina/vscode/docs/design-the-services/http-api-designer) in VS Code.
+   - Open the [Ballerina HTTP API Designer](https://wso2.com/ballerina/vscode/docs/design-the-services/http-api-designer) in VS Code.
 
-  - Define a service attached to the listener that is listening on port `9090`.
+   - Define a service attached to the listener that is listening on port `9090`.
 
         ![Define the service](./resources/define_a_service.gif)
 
-  - Define HTTP resources that allow CRUD operations on the employee data. The following GIF shows how to define the `post` resource that creates an employee. Similarly, define the `get`, `put` and `delete` resources.
+   - Define HTTP resources that allow CRUD operations on the employee data. The following GIF shows how to define the `POST` resource that creates an employee. Similarly, define the `GET`, `PUT` and `DELETE` resources.
 
         ![Define the resource](./resources/define_the_resource.gif)
 
@@ -147,10 +154,25 @@ service / on new http:Listener(9090) {
         }
         return http:CREATED;
     }
+
+    resource function get employees/[int empId]/tasks() returns store:Task[]|http:NotFound|http:InternalServerError {
+        store:Task[]|persist:Error tasks = from store:Task task in dbClient->/tasks(store:Task)
+            where task.employeeId == empId
+            select task;
+        if tasks is persist:NotFoundError {
+            return http:NOT_FOUND;
+        }
+        if tasks is persist:Error {
+            return <http:InternalServerError>{body: tasks.message()};
+        }
+        return tasks;
+    }
 }
 ```
 
-   - The `post` resource accepts a `store:EmployeeInsert` object as the payload and returns a `http:Created` response if the employee is created successfully. If the employee already exists, it returns an `http:Conflict` response and if an error occurs, it returns an `http:InternalServerError` response.
+   - The `POST` resource accepts a `store:EmployeeInsert` record as the payload and returns an `http:Created` response if the employee is created successfully. If the employee already exists, it returns an `http:Conflict` response and if an error occurs, it returns an `http:InternalServerError` response.
+
+   - The `GET` resource accepts an employee ID as a path parameter and retrieves tasks assigned to the employee using a database query where the `employeeId` is equal to the provided `empId`. If the employee does not exist, it returns an `http:NotFound` response and if an error occurs, it returns an `http:InternalServerError` response.
 
    - Similarly, implement the logic for the other resources.
 
@@ -178,7 +200,7 @@ service / on new http:Listener(9090) {
         return http:CREATED;
     }
 
-    resource function post task(store:TaskInsert task)
+    resource function post tasks(store:TaskInsert task)
             returns http:Created|http:Conflict|http:InternalServerError {
         int[]|persist:Error result = dbClient->/tasks.post([task]);
         if result is persist:AlreadyExistsError {
@@ -190,7 +212,7 @@ service / on new http:Listener(9090) {
         return http:CREATED;
     }
 
-    resource function get task/[int taskId]() returns store:Task|http:NotFound|http:InternalServerError {
+    resource function get tasks/[int taskId]() returns store:Task|http:NotFound|http:InternalServerError {
         store:Task|persist:Error task = dbClient->/tasks/[taskId];
         if task is persist:NotFoundError {
             return http:NOT_FOUND;
@@ -201,7 +223,7 @@ service / on new http:Listener(9090) {
         return task;
     }
 
-    resource function get employeetasks/[int empId]() returns store:Task[]|http:NotFound|http:InternalServerError {
+    resource function get employees/[int empId]/tasks() returns store:Task[]|http:NotFound|http:InternalServerError {
         store:Task[]|persist:Error tasks = from store:Task task in dbClient->/tasks(store:Task)
             where task.employeeId == empId
             select task;
@@ -214,7 +236,7 @@ service / on new http:Listener(9090) {
         return tasks;
     }
 
-    resource function get employee/[int empId]() returns store:Employee|http:NotFound|http:InternalServerError {
+    resource function get employees/[int empId]() returns store:Employee|http:NotFound|http:InternalServerError {
         store:Employee|persist:Error employee = dbClient->/employees/[empId];
         if employee is persist:NotFoundError {
             return http:NOT_FOUND;
@@ -225,8 +247,12 @@ service / on new http:Listener(9090) {
         return employee;
     }
 
-    resource function put task/[int taskId](store:TaskUpdate task)
-            returns store:Task|http:InternalServerError {
+    resource function put tasks/[int taskId](store:TaskUpdate task)
+            returns store:Task|http:NotFound|http:InternalServerError {
+        store:Task|persist:Error empTask = dbClient->/tasks/[taskId];
+        if empTask is persist:NotFoundError {
+            return http:NOT_FOUND;
+        }
         store:Task|persist:Error updatedTask = dbClient->/tasks/[taskId].put(task);
         if updatedTask is persist:Error {
             return <http:InternalServerError>{body: updatedTask.message()};
@@ -234,7 +260,7 @@ service / on new http:Listener(9090) {
         return updatedTask;
     }
 
-    resource function delete task/[int taskId]()
+    resource function delete tasks/[int taskId]()
             returns http:NoContent|http:NotFound|http:InternalServerError {
         store:Task|persist:Error task = dbClient->/tasks/[taskId];
         if task is persist:NotFoundError {
@@ -246,9 +272,9 @@ service / on new http:Listener(9090) {
         if task.status != store:COMPLETED {
             return <http:InternalServerError>{body: "Task is not completed yet"};
         }
-        store:Task|persist:Error deleteResult = dbClient->/tasks/[taskId].delete;
-        if deleteResult is persist:Error {
-            return <http:InternalServerError>{body: deleteResult.message()};
+        store:Task|persist:Error deletedTask = dbClient->/tasks/[taskId].delete;
+        if deletedTask is persist:Error {
+            return <http:InternalServerError>{body: deletedTask.message()};
         }
         return http:NO_CONTENT;
     }
@@ -260,14 +286,6 @@ service / on new http:Listener(9090) {
 The [entity relationship diagram view](https://wso2.com/ballerina/vscode/docs/implement-the-code/sequence-diagram-view/) for the defined data model is the following.
 
 <img src="./resources/entity_diagram.png" alt="Entity Diagram" height="800" style="width:auto; max-width:100%">
-
-### Step 3: Start the docker service
-
-Start the docker service using the following command.
-
-```bash
-$ docker-compose up
-```
 
 ### Step 4: Build and run the service
 
