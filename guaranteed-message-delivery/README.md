@@ -189,7 +189,7 @@ Follow the instructions given in this section to develop the service.
 
 6. Create a [rabbitmq: Client](https://central.ballerina.io/ballerinax/rabbitmq/latest#Client) object to forward the message to the message broker.
     
-    - Use rabbitmq's default host and deafult port to initialize the client object
+    - Use rabbitmq's default host and default port to initialize the client object
 
     ![Define a rabbitmq client](./resources/define_a_crabbitmq_client.gif)
 
@@ -252,7 +252,7 @@ Follow the instructions given in this section to develop the service.
     ```
 
     > **Note:**
-    > Using [record type inclusion](https://ballerina.io/learn/by-example/type-inclusion-for-records/) allows including all the fields from the the included record along with the defined fields.
+    > Using [record type inclusion](https://ballerina.io/learn/by-example/type-inclusion-for-records/) allows including all the fields from the included record along with the defined fields.
 
 9. Define configurations for the SMS service endpoints (e.g. `fromNumber`, `accountSId`, `authToken`) as [configurable variables](https://ballerina.io/learn/by-example/#configurability)
 
@@ -308,9 +308,9 @@ Follow the instructions given in this section to develop the service.
 
     -  Create the `rabbitmq:Service` listening on `rabbitmq:Listener` and remote function named `onMessage` which takes a message as an argument.
 
-    - Extract the necessary values to variables and send a `POST` reuqest to the hospital service to reserve the appointment. The `hospital_id` and `category` values are ued as path parameters
+    - Extract the necessary values to variables and send a `POST` request to the hospital service to reserve the appointment. The `hospital_id` and `category` values are ued as path parameters
 
-    - Use the `is` check to decide the flow based on the response to the client call. If the request failed with an error, log the error and set the `smsBody` an error message, else, set is as a confirmartion message.
+    - Use the `is` check to decide the flow based on the response to the client call. If the request failed with an error, log the error and set the `smsBody` an error message, else, set is as a confirmation message.
 
     - Call the twilio endpoint with configurations (e.g. from number, patient's phone number) and SMS body
 
@@ -349,7 +349,7 @@ $ bal run hospitalservice.jar
 
 #### Start the rabbitmq message broker
 
-Follow the [rabbitmq guidlines ](<link to the guidelines>) to configure and start the rabbitmq message broker.
+Follow the [rabbitmq guidelines ](<link to the guidelines>) to configure and start the rabbitmq message broker.
 
 #### Send a request
 
