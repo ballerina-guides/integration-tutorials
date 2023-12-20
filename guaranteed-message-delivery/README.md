@@ -2,13 +2,13 @@
 
 ## Overview
 
-In this tutorial, you will develop a service which you can reserve appointments at a hospital. You will use a message broker to store the forwarded requests from a one service. The other service will read the requests in the message queue and perform the appointment reservation by calling the hospital backend.
+In this tutorial, you'll create a service that lets users reserve appointments at a hospital. To manage the flow of requests, you'll employ a message broker. One part of your application will send appointment requests to the message broker, and another part will listen to the broker's message queue. When a new request is detected, this listener service will interact with the hospital's backend and SMS service to finalize the reservation.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. This resource will receive the user request and forward it to the message broker. The consuming service will read the request, make the reservation and send an SMS to the patient's phone number.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. This resource will handle incoming user requests and forward them to the message broker. A separate service (consumer service) that listens to the message broker's queue for new appointment requests will trigger a backend call to the hospital to make the reservation and send an SMS to the patient's phone number.
 
 The flow is as follows.
 
-1. Receive a request with a JSON payload in the following form.
+1. The publisher service receives a request with a JSON payload in the following form.
 
     ```json
     {
@@ -27,9 +27,9 @@ The flow is as follows.
     }
     ```
 
-2. Publish the receiving payload to the message broker
+2. The publisher service publishes the receiving payload to the message broker
 
-3. Consumer acquires the message from the message broker, extracts the necessary details (e.g. patient, doctor, hospital) and makes a call to the hospital backend service to request an appointment. A response similar to the following will be returned from the hospital backend service on success.
+3. The consumer service acquires the message from the message broker, extracts the necessary details (e.g. patient, doctor, hospital) and makes a call to the hospital backend service to request an appointment. A response similar to the following will be returned from the hospital backend service on success.
 
     ```json
     {
@@ -84,7 +84,7 @@ Follow the instructions given in this section to develop the service.
 
     ![Open diagram view](./resources/open_diagram_view.gif)
 
-3. Create a file named `types.bal` and generate record types corresponding to the payloads from the hospital and payment backend services by providing samples of the expected JSON payloads.
+3. Create a file named `types.bal` and generate record types corresponding to the payloads from the hospital backend service by providing samples of the expected JSON payload.
 
     The payload from the hospital backend service will be a JSON object similar to the following.
 
@@ -134,27 +134,17 @@ Follow the instructions given in this section to develop the service.
         decimal fee;
     };
 
-    type ReservationResponse record {|
+    type ReservationResponse record {
         int appointmentNumber;
         Doctor doctor;
         Patient patient;
         string hospital;
         boolean confirmed;
         string appointmentDate;
-    |};
-    ```
-
-    Similarly, generate records corresponding to the request payload (e.g., `ReservationRequest`). Delete the duplicate `Patient` record.
-
-    ```ballerina
-    type Patient record {
-        PatientWithCardNo patient;
-        string doctor;
-        string hospital_id;
-        string hospital;
-        string appointment_date;
     };
     ```
+
+    Similarly, generate records corresponding to the request payload (e.g., `ReservationRequest`). Delete the duplicate `Patient` record generated.
 
     > **Note:**
     > While it is possible to work with the JSON payload directly, using record types offers several advantages including enhanced type safety, data validation, and better tooling experience (e.g., completion).
@@ -162,9 +152,11 @@ Follow the instructions given in this section to develop the service.
     > **Note:** 
     > When the fields of the JSON objects are expected to be exactly those specified in the sample payload, the generated records can be updated to be [closed records](https://ballerina.io/learn/by-example/controlling-openness/), which would indicate that no other fields are allowed or expected.
 
+**Now you are going to implement the application logic in two files: `publisher.bal` and `consumer.bal`**
+
 4. Create a file named `publisher.bal` and define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests and publish to the message broker.
 
-- Open the [Ballerina HTTP API Designer](https://wso2.com/ballerina/vscode/docs/design-the-services/http-api-designer) in VS Code.
+    - Open the [Ballerina HTTP API Designer](https://wso2.com/ballerina/vscode/docs/design-the-services/http-api-designer) in VS Code.
 
     - Use `/healthcare` as the service path (or the context) for the service attached to the listener that is listening on port `8290`.
 
@@ -244,6 +236,7 @@ Follow the instructions given in this section to develop the service.
         }
     }
     ```
+
 8. Create a file named `consumer.bal` and define the record types needed for rabbitmq listener
 
     ```ballerina
@@ -393,5 +386,5 @@ Dear John Doe, your appointment has been accepted at grand oak community hospita
 
 - [`ballerina/http` API docs](https://lib.ballerina.io/ballerina/http/latest)
 - [`ballerina/log` API docs](https://lib.ballerina.io/ballerina/log/latest)
-- Twillio 
-- RabbitMQ
+- [`ballerinax/twilio` API docs](https://central.ballerina.io/ballerinax/twilio/latest)
+- [`RabbitMQ` API docs](https://central.ballerina.io/ballerinax/rabbitmq/latest)
