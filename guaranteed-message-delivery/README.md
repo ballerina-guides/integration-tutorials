@@ -2,9 +2,9 @@
 
 ## Overview
 
-In this tutorial, you'll create a service that lets users reserve appointments at a hospital. To manage the flow of requests, you'll employ a message broker. One part of your application will send appointment requests to the message broker, and another part will listen to the broker's message queue. When a new request is detected, this listener service will interact with the hospital's backend and SMS service to finalize the reservation.
+In this tutorial, you will create a service that let users reserve appointments at a hospital. To manage the flow of requests, you will employ a message broker. The publisher service will retrieve the appointment requests and forward them to the message broker. The consumer service will listen to the broker's message queue and interact with the hospital's backend and SMS service to finalize the reservation.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. This resource will handle incoming user requests and forward them to the message broker. A separate service (consumer service) that listens to the message broker's queue for new appointment requests will trigger a backend call to the hospital to make the reservation and send an SMS to the patient's phone number.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. This resource will handle incoming user requests and forward them to the message broker. The consumer service that listens to the message broker's queue for new appointment requests will trigger a backend call to the hospital to make the reservation and send an SMS to the patient's phone number.
 
 The flow is as follows.
 
@@ -27,7 +27,7 @@ The flow is as follows.
     }
     ```
 
-2. The publisher service publishes the receiving payload to the message broker
+2. The publisher service publishes the receiving payload to the message broker.
 
 3. The consumer service acquires the message from the message broker, extracts the necessary details (e.g. patient, doctor, hospital) and makes a call to the hospital backend service to request an appointment. A response similar to the following will be returned from the hospital backend service on success.
 
@@ -152,7 +152,7 @@ Follow the instructions given in this section to develop the service.
     > **Note:** 
     > When the fields of the JSON objects are expected to be exactly those specified in the sample payload, the generated records can be updated to be [closed records](https://ballerina.io/learn/by-example/controlling-openness/), which would indicate that no other fields are allowed or expected.
 
-**Now you are going to implement the application logic in two files: `publisher.bal` and `consumer.bal`**
+**Now you are going to implement the publsiher's and consumer's logic in two files: `publisher.bal` and `consumer.bal`**
 
 4. Create a file named `publisher.bal` and define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests and publish to the message broker.
 
@@ -187,9 +187,9 @@ Follow the instructions given in this section to develop the service.
     configurable string queueName = "ReservationQueue";
     ```
 
-6. Create a [rabbitmq: Client](https://central.ballerina.io/ballerinax/rabbitmq/latest#Client) object to forward the message to the message broker.
+6. Create a [rabbitmq:Client](https://central.ballerina.io/ballerinax/rabbitmq/latest#Client) object to forward the message to the message broker.
     
-    - Use rabbitmq's default host and default port to initialize the client object
+    - Use rabbitmq's default host and default port to initialize the client object.
 
     ![Define a rabbitmq client](./resources/define_a_crabbitmq_client.gif)
 
@@ -199,7 +199,7 @@ Follow the instructions given in this section to develop the service.
     final rabbitmq:Client rabbitmqClient = check new (rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT)
     ```
 
-7. Implement the logic
+7. Implement the logic.
 
     ```ballerina
     service /healthcare on new http:Listener(8290) {
@@ -237,7 +237,7 @@ Follow the instructions given in this section to develop the service.
     }
     ```
 
-8. Create a file named `consumer.bal` and define the record types needed for rabbitmq listener
+8. Create a file named `consumer.bal` and define the record types needed for rabbitmq listener.
 
     ```ballerina
     type MessageContent record {|
@@ -254,7 +254,7 @@ Follow the instructions given in this section to develop the service.
     > **Note:**
     > Using [record type inclusion](https://ballerina.io/learn/by-example/type-inclusion-for-records/) allows including all the fields from the included record along with the defined fields.
 
-9. Define configurations for the SMS service endpoints (e.g. `fromNumber`, `accountSId`, `authToken`) as [configurable variables](https://ballerina.io/learn/by-example/#configurability)
+9. Define configurations for the SMS service endpoints (e.g. `fromNumber`, `accountSId`, `authToken`) as [configurable variables](https://ballerina.io/learn/by-example/#configurability).
 
     ```ballerina
     configurable string fromNumber = ?;
@@ -308,11 +308,11 @@ Follow the instructions given in this section to develop the service.
 
     -  Create the `rabbitmq:Service` listening on `rabbitmq:Listener` and remote function named `onMessage` which takes a message as an argument.
 
-    - Extract the necessary values to variables and send a `POST` request to the hospital service to reserve the appointment. The `hospital_id` and `category` values are ued as path parameters
+    - Extract the necessary values to variables and send a `POST` request to the hospital service to reserve the appointment. The `hospital_id` and `category` values are used as path parameters.
 
     - Use the `is` check to decide the flow based on the response to the client call. If the request failed with an error, log the error and set the `smsBody` an error message, else, set is as a confirmation message.
 
-    - Call the twilio endpoint with configurations (e.g. from number, patient's phone number) and SMS body
+    - Call the twilio endpoint with configurations (e.g. from number, patient's phone number) and SMS body.
 
     - Log an error if the calling twilio endpoint fails.
 
