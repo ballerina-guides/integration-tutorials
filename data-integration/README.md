@@ -2,11 +2,11 @@
 
 ## Overview
 
-In this tutorial, you will develop a service to manage data stored in a database using the Ballerina persistence layer. The service will be used to create, retrieve, update and delete data from the database.
+In this tutorial, you will develop a service that accepts requests to create an employee and a task, update task status, and delete a completed task. Ballerina persistence layer is used to manage data stored in a database. The service will be used to create, retrieve, update, and delete data from the database.
 
 To implement this use case, you will develop a REST service with multiple resources using Visual Studio Code with the Ballerina Swan Lake extension.
 
-Define the data model using the `bal persist` feature and generate the client objects, types and scripts for the model. Then, define the service and implement the logic to interact with the database.
+Define the data model using the `bal persist` feature and generate the client objects, types, and scripts for the model. Then, define the service and implement the logic to interact with the database.
 
 The flow is as follows.
 
@@ -68,7 +68,7 @@ Follow the instructions given in this section to develop the service.
     $ bal new data-integration
     ```
 
-2. Initialize `bal persist` in the project. Specify the module name as `store` and the datastore as `mysql`. This will create a persist directory in the project root directory. The directory will contain the `model.bal` file, which is used to define the data model.
+2. Use `bal persist` in the project root to initialize the persistence layer for the project. Specify the module name as `store` and the datastore as `mysql`. This will create a directory named `persist` in the project root directory. The directory will contain the `model.bal` file, which is used to define the data model.
 
     ```bash
     $ bal persist init --module store --datastore mysql
@@ -109,17 +109,19 @@ Follow the instructions given in this section to develop the service.
     **Note:** 
     > The entities defined in the `model.bal` file should be based on the [`persist model specification`](https://ballerina.io/learn/persist-model/).
 
-4. Generate the client objects, types and and scripts for the model using the following command. Specify `store` as the module name. This will parse the `persist/model.bal` file and add the generated files under the generated directory.
+4. Generate the client objects, types, and scripts for the model using the following command. This will use the model defined in the `persist/model.bal` file to generate the persistence constructs in a module named `store` in a directory named `generated`.
    
     ```bash
     $ bal persist generate --module store
     ```
 
+Now, we are going to implement the logic using the generated constructs.
+
 5. Remove the generated content in the `main.bal` file in the project root and open the diagram view in VS Code.
 
     ![Open diagram view](./resources/open_diagram_view.gif)
 
-6. Define a variable of the generated client object `store:Client` type to interact with the database.
+6. Define a variable of the generated client object type (`store:Client`) to interact with the database.
    
    ```ballerina
    import data_integration.store;
@@ -127,7 +129,7 @@ Follow the instructions given in this section to develop the service.
    final store:Client dbClient = check new;
    ```
    
-7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resources that accept user requests, interact with the database and manage operations to create, retrieve, update, and delete employee and task data.
+7. Define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resources that accept user requests, interact with the database, and manage operations to create, retrieve, update, and delete employee and task data.
   
    - Open the [Ballerina HTTP API Designer](https://wso2.com/ballerina/vscode/docs/design-the-services/http-api-designer) in VS Code.
 
@@ -135,7 +137,7 @@ Follow the instructions given in this section to develop the service.
 
         ![Define the service](./resources/define_a_service.gif)
 
-   - Define HTTP resources that allow CRUD operations on the employee data. The following GIF shows how to define the `POST` resource that creates an employee. Similarly, define the `GET`, `PUT` and `DELETE` resources.
+   - Define an HTTP resource that allows the `POST` operation to create an employee. Use `http:Created`, `http:Conflict`, and `http:InternalServerError` as the response types. Similarly, define the `GET`, `PUT`, and `DELETE` resources.
 
         ![Define the resource](./resources/define_the_resource.gif)
 
@@ -154,7 +156,11 @@ service / on new http:Listener(9090) {
         }
         return http:CREATED;
     }
+```
 
+   - The `POST` resource accepts a `store:EmployeeInsert` record as the payload and returns an `http:Created` response if the employee is created successfully. If the employee already exists, it returns an `http:Conflict` response and if an error occurs, it returns an `http:InternalServerError` response.
+
+```ballerina
     resource function get employees/[int empId]/tasks() returns store:Task[]|http:NotFound|http:InternalServerError {
         store:Task[]|persist:Error tasks = from store:Task task in dbClient->/tasks(store:Task)
             where task.employeeId == empId
@@ -169,8 +175,6 @@ service / on new http:Listener(9090) {
     }
 }
 ```
-
-   - The `POST` resource accepts a `store:EmployeeInsert` record as the payload and returns an `http:Created` response if the employee is created successfully. If the employee already exists, it returns an `http:Conflict` response and if an error occurs, it returns an `http:InternalServerError` response.
 
    - The `GET` resource accepts an employee ID as a path parameter and retrieves tasks assigned to the employee using a database query where the `employeeId` is equal to the provided `empId`. If the employee does not exist, it returns an `http:NotFound` response and if an error occurs, it returns an `http:InternalServerError` response.
 
@@ -285,7 +289,7 @@ service / on new http:Listener(9090) {
 
 The [entity relationship diagram view](https://wso2.com/ballerina/vscode/docs/implement-the-code/sequence-diagram-view/) for the defined data model is the following.
 
-<img src="./resources/entity_diagram.png" alt="Entity Diagram" height="800" style="width:auto; max-width:100%">
+![Entity relationship diagram](./resources/er_diagram.gif)
 
 ### Step 4: Build and run the service
 
@@ -322,6 +326,10 @@ Use the [Try it](https://wso2.com/ballerina/vscode/docs/try-the-services/try-htt
 ```
 
 ![Send a request](./resources/try_it.gif)
+
+Send a GET request to retrieve the employee details.
+
+![Send a request](./resources/try_it_get.gif)
 
 #### Verify the response
 
