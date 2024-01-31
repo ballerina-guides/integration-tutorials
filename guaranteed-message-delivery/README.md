@@ -2,7 +2,7 @@
 
 ## Overview
 
-In this tutorial, you will create a service that let users reserve appointments at a hospital. To manage the flow of requests, you will employ a message broker. The publisher service will retrieve the appointment requests and forward them to the message broker. The consumer service will listen to the broker's message queue and interact with the hospital's backend and SMS service to finalize the reservation.
+In this tutorial, you will develop an integration that lets users reserve appointments at a hospital. To manage the flow of requests, you will employ a message broker. A publisher service will accept the appointment requests from users and publish them to a message broker. A consumer service will consume messages from the broker and interact with the hospital service to complete the reservation and send an SMS with the reservation status.
 
 To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. This resource will handle incoming user requests and forward them to the message broker. The consumer service that listens to the message broker's queue for new appointment requests will trigger a backend call to the hospital to make the reservation and send an SMS to the patient's phone number.
 
@@ -27,9 +27,9 @@ The flow is as follows.
     }
     ```
 
-2. The publisher service publishes the receiving payload to the message broker.
+2. The publisher service publishes the received payload to the message broker.
 
-3. The consumer service acquires the message from the message broker, extracts the necessary details (e.g. patient, doctor, hospital) and makes a call to the hospital backend service to request an appointment. A response similar to the following will be returned from the hospital backend service on success.
+3. The consumer service consumes the message from the message broker, extracts the necessary details (e.g., patient, doctor, and hospital details) and makes a call to the hospital backend service to request an appointment. A response similar to the following will be returned from the hospital backend service on success.
 
     ```json
     {
@@ -55,7 +55,7 @@ The flow is as follows.
     }
     ```
 
-4. Call the SMS service endpoint to send a message to the patient's mobile number.
+4. The consumer service will then send an SMS to the patient's mobile number notifying the appointment status.
 
 ### Concepts covered
 
@@ -154,7 +154,7 @@ Follow the instructions given in this section to develop the service.
 
 **Now you are going to implement the publsiher's and consumer's logic in two files: `publisher.bal` and `consumer.bal`**
 
-4. Create a file named `publisher.bal` and define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests and publish to the message broker.
+4. Create a file named `publisher.bal` and define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests and publishes the payload to the message broker.
 
     - Open the [Ballerina HTTP API Designer](https://wso2.com/ballerina/vscode/docs/design-the-services/http-api-designer) in VS Code.
 
@@ -306,7 +306,7 @@ Follow the instructions given in this section to develop the service.
     }
     ```
 
-    -  Create the `rabbitmq:Service` listening on `rabbitmq:Listener` and remote function named `onMessage` which takes a message as an argument.
+    -  Create the `rabbitmq:Service` service listening on a `rabbitmq:Listener` listener with the  `onMessage` remote method that gets called ....
 
     - Extract the necessary values to variables and send a `POST` request to the hospital service to reserve the appointment. The `hospital_id` and `category` values are used as path parameters.
 
