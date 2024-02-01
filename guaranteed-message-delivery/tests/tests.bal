@@ -9,13 +9,15 @@ const PINE_VALLEY_COMMUNITY_HOSPITAL = "pine valley community hospital";
 const THOMAS_COLLINS = "thomas collins";
 
 const EXPECTED_SUCCESS_MESSAGE = "Dear John Doe, " +
-                                 "your appointment has been accepted at grand oak community hospital. " +
-                                 "Appointment No: 1";
+                                "your appointment has been accepted at grand oak community hospital. " +
+                                "Appointment No: 1";
 const EXPECTED_FAIL_MESSAGE = "Dear John Doe, " +
-                              "your appointment request at grand oak community hospital failed. " +
-                              "Please try again.";
+                            "your appointment request at grand oak community hospital failed. " +
+                            "Please try again.";
 
 isolated string smsBody = "";
+isolated string sendingPhoneNo = "";
+isolated string recievingPhoneNo = "";
 
 final http:Client cl = check new ("http://localhost:8290/healthcare/categories");
 
@@ -40,6 +42,12 @@ isolated function testSuccessfulReservation() returns error? {
     lock {
         test:assertEquals(smsBody, EXPECTED_SUCCESS_MESSAGE);
     }
+    lock {
+        test:assertEquals(sendingPhoneNo, fromNumber);
+    }
+    lock {
+        test:assertEquals(recievingPhoneNo, "+1234567890");
+    }
 }
 
 @test:Config
@@ -62,6 +70,12 @@ isolated function testUnknownCategory() returns error? {
     runtime:sleep(5);
     lock {
         test:assertEquals(smsBody, EXPECTED_FAIL_MESSAGE);
+    }
+    lock {
+        test:assertEquals(sendingPhoneNo, fromNumber);
+    }
+    lock {
+        test:assertEquals(recievingPhoneNo, "+1234567890");
     }
 }
 
@@ -116,6 +130,14 @@ public client class MockTwilioClient {
             smsBody = message;
         }
 
+        lock {
+            sendingPhoneNo = fromNo;
+        }
+
+        lock {
+            recievingPhoneNo = toNo;
+        }
+
         return {};
     }
 }
@@ -144,8 +166,8 @@ isolated function getSuccessAppointmentResponse(string hospital) returns Reserva
 
 isolated function getInvalidHospitalOrDoctorErrorResponse() returns http:ClientRequestError
     => error("Not Found", body = "requested doctor is not available at the requested hospital",
-                          headers = {},
-                          statusCode = http:STATUS_NOT_FOUND);
+                        headers = {},
+                        statusCode = http:STATUS_NOT_FOUND);
 
 @test:Mock {
     functionName: "initializeHttpClient"
