@@ -60,9 +60,9 @@ The flow is as follows.
 ### Concepts covered
 
 - REST API
-- Message broker
+- Message Broker
 - HTTP Client
-- Twilio client
+- Twilio Client
 
 ## Develop the application
 
@@ -84,31 +84,24 @@ Follow the instructions given in this section to develop the service.
 
     ![Open diagram view](./resources/open_diagram_view.gif)
 
-3. Create a file named `types.bal` and generate record types corresponding to the payloads from the hospital backend service by providing samples of the expected JSON payload.
+3. Create a file named `types.bal` and generate record types corresponding to the request payload by providing samples of the expected JSON payload.
 
-    The payload from the hospital backend service will be a JSON object similar to the following.
+    The request payload accepting by the service will be a JSON object similar to the following.
 
     ```json
     {
-        "appointmentNumber": 1,
-        "doctor": {
-            "name": "thomas collins",
-            "hospital": "grand oak community hospital",
-            "category": "surgery",
-            "availability": "9.00 a.m - 11.00 a.m",
-            "fee": 7000.0
-        },
         "patient": {
             "name": "John Doe",
             "dob": "1940-03-19",
             "ssn": "234-23-525",
             "address": "California",
-            "phone": "8770586755",
+            "phone": "+94710889877",
             "email": "johndoe@gmail.com"
         },
+        "doctor": "thomas collins",
+        "hospital_id": "grandoaks",
         "hospital": "grand oak community hospital",
-        "confirmed": false,
-        "appointmentDate": "2023-10-02"
+        "appointment_date": "2023-10-02"
     }
     ```
 
@@ -126,25 +119,16 @@ Follow the instructions given in this section to develop the service.
         string email;
     };
 
-    type Doctor record {
-        string name;
-        string hospital;
-        string category;
-        string availability;
-        decimal fee;
-    };
-
-    type ReservationResponse record {
-        int appointmentNumber;
-        Doctor doctor;
+    type ReservationRequest record {
         Patient patient;
+        string doctor;
+        string hospital_id;
         string hospital;
-        boolean confirmed;
-        string appointmentDate;
+        string appointment_date;
     };
     ```
 
-    Similarly, generate records corresponding to the request payload (e.g., `ReservationRequest`). Delete the duplicate `Patient` record generated.
+    Similarly, generate records corresponding to the response payload from the hospital backend service (e.g., `ReservationResponse`). Delete the duplicate `Patient` record generated.
 
     > **Note:**
     > While it is possible to work with the JSON payload directly, using record types offers several advantages including enhanced type safety, data validation, and better tooling experience (e.g., completion).
@@ -237,7 +221,7 @@ Follow the instructions given in this section to develop the service.
     }
     ```
 
-8. Create a file named `consumer.bal` and define the record types needed for rabbitmq listener.
+8. Create a file named `consumer.bal` and define the record types needed for the consumer.
 
     ```ballerina
     type MessageContent record {|
@@ -251,10 +235,29 @@ Follow the instructions given in this section to develop the service.
     |};
     ```
 
+    ![Define record types for consumer](./resources/define_record_types_for_consumer.gif)
+
     > **Note:**
     > Using [record type inclusion](https://ballerina.io/learn/by-example/type-inclusion-for-records/) allows including all the fields from the included record along with the defined fields.
 
-9. Define configurations for the SMS service endpoints (e.g. `fromNumber`, `accountSId`, `authToken`) as [configurable variables](https://ballerina.io/learn/by-example/#configurability).
+9. Create the `rabbitmq:Service` service listening on a `rabbitmq:Listener` listener with the `onMessage` remote method that gets called.
+
+    ```
+    @rabbitmq:ServiceConfig {
+        queueName: "queueName"
+    }
+    service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
+        remote function onMessage(RabbitMqMessage message) {
+            
+        }
+    }
+    ```
+
+    > **Note:**
+    > Here, rabbitmq's default host and port are used to define the service
+
+
+9. Define configurations for the SMS service endpoints (e.g., `fromNumber`, `accountSId`, `authToken`) as [configurable variables](https://ballerina.io/learn/by-example/#configurability).
 
     ```ballerina
     configurable string fromNumber = ?;
@@ -262,7 +265,7 @@ Follow the instructions given in this section to develop the service.
     configurable string authToken = ?;
     ```
 
-10. Implement the consumer service.
+10. Implement the logic.
 
     ```ballerina
     @rabbitmq:ServiceConfig {
@@ -306,15 +309,11 @@ Follow the instructions given in this section to develop the service.
     }
     ```
 
-    -  Create the `rabbitmq:Service` service listening on a `rabbitmq:Listener` listener with the  `onMessage` remote method that gets called ....
-
     - Extract the necessary values to variables and send a `POST` request to the hospital service to reserve the appointment. The `hospital_id` and `category` values are used as path parameters.
 
-    - Use the `is` check to decide the flow based on the response to the client call. If the request failed with an error, log the error and set the `smsBody` an error message, else, set is as a confirmation message.
+    - Use the `is` check to decide the flow based on the response to the client call. If the request failed with an error, log the error and set an error message to the `smsBody` variable, else, set a confirmation message.
 
-    - Call the twilio endpoint with configurations (e.g. from number, patient's phone number) and SMS body.
-
-    - Log an error if the calling twilio endpoint fails.
+    - Call the twilio endpoint with the `smsBody` and, sender's and patient's phone numbers.
 
 #### Complete source
 
