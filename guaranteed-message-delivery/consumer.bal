@@ -33,7 +33,7 @@ function initializeTwilioClient() returns twilio:Client|error => new ({
 @rabbitmq:ServiceConfig {
     queueName
 }
-service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
+service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
     remote function onMessage(RabbitMqMessage message) {
         MessageContent content = message.content;
         string hospital = content.hospital;

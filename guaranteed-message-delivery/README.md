@@ -246,7 +246,7 @@ Follow the instructions given in this section to develop the service.
     @rabbitmq:ServiceConfig {
         queueName: "queueName"
     }
-    service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
+    service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
         remote function onMessage(RabbitMqMessage message) {
             
         }
@@ -271,7 +271,7 @@ Follow the instructions given in this section to develop the service.
     @rabbitmq:ServiceConfig {
         queueName
     }
-    service rabbitmq:Service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
+    service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
         remote function onMessage(RabbitMqMessage message) {
             MessageContent content = message.content;
             string hospital = content.hospital;
