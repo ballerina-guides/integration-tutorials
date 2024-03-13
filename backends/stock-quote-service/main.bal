@@ -52,7 +52,7 @@ service /services on new http:Listener(port) {
         }
 
         log:printError("unknown SOAP action", action = soapAction);
-        return {body: "unsupported SOAP action"};
+        return getFaultResponseForUnknownSOAPAction(soapAction, soapVersion);
     }
 }
 
@@ -67,6 +67,10 @@ function getSoap12Action(string contentTypeHeader) returns string? {
 }
 
 function getQuote(string company, SoapVersion soapVersion) returns xml {
+    if company.trim().length() == 0 {
+        return getFaultResponseForEmptyCompany(soapVersion);
+    }
+
     xml body = xml `<ns0:getQuoteResponse>
                         <ns1:change>-2.86843917118114</ns1:change>
                         <ns1:earnings>-8.540305401672558</ns1:earnings>
@@ -92,6 +96,10 @@ function getQuote(string company, SoapVersion soapVersion) returns xml {
 }
 
 function placeOrder(string company, SoapVersion soapVersion) returns xml {
+    if company.trim().length() == 0 {
+        return getFaultResponseForEmptyCompany(soapVersion);
+    }
+
     xml body = xml `<ns0:placeOrderResponse>
                         <ns1:status>created</ns1:status>
                     </ns0:placeOrderResponse>`;
@@ -102,4 +110,56 @@ function placeOrder(string company, SoapVersion soapVersion) returns xml {
     }
     xmlns "http://www.w3.org/2003/05/soap-envelope" as soapenv;
     return xml `<soapenv:Envelope><soapenv:Body>${body}</soapenv:Body></soapenv:Envelope>`;
+}
+
+function getFaultResponseForEmptyCompany(SoapVersion soapVersion) returns xml {
+    if soapVersion == ONE_ONE {
+        return xml `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope">
+                        <soapenv:Body>
+                            <soapenv:Fault>
+                                <faultcode>soapenv:Client</faultcode>
+                                <faultstring xml:lang="en">Company name cannot be empty</faultstring>
+                            </soapenv:Fault>
+                        </soapenv:Body>
+                    </soapenv:Envelope>`;
+    }
+
+    return xml `<soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">
+                    <soapenv:Body>
+                        <soapenv:Fault>
+                            <soapenv:Code>
+                                <soapenv:Value>env:Sender</soapenv:Value>
+                            </soapenv:Code>
+                            <soapenv:Reason>
+                                <soapenv:Text xml:lang="en-US">Company name cannot be empty</soapenv:Text>
+                            </soapenv:Reason>
+                        </soapenv:Fault>
+                    </soapenv:Body>
+                </soapenv:Envelope>`;
+}
+
+function getFaultResponseForUnknownSOAPAction(string soapAction, SoapVersion soapVersion) returns xml {
+    if soapVersion == ONE_ONE {
+        return xml `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope">
+                        <soapenv:Body>
+                            <soapenv:Fault>
+                                <faultcode>soapenv:Client</faultcode>
+                                <faultstring xml:lang="en">Unknown SOAP Action ${soapAction}</faultstring>
+                            </soapenv:Fault>
+                        </soapenv:Body>
+                    </soapenv:Envelope>`;
+    }
+
+    return xml `<soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">
+                    <soapenv:Body>
+                        <soapenv:Fault>
+                            <soapenv:Code>
+                                <soapenv:Value>env:Sender</soapenv:Value>
+                            </soapenv:Code>
+                            <soapenv:Reason>
+                                <soapenv:Text xml:lang="en-US">Unknown SOAP Action ${soapAction}</soapenv:Text>
+                            </soapenv:Reason>
+                        </soapenv:Fault>
+                    </soapenv:Body>
+                </soapenv:Envelope>`;
 }

@@ -22,6 +22,14 @@ function testPostOrder() returns error? {
     test:assertEquals("created", orderStatus);
 }
 
+@test:Config
+function testPostOrderWithInvalidCompanyName() returns error? {
+    http:Response orderStatus = check cl->/stockquote/'order.post({quantity: 12, symbol: ""});
+    test:assertEquals(http:STATUS_INTERNAL_SERVER_ERROR, orderStatus.statusCode);
+    test:assertEquals("failed to place order: Company name cannot be empty", 
+                      check orderStatus.getTextPayload());
+}
+
 public client class MockSoapClient {
     remote isolated function sendReceive(xml|mime:Entity[] body,
             string? action = (),
@@ -43,11 +51,22 @@ public client class MockSoapClient {
                 return getQuote(company);
             }
             PLACE_ORDER => {
-                string company = (body.<ns0:symbol>).data();
+                string company = (body/<ns0:'order>/<ns0:symbol>).data();
                 return placeOrder(company);
             }
         }
-        return error("unknown action: " + action);
+        return xml `<soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">
+                <soapenv:Body>
+                    <soapenv:Fault>
+                        <soapenv:Code>
+                            <soapenv:Value>env:Sender</soapenv:Value>
+                        </soapenv:Code>
+                        <soapenv:Reason>
+                            <soapenv:Text xml:lang="en-US">Unknown SOAP Action ${action}</soapenv:Text>
+                        </soapenv:Reason>
+                    </soapenv:Fault>
+                </soapenv:Body>
+            </soapenv:Envelope>`;
     }
 }
 
@@ -79,13 +98,26 @@ isolated function getQuote(string company) returns xml =>
         </soapenv:Envelope>`;
 
 isolated function placeOrder(string company) returns xml =>
-    xml `<soapenv:Envelope>
-            <soapenv:Body>
-                <ns0:placeOrderResponse>
-                    <ns1:status>created</ns1:status>
-                </ns0:placeOrderResponse>
-            </soapenv:Body>
-        </soapenv:Envelope>`;
+    company.trim().length() == 0 ?
+        xml `<soapenv:Envelope>
+                    <soapenv:Body>
+                        <soapenv:Fault>
+                            <soapenv:Code>
+                                <soapenv:Value>env:Sender</soapenv:Value>
+                            </soapenv:Code>
+                            <soapenv:Reason>
+                                <soapenv:Text xml:lang="en-US">Company name cannot be empty</soapenv:Text>
+                            </soapenv:Reason>
+                        </soapenv:Fault>
+                    </soapenv:Body>
+                </soapenv:Envelope>` : 
+        xml `<soapenv:Envelope>
+                <soapenv:Body>
+                    <ns0:placeOrderResponse>
+                        <ns1:status>created</ns1:status>
+                    </ns0:placeOrderResponse>
+                </soapenv:Body>
+            </soapenv:Envelope>`;
 
 function getExpectedQuotePayload(string symbol) returns Quote => {
     marketCap: 5.649557998178506E7,

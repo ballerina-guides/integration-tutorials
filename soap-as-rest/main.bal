@@ -41,7 +41,14 @@ service /stockquote on new http:Listener(8080) {
 
         if response is soap12:Error {
             log:printError("Failed to get quote", response);
-            return <http:InternalServerError>{body: response.message()};
+            return {body: response.message()};
+        }
+
+        xml<xml:Element> fault = response/<soapenv:Body>/<soapenv:Fault>;
+        if fault.length() != 0 {
+            string faultData = (fault/<soapenv:Reason>/<soapenv:Text>).data();
+            log:printError(string `Failed to retrieve quote: ${faultData}`);
+            return {body: string `failed to retrieve quote: ${faultData}`};
         }
 
         xml:Element quote =
@@ -51,7 +58,7 @@ service /stockquote on new http:Listener(8080) {
             return quoteRecord;
         }
         log:printError("Failed to transform XML payload to a record", quoteRecord);
-        return <http:InternalServerError>{body: "failed to transform XML payload to a record"};
+        return {body: "failed to transform XML payload to a record"};
     }
 
     resource function post 'order(Order 'order) returns string|http:InternalServerError {
@@ -67,7 +74,14 @@ service /stockquote on new http:Listener(8080) {
 
         if response is soap12:Error {
             log:printError("Failed to place order", response);
-            return <http:InternalServerError>{body: response.message()};
+            return {body: response.message()};
+        }
+
+        xml<xml:Element> fault = response/<soapenv:Body>/<soapenv:Fault>;
+        if fault.length() != 0 {
+            string faultData = (fault/<soapenv:Reason>/<soapenv:Text>).data();
+            log:printError(string `Failed to place order: ${faultData}`);
+            return {body: string `failed to place order: ${faultData}`};
         }
 
         xml:Element orderResponse =
