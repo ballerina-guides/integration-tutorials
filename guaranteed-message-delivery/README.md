@@ -249,7 +249,7 @@ Follow the instructions given in this section to develop the service.
     > **Note:**
     > Using [record type inclusion](https://ballerina.io/learn/by-example/type-inclusion-for-records/) allows including all the fields from the included record along with the defined fields.
 
-9. Create the `rabbitmq:Service` service listening on a `rabbitmq:Listener` listener with the `onMessage` remote method that gets called.
+9. Define a `rabbitmq:Service` listening on a `rabbitmq:Listener` listener with the `onMessage` remote method that gets called.
 
     ```
     @rabbitmq:ServiceConfig {
@@ -322,7 +322,7 @@ Follow the instructions given in this section to develop the service.
 
     - Use the `is` check to decide the flow based on the response to the client call. If the request failed with an error, log the error and set an error message to the `smsBody` variable, else, set a confirmation message.
 
-    - Call the twilio endpoint with the `smsBody` and, sender's and patient's phone numbers.
+    - Call the Twilio endpoint with the SMS body and the sender's and patient's phone numbers.
 
 #### Complete source
 
