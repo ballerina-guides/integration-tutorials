@@ -2,9 +2,9 @@
 
 ## Overview
 
-In this tutorial, you will develop an integration that lets users reserve appointments at a hospital. To manage the flow of requests, you will employ a message broker. A publisher service will accept the appointment requests from users and publish them to a message broker. A consumer service will consume messages from the broker and interact with the hospital service to complete the reservation and send an SMS with the reservation status.
+In this tutorial, you will develop an integration that lets users reserve appointments at a hospital. A publisher service will accept the appointment requests from users and forward them to a consumer service. A consumer service will consume messages and interact with the hospital service to complete the reservation and send an SMS with the reservation status. To manage the guranteed flow of reservation requests, you will employ a message broker.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. This resource will handle incoming user requests and forward them to the message broker. The consumer service that listens to the message broker's queue for new appointment requests will trigger a backend call to the hospital to make the reservation and send an SMS to the patient's phone number.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. This resource will handle incoming user requests and forward them to the message broker. The consumer service that listens to a queue of the message broker will trigger a backend call to the hospital to make the reservation and send an SMS to the patient's phone number.
 
 The flow is as follows.
 
@@ -86,7 +86,7 @@ Follow the instructions given in this section to develop the service.
 
 3. Create a file named `types.bal` and generate record types corresponding to the request payload by providing samples of the expected JSON payload.
 
-    The request payload accepting by the service will be a JSON object similar to the following.
+    The request payload expected by the service will be a JSON object similar to the following.
 
     ```json
     {
@@ -173,9 +173,9 @@ Follow the instructions given in this section to develop the service.
 
 6. Create a [rabbitmq:Client](https://central.ballerina.io/ballerinax/rabbitmq/latest#Client) object to forward the message to the message broker.
     
-    - Use rabbitmq's default host and default port to initialize the client object.
+    - Use RabbitMQ's default host and default port to initialize the client object.
 
-    ![Define a rabbitmq client](./resources/define_a_crabbitmq_client.gif)
+    ![Define a RabbitMQ client](./resources/define_a_crabbitmq_client.gif)
 
     The generated code will be as follows.
 
@@ -221,6 +221,15 @@ Follow the instructions given in this section to develop the service.
     }
     ```
 
+    - Define an `init` function to initialize the service. In there, declare the queue of the message-broker by calling `queueDeclare` function.
+
+    - In the resource function, first, define three variables and assign them values from the `request`.
+
+    - Call `rabbitmqClient`'s `publishMessage` function to publish the message to the RabbitMQ message-broker.
+
+    - Use `is` check and return an `http:InternalServerError` if error, else, return `http:CREATED`.
+
+
 8. Create a file named `consumer.bal` and define the record types needed for the consumer.
 
     ```ballerina
@@ -254,7 +263,7 @@ Follow the instructions given in this section to develop the service.
     ```
 
     > **Note:**
-    > Here, rabbitmq's default host and port are used to define the service
+    > Here, RabbitMQ's default host and port are used to define the service
 
 
 9. Define configurations for the SMS service endpoints (e.g., `fromNumber`, `accountSId`, `authToken`) as [configurable variables](https://ballerina.io/learn/by-example/#configurability).
@@ -346,9 +355,9 @@ Download the JAR file for the [backend service](https://github.com/ballerina-gui
 $ bal run hospitalservice.jar
 ```
 
-#### Start the rabbitmq message broker
+#### Start the RabbitMQ message broker
 
-Follow the [rabbitmq guidelines ](<link to the guidelines>) to configure and start the rabbitmq message broker.
+Follow the [RabbitMQ guidelines ](<link to the guidelines>) to configure and start the RabbitMQ message broker.
 
 #### Send a request
 
