@@ -249,6 +249,9 @@ Follow the instructions given in this section to develop the service.
     > **Note:**
     > Using [record type inclusion](https://ballerina.io/learn/by-example/type-inclusion-for-records/) allows including all the fields from the included record along with the defined fields.
 
+    > **Note:**
+    > Since details in the reservation and the `rabbitmq:AnydataMessage` needed to be merged, a separate record (i.e. `RabbitMqMessage`) is created.
+
 9. Define a `rabbitmq:Service` listening on a `rabbitmq:Listener` listener with the `onMessage` remote method that gets called.
 
     ```
