@@ -80,11 +80,11 @@ Follow the instructions given in this section to develop the service.
     $ bal new guaranteed-message-delivery
     ```
 
-2. Remove the `main.bal` file and open the diagram view in VS Code.
+2. Rename `main.bal` file to `types.bal`, remove the generated content, and open the diagram view in VS Code.
 
-    ![Open diagram view](./resources/open_diagram_view.gif)
+    ![Open diagram view](./resources/open_diagram_view.gif)ope
 
-3. Create a file named `types.bal` and generate record types corresponding to the request payload by providing samples of the expected JSON payload.
+3. Generate record types corresponding to the request payload by providing samples of the expected JSON payload.
 
     The request payload expected by the service will be a JSON object similar to the following.
 
@@ -130,6 +130,25 @@ Follow the instructions given in this section to develop the service.
 
     Similarly, generate records corresponding to the response payload from the hospital backend service (e.g., `ReservationResponse`). Delete the duplicate `Patient` record generated.
 
+    ```ballerina
+    type Doctor record {
+        string name;
+        string hospital;
+        string category;
+        string availability;
+        decimal fee;
+    };
+
+    type ReservationResponse record {
+        int appointmentNumber;
+        Doctor doctor;
+        Patient patient;
+        string hospital;
+        boolean confirmed;
+        string appointmentDate;
+    };
+    ```
+
     > **Note:**
     > While it is possible to work with the JSON payload directly, using record types offers several advantages including enhanced type safety, data validation, and better tooling experience (e.g., completion).
 
@@ -154,7 +173,7 @@ Follow the instructions given in this section to develop the service.
 
         ```ballerina
         service /healthcare on new http:Listener(8290) {
-            resource function post categories/[string category]/reserve(ReservationRequest payload) 
+            resource function post categories/[string category]/reserve(ReservationRequest request) 
                     returns http:Created|http:InternalServerError {
                 
             }
@@ -175,7 +194,7 @@ Follow the instructions given in this section to develop the service.
     
     - Use RabbitMQ's default host and default port to initialize the client object.
 
-    ![Define a RabbitMQ client](./resources/define_a_crabbitmq_client.gif)
+    ![Define a RabbitMQ client](./resources/define_a_rabbitmq_client.gif)
 
     The generated code will be as follows.
 
@@ -244,8 +263,6 @@ Follow the instructions given in this section to develop the service.
     |};
     ```
 
-    ![Define record types for consumer](./resources/define_record_types_for_consumer.gif)
-
     > **Note:**
     > Using [record type inclusion](https://ballerina.io/learn/by-example/type-inclusion-for-records/) allows including all the fields from the included record along with the defined fields.
 
@@ -275,6 +292,22 @@ Follow the instructions given in this section to develop the service.
     configurable string fromNumber = ?;
     configurable string accountSId = ?;
     configurable string authToken = ?;
+    ```
+
+10. Define a [`http:Client`](https://ballerina.io/learn/by-example/#http-client) object to send requests to the hospital backend service and a [`twilio:Client`](https://central.ballerina.io/ballerinax/twilio/latest#Client) object to send SMS to the given phone number via Twilio.
+
+    ![Define a http client](./resources/define_a_http_client.gif)
+
+    The generated code will be as follows.
+
+    ```ballerina
+    final http:Client hospitalBackend = check new (url = "http://localhost:9090");
+    final twilio:Client twilioEp = check new (config = {
+        auth: {
+            username: accountSId,
+            password: authToken
+        }
+    });
     ```
 
 10. Implement the logic.
@@ -312,10 +345,14 @@ Follow the instructions given in this section to develop the service.
                             }. Appointment No: ${reservationResponse.appointmentNumber}`;
             }
 
-            twilio:SmsResponse|error smsApiStatus = twilioEp->sendSms(fromNumber, content.patient.phone, smsBody);
+            twilio:Message|error smsApiResponse = twilioEp->createMessage({
+                To: content.patient.phone,
+                From: fromNumber,
+                Body: smsBody
+            });
 
-            if smsApiStatus !is twilio:SmsResponse {
-                log:printError("Failed to send an SMS message", smsApiStatus, phoneNo = content.patient.phone);
+            if smsApiResponse is error {
+                log:printError("Failed to send an SMS message", smsApiResponse, phoneNo = content.patient.phone);
             }
         }
     }
@@ -331,12 +368,20 @@ Follow the instructions given in this section to develop the service.
 
 <TODO: Complete source code>
 
-### Step 3: Build and run the service
+### Step 3: Build and run the Ballerina project
 
-![Run the service](./resources/run_the_service.gif)
+#### Start the RabbitMQ message broker
+
+Follow the [RabbitMQ guidelines ](https://www.rabbitmq.com/tutorials) to configure and start the RabbitMQ message broker.
+
+#### Run the project
+
+Define the configurable values in the `Config.bal` and run the Ballerina project.
+
+![Run the service](./resources/run_the_ballerina_project.gif)
 
 > **Note:**
-> Alternatively, you can run this service by navigating to the project root and using the `bal run` command.
+> Alternatively, you can run this project by navigating to the project root and using the `bal run` command.
 >
 > ```
 > guaranteed-message-delivery$ bal run
@@ -358,10 +403,6 @@ Download the JAR file for the [backend service](https://github.com/ballerina-gui
 $ bal run hospitalservice.jar
 ```
 
-#### Start the RabbitMQ message broker
-
-Follow the [RabbitMQ guidelines ](<link to the guidelines>) to configure and start the RabbitMQ message broker.
-
 #### Send a request
 
 Use the [Try it](https://wso2.com/ballerina/vscode/docs/try-the-services/try-http-services/) feature to send a request to the service. Specify `surgery` as the path parameter. Use the following as the request payload.
@@ -373,8 +414,8 @@ Use the [Try it](https://wso2.com/ballerina/vscode/docs/try-the-services/try-htt
             "dob": "1940-03-19",
             "ssn": "234-23-525",
             "address": "California",
-            "phone": "+9470586755",
-            "email": "johndoe@gmail.com",
+            "phone": "+94710889867",
+            "email": "johndoe@gmail.com"
         },
         "doctor": "thomas collins",
         "hospital_id": "grandoaks",
