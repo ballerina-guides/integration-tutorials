@@ -24,9 +24,9 @@ final twilio:Client twilioEp = check initializeTwilioClient();
 function initializeHttpClient() returns http:Client|error => new ("http://localhost:9090");
 
 function initializeTwilioClient() returns twilio:Client|error => new ({
-    twilioAuth: {
-        accountSId,
-        authToken
+    auth: {
+        username: accountSId,
+        password: authToken
     }
 });
 
@@ -62,10 +62,14 @@ service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
                         }. Appointment No: ${reservationResponse.appointmentNumber}`;
         }
 
-        twilio:SmsResponse|error smsApiStatus = twilioEp->sendSms(fromNumber, content.patient.phone, smsBody);
+        twilio:Message|error smsApiResponse = twilioEp->createMessage({
+            To: content.patient.phone,
+            From: fromNumber,
+            Body: smsBody
+        });
 
-        if smsApiStatus !is twilio:SmsResponse {
-            log:printError("Failed to send an SMS message", smsApiStatus, phoneNo = content.patient.phone);
+        if smsApiResponse is error {
+            log:printError("Failed to send an SMS message", smsApiResponse, phoneNo = content.patient.phone);
         }
     }
 }

@@ -120,22 +120,20 @@ public client class MockHttpClient {
 }
 
 public client class MockTwilioClient {
-    isolated remote function sendSms(
-            string fromNo,
-            string toNo,
-            string message,
-            string? statusCallbackUrl) returns twilio:SmsResponse|error {
+    isolated remote function createMessage(
+            record {|string To; string From; string Body;|} msgRequest,
+            string? statusCallbackUrl) returns twilio:Message|error {
 
         lock {
-            smsBody = message;
+            smsBody = msgRequest.Body;
         }
 
         lock {
-            sendingPhoneNo = fromNo;
+            sendingPhoneNo = msgRequest.From;
         }
 
         lock {
-            recievingPhoneNo = toNo;
+            recievingPhoneNo = msgRequest.To;
         }
 
         return {};
