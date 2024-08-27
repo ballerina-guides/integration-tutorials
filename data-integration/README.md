@@ -2,11 +2,11 @@
 
 ## Overview
 
-In this tutorial, you will develop a service that accepts requests to create an employee and a task, update task status, and delete a completed task. Ballerina persistence layer is used to manage data stored in a database. The service will be used to create, retrieve, update, and delete data from the database.
+In this tutorial, you will develop a service that manages employees and their assigned tasks. The service accepts requests to create employee records and tasks, update task statuses, and delete completed tasks. By utilizing the Ballerina persistence layer, this service simplifies data management by abstracting the underlying database interactions, providing a convenient and efficient way to handle employee and task-related operations.
 
-To implement this use case, you will develop a REST service with multiple resources using Visual Studio Code with the Ballerina Swan Lake extension.
+To implement this use case, you will start by defining the data model using the `bal persist` feature, which will generate the necessary client objects, types, and scripts. 
 
-Define the data model using the `bal persist` feature and generate the client objects, types, and scripts for the model. Then, define the service and implement the logic to interact with the database.
+Next, you will develop a REST service with multiple resources in Visual Studio Code, using the Ballerina Swan Lake extension. Finally, you will implement the service logic to interact with the database, ensuring seamless management of employee and task data.
 
 The flow is as follows.
 
@@ -112,7 +112,7 @@ Follow the instructions given in this section to develop the service.
 4. Generate the client objects, types, and scripts for the model using the following command. This will use the model defined in the `persist/model.bal` file to generate the persistence constructs in a module named `store` in a directory named `generated`.
    
     ```bash
-    $ bal persist generate --module store
+    $ bal persist generate
     ```
 
 Now, we are going to implement the logic using the generated constructs.
