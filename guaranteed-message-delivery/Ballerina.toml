@@ -1,0 +1,8 @@
+[package]
+org = "integration_tutorials"
+name = "guaranteed_message_delivery"
+version = "0.1.0"
+distribution = "2201.8.2"
+
+[build-options]
+observabilityIncluded = true
