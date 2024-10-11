@@ -366,7 +366,171 @@ Follow the instructions given in this section to develop the service.
 
 #### Complete source
 
-<TODO: Complete source code>
+```ballerina
+// type.bal
+
+type Patient record {|
+    string name;
+    string dob;
+    string ssn;
+    string address;
+    string phone;
+    string email;
+|};
+
+type ReservationRequest record {|
+    Patient patient;
+    string doctor;
+    string hospital_id;
+    string hospital;
+    string appointment_date;
+|};
+
+type Doctor record {|
+    string name;
+    string hospital;
+    string category;
+    string availability;
+    decimal fee;
+|};
+
+type ReservationResponse record {|
+    int appointmentNumber;
+    Doctor doctor;
+    Patient patient;
+    string hospital;
+    boolean confirmed;
+    string appointmentDate;
+|};
+```
+
+```ballerina
+// publisher.bal
+
+import ballerina/http;
+import ballerina/log;
+import ballerinax/rabbitmq;
+
+configurable string queueName = "ReservationQueue";
+
+final rabbitmq:Client rabbitmqClient = check initializeRabbitMqClient();
+
+function initializeRabbitMqClient() returns rabbitmq:Client|error => new (rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT);
+
+service /healthcare on new http:Listener(8290) {
+    function init() returns error? {
+        return rabbitmqClient->queueDeclare(queueName);
+    }
+
+    resource function post categories/[string category]/reserve(ReservationRequest request)
+                    returns http:Created|http:InternalServerError {
+        Patient patient = request.patient;
+        string doctor = request.doctor;
+        string hospital = request.hospital;
+
+        rabbitmq:Error? response = rabbitmqClient->publishMessage({
+            content: {
+                patient,
+                doctor,
+                hospital_id: request.hospital_id,
+                hospital: hospital,
+                appointment_date: request.appointment_date,
+                category
+            },
+            routingKey: queueName
+        });
+
+        if response is rabbitmq:Error {
+            log:printError("Failed to publish to the message broker", patient = patient.name,
+                                                                      doctor = doctor,
+                                                                      hospital = hospital);
+            return <http:InternalServerError>{body: response.message()};
+        }
+
+        return http:CREATED;
+    }
+}
+```
+
+```ballerina
+// consumer.bal
+
+import ballerina/http;
+import ballerina/log;
+import ballerinax/rabbitmq;
+import ballerinax/twilio;
+
+type MessageContent record {|
+    *ReservationRequest;
+    string category;
+|};
+
+type RabbitMqMessage record {|
+    *rabbitmq:AnydataMessage;
+    MessageContent content;
+|};
+
+configurable string fromNumber = ?;
+configurable string accountSId = ?;
+configurable string authToken = ?;
+
+final http:Client hospitalBackend = check initializeHttpClient();
+
+final twilio:Client twilioEp = check initializeTwilioClient();
+
+function initializeHttpClient() returns http:Client|error => new ("http://localhost:9090");
+
+function initializeTwilioClient() returns twilio:Client|error => new ({
+    auth: {
+        username: accountSId,
+        password: authToken
+    }
+});
+
+@rabbitmq:ServiceConfig {
+    queueName
+}
+service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
+    remote function onMessage(RabbitMqMessage message) {
+        MessageContent content = message.content;
+        string hospital = content.hospital;
+        string patientName = content.patient.name;
+        string doctor = content.doctor;
+
+        ReservationResponse|http:ClientError reservationResponse = 
+            hospitalBackend->/[content.hospital_id]/categories/[content.category]/reserve.post({
+                patient: content.patient,
+                doctor,
+                hospital,
+                appointment_date: content.appointment_date
+            });
+
+        string smsBody;
+        if reservationResponse is http:ClientError {
+            log:printError("Reservation request failed", patient = patientName,
+                                                         doctor = doctor,
+                                                         hospital = hospital);
+            smsBody = string `Dear ${patientName
+                        }, your appointment request at ${hospital
+                        } failed. Please try again.`;
+        } else {
+            smsBody = string `Dear ${patientName
+                        }, your appointment has been accepted at ${hospital
+                        }. Appointment No: ${reservationResponse.appointmentNumber}`;
+        }
+
+        twilio:Message|error smsApiResponse = twilioEp->createMessage({
+            To: content.patient.phone,
+            From: fromNumber,
+            Body: smsBody
+        });
+
+        if smsApiResponse is error {
+            log:printError("Failed to send an SMS message", smsApiResponse, phoneNo = content.patient.phone);
+        }
+    }
+}
+```
 
 ### Step 3: Build and run the Ballerina project
 
