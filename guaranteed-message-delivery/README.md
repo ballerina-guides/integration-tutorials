@@ -2,9 +2,9 @@
 
 ## Overview
 
-In this tutorial, you will develop an integration that lets users reserve appointments at a hospital. A publisher service will accept the appointment requests from users and forward them to a consumer service. A consumer service will consume messages and interact with the hospital service to complete the reservation and send an SMS with the reservation status. To manage the guranteed flow of reservation requests, you will employ a message broker.
+In this tutorial, you will develop an integration that lets users reserve appointments at a hospital. To manage the guranteed flow of reservation requests, you will employ a message broker. A publisher service will accept the appointment requests from users and forward them to a consumer service. A consumer service will consume messages and interact with the hospital service to complete the reservation and send an SMS with the reservation status.
 
-To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. This resource will handle incoming user requests and forward them to the message broker. The consumer service that listens to a queue of the message broker will trigger a backend call to the hospital to make the reservation and send an SMS to the patient's phone number.
+To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. This resource will handle incoming user requests and forward them to the message broker. The consumer service that listens to a queue of the message broker will trigger a backend call to the hospital to make the reservation and send an SMS to the patient's phone number informing the reservation status.
 
 The flow is as follows.
 
@@ -55,7 +55,7 @@ The flow is as follows.
     }
     ```
 
-4. The consumer service will then send an SMS to the patient's mobile number notifying the appointment status.
+4. The consumer service will then send an SMS to the patient's mobile number notifying the reservation status.
 
 ### Concepts covered
 
@@ -80,9 +80,9 @@ Follow the instructions given in this section to develop the service.
     $ bal new guaranteed-message-delivery
     ```
 
-2. Rename `main.bal` file to `types.bal`, remove the generated content, and open the diagram view in VS Code.
+2. Rename the `main.bal` file to `types.bal`, remove the generated content, and open the diagram view in VS Code.
 
-    ![Open diagram view](./resources/open_diagram_view.gif)ope
+    ![Open diagram view](./resources/open_diagram_view.gif)
 
 3. Generate record types corresponding to the request payload by providing samples of the expected JSON payload.
 
@@ -155,7 +155,7 @@ Follow the instructions given in this section to develop the service.
     > **Note:** 
     > When the fields of the JSON objects are expected to be exactly those specified in the sample payload, the generated records can be updated to be [closed records](https://ballerina.io/learn/by-example/controlling-openness/), which would indicate that no other fields are allowed or expected.
 
-**Now you are going to implement the publsiher's and consumer's logic in two files: `publisher.bal` and `consumer.bal`**
+**Now you are going to implement the publsiher and consumer logic in two files: `publisher.bal` and `consumer.bal`**
 
 4. Create a file named `publisher.bal` and define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests and publishes the payload to the message broker.
 
@@ -190,9 +190,9 @@ Follow the instructions given in this section to develop the service.
     configurable string queueName = "ReservationQueue";
     ```
 
-6. Create a [rabbitmq:Client](https://central.ballerina.io/ballerinax/rabbitmq/latest#Client) object to forward the message to the message broker.
+6. Create a [rabbitmq:Client](https://central.ballerina.io/ballerinax/rabbitmq/latest#Client) object to publish message to the message broker.
     
-    - Use RabbitMQ's default host and default port to initialize the client object.
+    - Use preferable host and port values to initialize the client object. For now, use RabbitMQ's default host and port values.
 
     ![Define a RabbitMQ client](./resources/define_a_rabbitmq_client.gif)
 
@@ -240,16 +240,16 @@ Follow the instructions given in this section to develop the service.
     }
     ```
 
-    - Define an `init` function to initialize the service. In there, declare the queue of the message-broker by calling `queueDeclare` function.
+    - Define an `init` function and declare the queue on the message broker using the `queueDeclare` method on service initialization.
 
-    - In the resource function, first, define three variables and assign them values from the `request`.
+    - In the resource method, first, define three variables (i.e. `patient`, `doctor` and `hospital`) and assign them values from the `request` record.
 
-    - Call `rabbitmqClient`'s `publishMessage` function to publish the message to the RabbitMQ message-broker.
+    - Call `rabbitmqClient`'s `publishMessage` method to publish the message to the RabbitMQ message broker.
 
-    - Use `is` check and return an `http:InternalServerError` if error, else, return `http:CREATED`.
+    - Use `is` check to verify if the publishing is success or failure. Return an `http:InternalServerError` if error, else, return `http:CREATED`.
 
 
-8. Create a file named `consumer.bal` and define the record types needed for the consumer.
+8. Create a file named `consumer.bal` and first define the consumer-specific record types.
 
     ```ballerina
     type MessageContent record {|
@@ -269,11 +269,11 @@ Follow the instructions given in this section to develop the service.
     > **Note:**
     > Since details in the reservation and the `rabbitmq:AnydataMessage` needed to be merged, a separate record (i.e. `RabbitMqMessage`) is created.
 
-9. Define a `rabbitmq:Service` listening on a `rabbitmq:Listener` listener with the `onMessage` remote method that gets called.
+9. Define a RabbitMQ service listening on a `rabbitmq:Listener` listener with the `onMessage` remote method that gets called when a messaged is received to the message broker.
 
     ```
     @rabbitmq:ServiceConfig {
-        queueName: "queueName"
+        queueName
     }
     service on new rabbitmq:Listener(rabbitmq:DEFAULT_HOST, rabbitmq:DEFAULT_PORT) {
         remote function onMessage(RabbitMqMessage message) {
@@ -286,7 +286,7 @@ Follow the instructions given in this section to develop the service.
     > Here, RabbitMQ's default host and port are used to define the service
 
 
-9. Define configurations for the SMS service endpoints (e.g., `fromNumber`, `accountSId`, `authToken`) as [configurable variables](https://ballerina.io/learn/by-example/#configurability).
+9. Define [configurable variables](https://ballerina.io/learn/by-example/#configurability) (e.g., `fromNumber`, `accountSId`, `authToken`) for the SMS service endpoints.
 
     ```ballerina
     configurable string fromNumber = ?;
@@ -294,7 +294,7 @@ Follow the instructions given in this section to develop the service.
     configurable string authToken = ?;
     ```
 
-10. Define a [`http:Client`](https://ballerina.io/learn/by-example/#http-client) object to send requests to the hospital backend service and a [`twilio:Client`](https://central.ballerina.io/ballerinax/twilio/latest#Client) object to send SMS to the given phone number via Twilio.
+10. Define an [`http:Client`](https://ballerina.io/learn/by-example/#http-client) object to send requests to the hospital backend service and a [`twilio:Client`](https://central.ballerina.io/ballerinax/twilio/latest#Client) object to send SMS messages to the given phone number via Twilio.
 
     ![Define a http client](./resources/define_a_http_client.gif)
 
@@ -372,13 +372,13 @@ Follow the instructions given in this section to develop the service.
 
 #### Start the RabbitMQ message broker
 
-Follow the [RabbitMQ guidelines ](https://www.rabbitmq.com/tutorials) to configure and start the RabbitMQ message broker.
+Follow the [RabbitMQ guidelines](https://www.rabbitmq.com/tutorials) to configure and start the RabbitMQ message broker.
 
 #### Run the project
 
-Define the configurable values in the `Config.bal` and run the Ballerina project.
+Define the configurable values in the `Config.bal` file and run the Ballerina program.
 
-![Run the service](./resources/run_the_ballerina_project.gif)
+![Run the service](./resources/run_the_ballerina_service.gif)
 
 > **Note:**
 > Alternatively, you can run this project by navigating to the project root and using the `bal run` command.
@@ -428,7 +428,7 @@ Use the [Try it](https://wso2.com/ballerina/vscode/docs/try-the-services/try-htt
 
 #### Verify the SMS
 
-You will receive an SMS with information similar to the following for a successful appointment reservation.
+You will receive an SMS with information similar to the following for a successful reservation.
 
 ```
 Dear John Doe, your appointment has been accepted at grand oak community hospital. Appointment No: 1
