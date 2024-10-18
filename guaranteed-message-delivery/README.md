@@ -2,7 +2,7 @@
 
 ## Overview
 
-In this tutorial, you will develop an integration that lets users reserve appointments at a hospital. To manage the guranteed flow of reservation requests, you will employ a message broker. A publisher service will accept the appointment requests from users and forward them to a consumer service. A consumer service will consume messages and interact with the hospital service to complete the reservation and send an SMS with the reservation status.
+In this tutorial, you will develop an integration that lets users reserve appointments at a hospital. To manage the guranteed flow of reservation requests, you will employ a message broker. A publisher service will accept the appointment requests from users and publish to a message broker. A consumer service will consume messages from the message broker and interact with the hospital service to complete the reservation and send an SMS with the reservation status.
 
 To implement this use case, you will develop a REST service with a single resource using Visual Studio Code with the Ballerina Swan Lake extension. This resource will handle incoming user requests and forward them to the message broker. The consumer service that listens to a queue of the message broker will trigger a backend call to the hospital to make the reservation and send an SMS to the patient's phone number informing the reservation status.
 
@@ -155,7 +155,7 @@ Follow the instructions given in this section to develop the service.
     > **Note:** 
     > When the fields of the JSON objects are expected to be exactly those specified in the sample payload, the generated records can be updated to be [closed records](https://ballerina.io/learn/by-example/controlling-openness/), which would indicate that no other fields are allowed or expected.
 
-**Now you are going to implement the publsiher and consumer logic in two files: `publisher.bal` and `consumer.bal`**
+**Now you are going to implement the publisher and consumer logic in two files: `publisher.bal` and `consumer.bal`**
 
 4. Create a file named `publisher.bal` and define the [HTTP service (REST API)](https://ballerina.io/learn/by-example/#rest-service) that has the resource that accepts user requests and publishes the payload to the message broker.
 
@@ -192,7 +192,7 @@ Follow the instructions given in this section to develop the service.
 
 6. Create a [rabbitmq:Client](https://central.ballerina.io/ballerinax/rabbitmq/latest#Client) object to publish message to the message broker.
     
-    - Use preferable host and port values to initialize the client object. For now, use RabbitMQ's default host and port values.
+    - Use the relevant host and port values to initialize the client object. For now, use RabbitMQ's default host and port values.
 
     ![Define a RabbitMQ client](./resources/define_a_rabbitmq_client.gif)
 
@@ -240,13 +240,13 @@ Follow the instructions given in this section to develop the service.
     }
     ```
 
-    - Define an `init` function and declare the queue on the message broker using the `queueDeclare` method on service initialization.
+    - Define the `init` method and declare the queue on the message broker using the `queueDeclare` method on service initialization.
 
-    - In the resource method, first, define three variables (i.e. `patient`, `doctor` and `hospital`) and assign them values from the `request` record.
+    - In the resource method, first, define three variables (i.e., `patient`, `doctor` and `hospital`) and assign to them values from the `request` record.
 
-    - Call `rabbitmqClient`'s `publishMessage` method to publish the message to the RabbitMQ message broker.
+    - Call the `publishMessage` method on the `rabbitmqClient` value to publish the message to the RabbitMQ message broker.
 
-    - Use `is` check to verify if the publishing is success or failure. Return an `http:InternalServerError` if error, else, return `http:CREATED`.
+    - Use the `is` check to check if publishing failed. Return an `http:InternalServerError` response on error (i. e., failure), else, return an `http:CREATED` response.
 
 
 8. Create a file named `consumer.bal` and first define the consumer-specific record types.
@@ -269,9 +269,9 @@ Follow the instructions given in this section to develop the service.
     > **Note:**
     > Since details in the reservation and the `rabbitmq:AnydataMessage` needed to be merged, a separate record (i.e. `RabbitMqMessage`) is created.
 
-9. Define a RabbitMQ service listening on a `rabbitmq:Listener` listener with the `onMessage` remote method that gets called when a messaged is received to the message broker.
+9. Define a RabbitMQ service listening on a `rabbitmq:Listener` listener with the `onMessage` remote method that gets called when a messaged is published to the specified queue on the message broker.
 
-    ```
+    ```ballerina
     @rabbitmq:ServiceConfig {
         queueName
     }
@@ -282,8 +282,6 @@ Follow the instructions given in this section to develop the service.
     }
     ```
 
-    > **Note:**
-    > Here, RabbitMQ's default host and port are used to define the service
 
 
 9. Define [configurable variables](https://ballerina.io/learn/by-example/#configurability) (e.g., `fromNumber`, `accountSId`, `authToken`) for the SMS service endpoints.
@@ -367,7 +365,7 @@ Follow the instructions given in this section to develop the service.
 #### Complete source
 
 ```ballerina
-// type.bal
+// types.bal
 
 type Patient record {|
     string name;
